@@ -65,6 +65,10 @@ export function runGlobalShortcut(host: ShortcutHost, action: string, resume: ()
       host.alert("prompt");
       break;
 
+    case "noteIdea":
+      void Bridge.noteIdea();
+      break;
+
     case "newSession":
       resume();
       host.alert("launch");

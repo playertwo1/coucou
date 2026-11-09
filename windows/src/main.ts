@@ -166,6 +166,11 @@ async function main() {
   registerVoiceHandlers();
   registerSpotifyHandlers(island);
   registerCoucoudoro(island);
+  void onEvent<boolean>("meeting", (on) => {
+    State.meeting = on;
+    Sound.quiet = on;
+    State.notify();
+  });
   registerWhatsAppHandlers(island);
   // New versions: Rust offers the card, the island opens it when nothing else waits.
   await Updates.register(island);

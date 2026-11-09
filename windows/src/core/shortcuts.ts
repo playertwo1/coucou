@@ -30,6 +30,7 @@ export const SHORTCUT_TEXT = {
   desktopToggle: N_("Send Mochi to the desktop"),
   wardrobeToggle: N_("Open the wardrobe"),
   newSession: N_("New Claude Code session"),
+  noteIdea: N_("Note an idea"),
   island: {
     nextPrev: N_("Next or previous pill"),
     byNumber: N_("Go to pill 1 to 9"),
@@ -58,7 +59,8 @@ export type ShortcutId =
   | "muteToggle"
   | "desktopToggle"
   | "wardrobeToggle"
-  | "newSession";
+  | "newSession"
+  | "noteIdea";
 
 export interface ShortcutDef {
   id: ShortcutId;
@@ -85,6 +87,8 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   def("wardrobeToggle", "Ctrl+Alt+G", true, true),
   // The Mac's ⌃⌥N is the island toggle here, so this one takes L (launch).
   def("newSession", "Ctrl+Alt+L", true, true),
+  // Not the Mac's: Notetaker for one voice, a fork addition (see docs/ROADMAP-FORK.md).
+  def("noteIdea", "Ctrl+Alt+I", true, true),
 ];
 
 export interface Binding {

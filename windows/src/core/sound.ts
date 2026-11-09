@@ -19,6 +19,8 @@ export type SoundName = (typeof SOUND_NAMES)[number];
 class SoundEngine {
   enabled = true;
   volume = 0.12;
+  /** Meeting mode (the Notetaker is recording): only a request for the user still has a sound. */
+  quiet = false;
 
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
@@ -119,6 +121,7 @@ class SoundEngine {
 
   play(name: SoundName | string) {
     if (!this.enabled) return;
+    if (this.quiet && name !== "approval" && name !== "question") return;
     const ctx = this.ctx;
     const master = this.master;
     const buf = this.buffers.get(name);

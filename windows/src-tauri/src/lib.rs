@@ -1060,6 +1060,7 @@ pub fn run() {
             flow::pill_action,
             notes::notes_state,
             notes::notes_start,
+            notes::notes_idea,
             notes::notes_stop,
             notes::notes_rename,
             notes::notes_rename_speaker,

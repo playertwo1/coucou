@@ -234,9 +234,18 @@ pub fn setup(app: &AppHandle) {
 
 /// The pill's record button: starts or stops, and says what is missing.
 pub fn toggle(app: &AppHandle) {
+    toggle_as(app, false);
+}
+
+/// The shortcut for an idea: your voice alone, no call, saved as a note with its date and time.
+pub fn toggle_idea(app: &AppHandle) {
+    toggle_as(app, true);
+}
+
+fn toggle_as(app: &AppHandle, idea: bool) {
     if is_recording(app) {
         stop(app);
-    } else if let Err(err) = start(app) {
+    } else if let Err(err) = start_as(app, idea) {
         let (text, action) = if err == "models" {
             (t("Download the voice model first, in Coucou → Settings → Recognition."), Some((t("Open Settings"), "openSettings")))
         } else {
@@ -247,16 +256,20 @@ pub fn toggle(app: &AppHandle) {
 }
 
 pub fn start(app: &AppHandle) -> Result<String, String> {
+    start_as(app, false)
+}
+
+fn start_as(app: &AppHandle, idea: bool) -> Result<String, String> {
     let taker = get(app).ok_or("not ready")?;
     if taker.recording.lock().unwrap().is_some() || taker.starting.swap(true, Ordering::Relaxed) {
         return Err("already recording".into());
     }
-    let result = start_inner(app, &taker);
+    let result = start_inner(app, &taker, idea);
     taker.starting.store(false, Ordering::Relaxed);
     result
 }
 
-fn start_inner(app: &AppHandle, taker: &Arc<NoteTaker>) -> Result<String, String> {
+fn start_inner(app: &AppHandle, taker: &Arc<NoteTaker>, idea: bool) -> Result<String, String> {
     if !speech::is_ready() {
         return Err("models".into());
     }
@@ -265,7 +278,10 @@ fn start_inner(app: &AppHandle, taker: &Arc<NoteTaker>) -> Result<String, String
     let id = crate::flow::text::new_id();
     let note = Note {
         id: id.clone(),
-        title: tf("Call · {0}", &[("0", stamp.get(5..).unwrap_or(&stamp))]),
+        title: {
+            let when = [("0", stamp.get(5..).unwrap_or(&stamp))];
+            if idea { tf("Idea · {0}", &when) } else { tf("Call · {0}", &when) }
+        },
         title_edited: false,
         start: now,
         end: None,
@@ -294,6 +310,8 @@ fn start_inner(app: &AppHandle, taker: &Arc<NoteTaker>) -> Result<String, String
     })?;
     // Without the computer's sound, the call is noted from the microphone alone.
     let (system, system_channel) = match Channel::new(&dir.join("system.wav")) {
+        // An idea is your voice alone: the computer's sound is not recorded.
+        _ if idea => (None, None),
         Ok(channel) => {
             let channel = Arc::new(Mutex::new(channel));
             let sink = channel.clone();
@@ -322,6 +340,7 @@ fn start_inner(app: &AppHandle, taker: &Arc<NoteTaker>) -> Result<String, String
     speech::preload();
     spawn_live(app.clone(), taker.clone(), id.clone(), mic_channel, system_channel, stop_live);
     pill::update(app, |s| s.note_started_at = Some(note.start));
+    let _ = app.emit_to(crate::island::WINDOW_LABEL, "meeting", true);
     let _ = app.emit_to(crate::HUB_LABEL, "notes-changed", &id);
     crate::log::line("notes: recording");
     Ok(id)
@@ -418,6 +437,7 @@ pub fn stop(app: &AppHandle) {
         n.status = Status::Processing;
     });
     pill::update(app, |s| s.note_started_at = None);
+    let _ = app.emit_to(crate::island::WINDOW_LABEL, "meeting", false);
     let app = app.clone();
     let id = rec.id.clone();
     std::thread::spawn(move || process(&app, &id));
@@ -657,6 +677,12 @@ pub fn notes_state(taker: State<Arc<NoteTaker>>) -> NotesState {
         recording: taker.recording.lock().unwrap().as_ref().map(|r| r.id.clone()),
         working: taker.working.lock().unwrap().clone(),
     }
+}
+
+/// The "Note an idea" shortcut: start the one-voice note, or stop it.
+#[tauri::command]
+pub async fn notes_idea(app: AppHandle) {
+    let _ = tauri::async_runtime::spawn_blocking(move || toggle_idea(&app)).await;
 }
 
 #[tauri::command]

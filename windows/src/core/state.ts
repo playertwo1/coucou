@@ -225,6 +225,8 @@ class AppState {
   focusId: string | null = null;
 
   stateOverride: BotStateName | null = null;
+  /** The Notetaker is recording (src-tauri/src/notes): the island keeps quiet. */
+  meeting = false;
 
   /** Cursor in logical screen pixels, origin top-left (like AppState.mousePosition). */
   mouse = { x: 0, y: 0 };
@@ -303,7 +305,9 @@ class AppState {
   }
 
   get effectiveState(): BotStateName {
-    return this.stateOverride ?? this.focusTask?.state ?? "idle";
+    const own = this.stateOverride ?? this.focusTask?.state ?? "idle";
+    // Meeting mode: Mochi listens along while the Notetaker records, unless something needs you.
+    return this.meeting && own === "idle" ? "thinking" : own;
   }
 
   /** Spotify plays on a declared pill: Mochi dances (Linux; never on Windows yet). */

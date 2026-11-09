@@ -475,6 +475,8 @@ export const Bridge = {
     call<boolean>("spotify_control", { action, value: value ?? null }),
   /** Brings Spotify forward or starts it; without it, its download page. */
   spotifyOpen: () => call<boolean>("spotify_open"),
+  /** The "Note an idea" shortcut: starts the one-voice note, or stops it. */
+  noteIdea: () => call<void>("notes_idea"),
   /** Whether there is a Spotify to launch (Settings). */
   spotifyInstalled: () => call<boolean>("spotify_installed"),
 
