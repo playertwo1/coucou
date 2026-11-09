@@ -98,6 +98,7 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 - [ ] Iniciar ou pausar uma reprodução real de teste no Spotify.
 - [ ] Conferir título/artista/estado na pílula e que os controles não agem sobre outro player.
 - Checkpoint: registrar cliente Spotify usado e resultado.
+- Status (2026-11-09): N/A — o proprietário não usa Spotify. A pílula de mídia será validada com o YouTube Music (mesmo cartão e controles, `integration_youtubemusic`), que só é reconhecido como app instalado (PWA do Chrome/Edge ou app desktop), não como aba comum do navegador.
 
 #### 0.5b — Uso do plano
 
@@ -114,11 +115,12 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 
 ### 0.6 — Inicialização com o Windows
 
-- [ ] Verificar o estado atual da opção de iniciar com o Windows; não alterá-la sem autorização.
+- [x] Verificar o estado atual da opção de iniciar com o Windows; não alterá-la sem autorização.
 - [ ] Se estiver habilitada, combinar um reinício de teste, salvar o trabalho aberto e reiniciar.
 - [ ] Após entrar no Windows, confirmar que uma única instância abre e a ilha fica utilizável.
 - [ ] Se a opção estiver desligada e o proprietário autorizar habilitá-la, repetir o reinício; caso contrário, registrar BLOQUEADO.
 - Checkpoint: estado anterior/posterior da opção, número de instâncias e resultado após login.
+- Status (2026-11-09): estado anterior DESLIGADO — `autostart: false` em `%APPDATA%\Coucou\settings.json`, nenhuma entrada do Coucou em `HKCU\...\CurrentVersion\Run`, uma instância em execução. O proprietário autorizou habilitar a opção e fazer o reinício de teste; resultado após login pendente.
 
 ### 0.7 — Coucoudoro: timer e foco
 
