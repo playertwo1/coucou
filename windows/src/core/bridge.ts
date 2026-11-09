@@ -411,6 +411,12 @@ export const Bridge = {
   /** Moves a switch; returns the rows as they are now. */
   subscriptionSet: (provider: string, on: boolean) =>
     call<SubscriptionStatus[]>("subscription_set", { provider, on }),
+  /** Open a terminal running the provider's sign-in command (e.g. `codex login`, `agy`). */
+  subscriptionSignIn: (provider: string) =>
+    callOrThrow<void>("subscription_sign_in", { provider }),
+  /** Switch Gemini / Antigravity between Google OAuth and API key. */
+  geminiSetAuthMode: (oauth: boolean) =>
+    callOrThrow<void>("gemini_set_auth_mode", { oauth }),
   /** Whether a provider can answer with this key: Claude Code stands in for a missing Anthropic one. */
   keyReady: (key: string) =>
     key === "anthropic-api-key" ? call<boolean>("claude_ready") : call<boolean>("secret_present", { key }),
@@ -590,6 +596,8 @@ export interface SubscriptionStatus {
   signIn: string;
   installUrl: string;
   subscriptionOnly: boolean;
+  signedIn: boolean;
+  authMode: string | null;
 }
 
 export interface LocalServer {

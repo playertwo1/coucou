@@ -160,6 +160,181 @@ pub struct Status {
     pub sign_in: &'static str,
     pub install_url: &'static str,
     pub subscription_only: bool,
+    pub signed_in: bool,
+    pub auth_mode: Option<String>,
+}
+
+/// Auth status of a CLI tool: whether signed in, and human-readable account/mode.
+pub fn auth_info(cli: Cli) -> (bool, Option<String>) {
+    let home = platform::home_dir();
+    match cli {
+        Cli::Claude => {
+            let path = home.join(".claude.json");
+            if let Ok(bytes) = std::fs::read(&path) {
+                if let Ok(json) = serde_json::from_slice::<Value>(&bytes) {
+                    if let Some(email) = json.get("oauthAccount").and_then(|a| a.get("emailAddress")).and_then(Value::as_str) {
+                        return (true, Some(email.to_string()));
+                    }
+                    if json.get("oauthAccount").is_some() {
+                        return (true, Some("Claude.ai (OAuth)".to_string()));
+                    }
+                }
+            }
+            (false, None)
+        }
+        Cli::Codex => {
+            let path = home.join(".codex").join("auth.json");
+            if let Ok(bytes) = std::fs::read(&path) {
+                if let Ok(json) = serde_json::from_slice::<Value>(&bytes) {
+                    let mode = json.get("auth_mode").and_then(Value::as_str);
+                    if mode == Some("chatgpt") || json.get("tokens").is_some() {
+                        return (true, Some("ChatGPT (OAuth)".to_string()));
+                    }
+                    if json.get("OPENAI_API_KEY").is_some() {
+                        return (true, Some("OpenAI API Key".to_string()));
+                    }
+                }
+            }
+            (false, None)
+        }
+        Cli::Antigravity | Cli::Gemini => {
+            let settings_path = home.join(".gemini").join("settings.json");
+            let mut selected_type = None;
+            if let Ok(bytes) = std::fs::read(&settings_path) {
+                if let Ok(json) = serde_json::from_slice::<Value>(&bytes) {
+                    selected_type = json.get("security")
+                        .and_then(|s| s.get("auth"))
+                        .and_then(|a| a.get("selectedType"))
+                        .and_then(Value::as_str)
+                        .map(String::from);
+                }
+            }
+            let accounts_path = home.join(".gemini").join("google_accounts.json");
+            let mut active_email = None;
+            if let Ok(bytes) = std::fs::read(&accounts_path) {
+                if let Ok(json) = serde_json::from_slice::<Value>(&bytes) {
+                    active_email = json.get("active").and_then(Value::as_str).map(String::from);
+                }
+            }
+            if selected_type.as_deref() == Some("oauth-personal") {
+                let desc = active_email.unwrap_or_else(|| "Google (OAuth)".to_string());
+                return (true, Some(desc));
+            } else if selected_type.as_deref() == Some("gemini-api-key") {
+                return (false, Some("API Key".to_string()));
+            }
+            if let Some(email) = active_email {
+                return (true, Some(email));
+            }
+            (false, None)
+        }
+        Cli::Cursor => (false, None),
+        Cli::Copilot => {
+            let path = home.join(".copilot");
+            (path.exists(), None)
+        }
+    }
+}
+
+/// Switch Gemini / Antigravity between Google OAuth ("oauth-personal") and API Key ("gemini-api-key").
+pub fn set_gemini_auth_mode(oauth: bool) -> Result<(), String> {
+    let home = platform::home_dir();
+    let settings_path = home.join(".gemini").join("settings.json");
+    let mut root: Value = if let Ok(bytes) = std::fs::read(&settings_path) {
+        serde_json::from_slice(&bytes).unwrap_or_else(|_| json!({}))
+    } else {
+        json!({})
+    };
+
+    let target_type = if oauth { "oauth-personal" } else { "gemini-api-key" };
+    if !root.is_object() {
+        root = json!({});
+    }
+    let sec = root.as_object_mut().unwrap().entry("security").or_insert_with(|| json!({}));
+    if !sec.is_object() {
+        *sec = json!({});
+    }
+    let auth = sec.as_object_mut().unwrap().entry("auth").or_insert_with(|| json!({}));
+    if !auth.is_object() {
+        *auth = json!({});
+    }
+    auth.as_object_mut().unwrap().insert("selectedType".into(), json!(target_type));
+
+    if oauth {
+        let accounts_path = home.join(".gemini").join("google_accounts.json");
+        if let Ok(bytes) = std::fs::read(&accounts_path) {
+            if let Ok(mut acc_json) = serde_json::from_slice::<Value>(&bytes) {
+                if acc_json.get("active").map_or(true, |v| v.is_null()) {
+                    let old_account = acc_json.get("old").and_then(Value::as_array).and_then(|arr| arr.first()).cloned();
+                    if let Some(old) = old_account {
+                        if let Some(m) = acc_json.as_object_mut() {
+                            m.insert("active".into(), old);
+                        }
+                        let _ = std::fs::write(&accounts_path, serde_json::to_string_pretty(&acc_json).unwrap_or_default());
+                    }
+                }
+            }
+        }
+    }
+
+    let text = serde_json::to_string_pretty(&root).map_err(|e| e.to_string())?;
+    if let Some(parent) = settings_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(&settings_path, text).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Open a terminal to sign in with the provider's CLI (e.g. `codex login`, `agy`, `claude login`).
+pub fn launch_sign_in(provider: &str) -> Result<(), String> {
+    let (cli, _) = installed(provider).ok_or_else(|| {
+        let tool = clis_for(provider).first().map(|c| c.name()).unwrap_or(provider);
+        tf(
+            "{tool} is not installed. Install it from Settings → Chat, sign in once in a terminal, then ask again.",
+            &[("tool", tool)],
+        )
+    })?;
+    let cmd = cli.sign_in();
+    let home = platform::home_dir();
+    let folder = home.to_string_lossy().to_string();
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NEW_CONSOLE: u32 = 0x0000_0010;
+        let shell = if platform::find_on_path("pwsh").is_some() { "pwsh.exe" } else { "powershell.exe" };
+        if let Some(wt) = platform::windows_terminal() {
+            let mut c = std::process::Command::new(wt);
+            c.args(["-d", &folder, shell, "-NoExit", "-Command", cmd])
+             .current_dir(&folder);
+            platform::no_console(&mut c);
+            if c.spawn().is_ok() {
+                return Ok(());
+            }
+        }
+        let mut c = std::process::Command::new(shell);
+        c.args(["-NoExit", "-Command", cmd])
+         .current_dir(&folder)
+         .creation_flags(CREATE_NEW_CONSOLE);
+        c.spawn().map(|_| ()).map_err(|e| e.to_string())
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".into());
+        let terminal = std::env::var("TERMINAL").unwrap_or_else(|_| "x-terminal-emulator".into());
+        let mut c = std::process::Command::new(terminal);
+        c.args(["-e", &shell, "-c", &format!("{cmd}; exec {shell}")])
+         .current_dir(&folder);
+        platform::no_console(&mut c);
+        c.spawn().map(|_| ()).map_err(|e| e.to_string())
+    }
+
+    #[cfg(not(any(windows, target_os = "linux")))]
+    {
+        let _ = cmd;
+        let _ = folder;
+        Err("Unsupported platform".into())
+    }
 }
 
 pub fn status(settings: &Settings) -> Vec<Status> {
@@ -168,6 +343,11 @@ pub fn status(settings: &Settings) -> Vec<Status> {
         .map(|provider| {
             let found = installed(provider).map(|(cli, _)| cli);
             let cli = found.unwrap_or(clis_for(provider)[0]);
+            let (signed_in, auth_mode) = if found.is_some() {
+                auth_info(cli)
+            } else {
+                (false, None)
+            };
             Status {
                 provider,
                 tool: cli.name(),
@@ -176,6 +356,8 @@ pub fn status(settings: &Settings) -> Vec<Status> {
                 sign_in: cli.sign_in(),
                 install_url: cli.install_url(),
                 subscription_only: subscription_only(provider),
+                signed_in,
+                auth_mode,
             }
         })
         .collect()
@@ -688,5 +870,12 @@ mod tests {
         set(&mut s, "cursor", false);
         assert_eq!(s.chat_provider, "anthropic");
         assert_eq!(status(&s).len(), PROVIDERS.len());
+    }
+
+    #[test]
+    fn auth_info_reads_status_and_defaults() {
+        let (signed_in, mode) = auth_info(Cli::Cursor);
+        assert!(!signed_in);
+        assert!(mode.is_none());
     }
 }

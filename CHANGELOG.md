@@ -26,6 +26,11 @@ Fixes:
 - **Mochi reads the memory pressure** as soon as he comes back on screen (#795 by @orrrrli)
 - **iPhone link**: the relay is sturdier (#1035) and no longer retries a bad device token forever (#1036), by @hasnain-amir
 
+## Windows and Linux 0.6.3 — November 9, 2026 *(playertwo1 fork)*
+
+- **OAuth status and terminal login for AI coding tools** — Settings → Chat shows whether Claude Code, Codex CLI and Gemini / Antigravity CLI are connected via OAuth, with their active account or auth mode and a direct button to start sign-in from your terminal
+- **Google OAuth / Gemini API key switcher** — switch Gemini CLI and Antigravity between personal Google OAuth and API key in Settings → Chat with a single click
+
 ## Windows and Linux 0.6.2 — November 9, 2026 *(playertwo1 fork)*
 
 - **Coucoudoro keeps your day** — each finished work phase is logged with the project you were on; the card shows today's focus per project, and after a phase asks for one line (type it or use the mic) that is kept with it. With the YouTube Music pill on, the music plays when work starts and pauses when rest does

@@ -2,6 +2,81 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.3",
+      "items": [
+        {
+          "icon": "shield",
+          "title": {
+            "en": "OAuth status and sign-in for AI",
+            "zh-Hans": "AI 的 OAuth 状态与登录",
+            "hi": "AI के लिए OAuth स्थिति और साइन-इन",
+            "es": "Estado OAuth e inicio de sesión para IA",
+            "ar": "حالة OAuth وتسجيل الدخول للذكاء الاصطناعي",
+            "fr": "Statut OAuth et connexion pour l'IA",
+            "bn": "AI এর জন্য OAuth স্থিতি এবং সাইন-ইন",
+            "pt-BR": "Status OAuth e login para IA",
+            "ru": "Статус OAuth и вход для ИИ",
+            "id": "Status OAuth dan masuk untuk AI",
+            "de": "OAuth-Status und Anmeldung für KI",
+            "tr": "Yapay zeka için OAuth durumu ve giriş",
+            "ko": "AI용 OAuth 상태 및 로그인",
+            "ja": "AI向けOAuth状態とサインイン"
+          },
+          "detail": {
+            "en": "Check if Claude, Codex and Gemini are connected via OAuth, and start the sign-in directly from Settings.",
+            "zh-Hans": "查看 Claude、Codex 和 Gemini 是否已通过 OAuth 连接，并直接在设置中启动登录。",
+            "hi": "देखें कि Claude, Codex और Gemini OAuth से जुड़े हैं या नहीं, और सेटिंग्स से साइन-इन शुरू करें।",
+            "es": "Comprueba si Claude, Codex y Gemini están conectados por OAuth e inicia sesión desde Configuración.",
+            "ar": "تحقق مما إذا كان Claude وCodex وGemini متصلين عبر OAuth، وابدأ تسجيل الدخول مباشرة من الإعدادات.",
+            "fr": "Vérifiez si Claude, Codex et Gemini sont connectés via OAuth et lancez la connexion depuis Réglages.",
+            "bn": "Claude, Codex এবং Gemini OAuth দিয়ে সংযুক্ত কিনা দেখুন এবং সরাসরি সেটিংস থেকে সাইন-ইন শুরু করুন।",
+            "pt-BR": "Veja se Claude, Codex e Gemini estão conectados via OAuth e inicie o login direto nas Configurações.",
+            "ru": "Проверяйте подключение Claude, Codex и Gemini по OAuth и запускайте вход прямо из настроек.",
+            "id": "Periksa apakah Claude, Codex, dan Gemini terhubung lewat OAuth, dan mulai masuk langsung dari Pengaturan.",
+            "de": "Sieh, ob Claude, Codex und Gemini per OAuth verbunden sind, und starte den Login direkt in Einstellungen.",
+            "tr": "Claude, Codex ve Gemini'nin OAuth ile bağlı olup olmadığını görün ve doğrudan Ayarlar'dan giriş başlatın.",
+            "ko": "Claude, Codex, Gemini의 OAuth 연결 상태를 확인하고 설정에서 바로 로그인을 시작하세요.",
+            "ja": "Claude、Codex、GeminiがOAuth接続されているか確認し、設定から直接ログインを開始できます。"
+          }
+        },
+        {
+          "icon": "chat",
+          "title": {
+            "en": "Google OAuth or Gemini API key",
+            "zh-Hans": "Google OAuth 或 Gemini API 密钥",
+            "hi": "Google OAuth या Gemini API कुंजी",
+            "es": "Google OAuth o clave API Gemini",
+            "ar": "Google OAuth أو مفتاح Gemini API",
+            "fr": "Google OAuth ou clé API Gemini",
+            "bn": "Google OAuth বা Gemini API কী",
+            "pt-BR": "Google OAuth ou chave API Gemini",
+            "ru": "Google OAuth или API-ключ Gemini",
+            "id": "Google OAuth atau kunci API Gemini",
+            "de": "Google OAuth oder Gemini API-Schlüssel",
+            "tr": "Google OAuth veya Gemini API anahtarı",
+            "ko": "Google OAuth 또는 Gemini API 키",
+            "ja": "Google OAuthまたはGemini APIキー"
+          },
+          "detail": {
+            "en": "Easily toggle between personal Google account OAuth and standard Gemini API key in Chat settings.",
+            "zh-Hans": "在聊天设置中轻松在个人 Google 账户 OAuth 与标准 Gemini API 密钥之间切换。",
+            "hi": "चैट सेटिंग्स में व्यक्तिगत Google खाता OAuth और मानक Gemini API कुंजी के बीच आसानी से टॉगल करें।",
+            "es": "Alterna fácilmente entre Google OAuth personal y la clave API de Gemini en los ajustes de Chat.",
+            "ar": "التبديل بسهولة بين حساب Google الشخصي ومفتاح Gemini API القياسي في إعدادات الدردشة.",
+            "fr": "Basculez facilement entre le compte Google OAuth personnel et la clé API Gemini dans les réglages Chat.",
+            "bn": "চ্যাট সেটিংসে ব্যক্তিগত Google অ্যাকাউন্ট OAuth এবং স্ট্যান্ডার্ড Gemini API কী-এর মধ্যে সহজে পরিবর্তন করুন।",
+            "pt-BR": "Alterne facilmente entre conta Google pessoal via OAuth e chave de API Gemini nas configurações de Chat.",
+            "ru": "Легко переключайтесь между Google OAuth и обычным API-ключом Gemini в настройках чата.",
+            "id": "Beralih dengan mudah antara Google OAuth pribadi dan kunci API Gemini standar di pengaturan Obrolan.",
+            "de": "Wechsle in Chat-Einstellungen einfach zwischen Google-OAuth und regulärem Gemini-API-Schlüssel.",
+            "tr": "Sohbet ayarlarında kişisel Google OAuth ile standart Gemini API anahtarı arasında kolayca geçiş yapın.",
+            "ko": "채팅 설정에서 개인 Google 계정 OAuth와 표준 Gemini API 키 사이를 쉽게 전환하세요.",
+            "ja": "チャット設定で個人のGoogleアカウントOAuthと標準のGemini APIキーを簡単に切り替えられます。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.2",
       "items": [
         {

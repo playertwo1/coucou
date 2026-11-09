@@ -383,6 +383,47 @@ function subscriptionsSection(): HTMLElement {
       const lines: HTMLElement[] = [];
       if (row.installed) {
         lines.push(h("div", { class: "hint", style: "color:#22c55e", text: t("{tool} found ✓", { tool: row.tool }) }));
+
+        const authRow = h("div", { class: "row", style: "margin-top:2px" });
+        authRow.append(
+          statusDot(row.signedIn),
+          h("span", {
+            class: "hint",
+            style: row.signedIn ? "color:#22c55e" : "",
+            text: row.signedIn
+              ? (row.authMode ? t("Connected · {detail}", { detail: row.authMode }) : t("Connected"))
+              : (row.authMode ? t("Connected · {detail}", { detail: row.authMode }) : t("Not connected")),
+          }),
+          h("span", { class: "spacer" }),
+          h("button", {
+            class: row.signedIn ? "" : "primary",
+            text: t("Connect"),
+            onclick: () => void Bridge.subscriptionSignIn(row.provider),
+          }),
+        );
+        lines.push(authRow);
+
+        if (row.provider === "google") {
+          const isOAuth = row.signedIn || (row.authMode ? row.authMode.toLowerCase().includes("oauth") : false);
+          const toggleRow = h("div", { class: "row", style: "margin-top:2px" });
+          toggleRow.append(
+            h("span", {
+              class: "hint",
+              text: isOAuth ? t("Connected · {detail}", { detail: "Google OAuth" }) : t("Connected · {detail}", { detail: "Gemini API key" }),
+            }),
+            h("span", { class: "spacer" }),
+            h("button", {
+              text: isOAuth ? t("Use API key") : t("Use Google OAuth"),
+              onclick: async () => {
+                await Bridge.geminiSetAuthMode(!isOAuth);
+                const fresh = await Bridge.subscriptionStatus();
+                if (fresh) draw(fresh);
+              },
+            }),
+          );
+          lines.push(toggleRow);
+        }
+
         lines.push(h("div", {
           class: "hint",
           text: t("Not signed in yet? Run this once in a terminal: {command}", { command: row.signIn }),

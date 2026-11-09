@@ -181,6 +181,7 @@ Windows and Linux are released together, under the `windows-v*` and `linux-v*` t
 
 | Windows & Linux | Date | Highlights |
 |---------|------|------------|
+| 0.6.3 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.3) | Nov 9, 2026 | Fork: OAuth status and terminal sign-in for Claude, Codex and Gemini, toggle between Google OAuth and API key |
 | 0.6.2 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.2) | Nov 9, 2026 | Fork: Coucoudoro keeps your day, Ctrl+Alt+I notes an idea by voice, quiet while recording, search your notes |
 | 0.6.1 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.1) | Nov 9, 2026 | Fork: Coucoudoro timer, dictation button in the chat, the island in any corner, YouTube Music pill, Ctrl+Alt+L for a new session |
 | 0.5.9 · [Windows](https://github.com/Louis-CFM/coucou/releases/tag/windows-v0.5.9) · [Linux](https://github.com/Louis-CFM/coucou/releases/tag/linux-v0.5.9) | Nov 3, 2026 | The island never disappears (Mochi or the time when closed), ✕ to fold it, dictation keeps your language, your own dictation key, silence while you speak |

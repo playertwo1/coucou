@@ -7593,6 +7593,36 @@
       "tr": "Kopyalandı: oturumun terminaline yapıştır.",
       "ko": "복사됨: 세션의 터미널에 붙여 넣으세요.",
       "ja": "コピーしました：セッションのターミナルに貼り付けてください。"
+    },
+    "Use API key": {
+      "zh-Hans": "使用 API 密钥",
+      "hi": "API कुंजी का उपयोग करें",
+      "es": "Usar clave de API",
+      "ar": "استخدم مفتاح API",
+      "fr": "Utiliser la clé d'API",
+      "bn": "API কী ব্যবহার করুন",
+      "pt-BR": "Usar chave de API",
+      "ru": "Использовать API-ключ",
+      "id": "Gunakan kunci API",
+      "de": "API-Schlüssel verwenden",
+      "tr": "API anahtarını kullan",
+      "ko": "API 키 사용",
+      "ja": "APIキーを使用"
+    },
+    "Use Google OAuth": {
+      "zh-Hans": "使用 Google OAuth",
+      "hi": "Google OAuth का उपयोग करें",
+      "es": "Usar Google OAuth",
+      "ar": "استخدم Google OAuth",
+      "fr": "Utiliser Google OAuth",
+      "bn": "Google OAuth ব্যবহার করুন",
+      "pt-BR": "Usar Google OAuth",
+      "ru": "Использовать Google OAuth",
+      "id": "Gunakan Google OAuth",
+      "de": "Google OAuth verwenden",
+      "tr": "Google OAuth kullan",
+      "ko": "Google OAuth 사용",
+      "ja": "Google OAuthを使用"
     }
   }
 }

@@ -630,6 +630,18 @@ fn subscription_status(shared: State<Shared>) -> Vec<cli_relay::Status> {
     cli_relay::status(&settings)
 }
 
+/// Open a terminal to sign in with the provider's CLI (e.g. `codex login`, `agy`).
+#[tauri::command]
+fn subscription_sign_in(provider: String) -> Result<(), String> {
+    cli_relay::launch_sign_in(&provider)
+}
+
+/// Switch Gemini / Antigravity between Google OAuth and API key.
+#[tauri::command]
+fn gemini_set_auth_mode(oauth: bool) -> Result<(), String> {
+    cli_relay::set_gemini_auth_mode(oauth)
+}
+
 /// A switch under "Your AI subscriptions" moved: saved, and both windows told.
 #[tauri::command]
 fn subscription_set(app: AppHandle, shared: State<Shared>, provider: String, on: bool) -> Vec<cli_relay::Status> {
@@ -961,6 +973,8 @@ pub fn run() {
             claude_ready,
             subscription_status,
             subscription_set,
+            subscription_sign_in,
+            gemini_set_auth_mode,
             secret_set,
             secret_clear,
             refresh_integration,
