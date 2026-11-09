@@ -2,7 +2,8 @@
 // the pure part of SessionLauncher.swift / LaunchScript.swift / SessionDrop.swift.
 //
 // The projects offered are the folders Claude Code sessions ran in (from the
-// hooks), most recent first, ten at most, never the home folder or a root.
+// hooks), most recent first, ten at most, never the home folder, a root or a
+// temp folder.
 // They are a per-install convenience, so the webview's storage keeps them:
 // lost, the list fills again with the next sessions. The terminal itself is
 // opened by Rust (src-tauri/src/launch.rs).
@@ -35,14 +36,23 @@ export function isRootOrHome(path: string): boolean {
 }
 
 /**
+ * In the temp folder (%TEMP% under C:\Users\me, /tmp, /var/tmp): never a project.
+ * Tools run short Claude Code sessions there and delete the folder afterwards.
+ */
+export function isTemp(path: string): boolean {
+  const p = normalizeFolder(path);
+  return /^[A-Za-z]:\\Users\\[^\\]+\\AppData\\Local\\Temp(?:\\|$)/i.test(p) || /^\/(?:var\/)?tmp(?:\/|$)/.test(p);
+}
+
+/**
  * Projects, most recent first: `folder` in front, no duplicate (letter case
  * ignored on Windows, where paths ignore it), ten at most. The home folder,
- * a root, or a relative path leaves the list as it is.
+ * a root, a temp folder or a relative path leaves the list as it is.
  */
 export function rememberProject(folder: string, list: readonly string[], windows: boolean, max = MAX_PROJECTS): string[] {
   const path = normalizeFolder(folder);
   const absolute = path.startsWith("/") || /^[A-Za-z]:\\/.test(path) || path.startsWith("\\\\");
-  if (!path || !absolute || isRootOrHome(path)) return [...list];
+  if (!path || !absolute || isRootOrHome(path) || isTemp(path)) return [...list];
   const same = (a: string) => (windows ? a.toLowerCase() === path.toLowerCase() : a === path);
   return [path, ...list.filter((p) => !same(p))].slice(0, max);
 }
@@ -72,7 +82,8 @@ function write(key: string, value: string) {
 function readProjects(): string[] {
   try {
     const list = JSON.parse(read(PROJECTS_KEY) ?? "[]");
-    return Array.isArray(list) ? list.filter((p): p is string => typeof p === "string").slice(0, MAX_PROJECTS) : [];
+    // Temp folders remembered before isTemp existed are dropped here.
+    return Array.isArray(list) ? list.filter((p): p is string => typeof p === "string" && !isTemp(p)).slice(0, MAX_PROJECTS) : [];
   } catch {
     return [];
   }

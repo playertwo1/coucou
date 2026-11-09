@@ -305,6 +305,7 @@ fn launch_here(folder: &str, prompt: &str) -> Result<String, String> {
 #[tauri::command]
 pub fn launch_session(folder: String, prompt: String) -> bool {
     if !valid_folder(&folder) {
+        crate::log::line(format!("launch: {} is not an existing folder", session_window::folder_name(&folder)));
         return false;
     }
     let name = session_window::folder_name(&folder).to_string();

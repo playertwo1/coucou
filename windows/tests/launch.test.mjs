@@ -19,7 +19,7 @@ globalThis.localStorage = {
 
 const {
   DROP_LIST, DROP_TEXT_RIGHT_WITH_LIST, Launch, Launcher, MAX_PROJECTS, dropTargetAt, dropTargets, dropTargetsLayout,
-  isRootOrHome, normalizeFolder, projectName, rememberProject,
+  isRootOrHome, isTemp, normalizeFolder, projectName, rememberProject,
 } = await import("../src/core/launch.ts");
 const { buildLaunch } = await import("../src/views/launch.ts");
 const { buildSessionDropList } = await import("../src/views/session-drop.ts");
@@ -72,6 +72,25 @@ test("projects: most recent first, no duplicates, ten at most, home and / left o
   for (let i = 0; i < 15; i++) many = rememberProject(`/p/${i}`, many, false);
   assert.equal(many.length, MAX_PROJECTS);
   assert.equal(many[0], "/p/14");
+});
+
+test("a temp folder is never a project, even one remembered earlier", () => {
+  const list = ["C:\\code\\app"];
+  for (const temp of [
+    "C:\\Users\\me\\AppData\\Local\\Temp\\te-side-fdf2mjb3b",
+    "c:\\users\\me\\appdata\\local\\temp",
+    "/tmp/x",
+    "/var/tmp/y",
+  ]) {
+    assert.ok(isTemp(temp), temp);
+    assert.deepEqual(rememberProject(temp, list, true), list);
+  }
+  for (const kept of ["C:\\Users\\me\\AppData\\Local\\Temporary", "C:\\code\\Temp", "/home/me/tmp"]) assert.ok(!isTemp(kept), kept);
+  storage.set("coucou.launch.projects", JSON.stringify(["C:\\Users\\me\\AppData\\Local\\Temp\\te-side-x", "C:\\code\\app"]));
+  const launcher = new Launcher(true);
+  assert.deepEqual(launcher.projects, ["C:\\code\\app"]);
+  assert.equal(launcher.folder, "C:\\code\\app");
+  storage.clear();
 });
 
 test("on Windows the same folder in another letter case is the same project", () => {
