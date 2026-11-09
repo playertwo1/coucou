@@ -56,7 +56,7 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 
 ### 0.1 — Ditado Flow (Parakeet)
 
-- [ ] Abrir a versão de desenvolvimento 0.6.2 e iniciar/confirmar o download do modelo Parakeet.
+- [x] Abrir a build dev 0.6.2 (`windows/target/debug/coucou.exe`); os quatro arquivos Parakeet e os dois do diarizador estão presentes com os tamanhos esperados em `%LOCALAPPDATA%\Coucou\Models`, então não foi necessário baixar nada.
 - [ ] Ditar uma frase de teste no VS Code; conferir que o texto aparece uma vez no campo focado.
 - [ ] Repetir no navegador e no Windows Terminal, um alvo de cada vez.
 - [ ] Se o Windows pedir acesso ao microfone, conceder apenas pelo diálogo clicado pelo usuário.
