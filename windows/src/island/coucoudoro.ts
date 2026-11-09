@@ -3,9 +3,12 @@
 // the deadline. A phase change lands on the pill: its sentence, a sound, and the island opens onto
 // it unless a card the user is in the middle of is already up.
 
+import { Bridge } from "../core/bridge";
+import { projectName } from "../core/launch";
 import { pillDefinition } from "../core/pills";
+import { Spotify, YTM_ID } from "../core/spotify";
 import {
-  COUCOUDORO_ID, Coucoudoro, IDLE_COUCOUDORO, coucoudoroConfig, pause as pauseSnap, remaining, resume as resumeSnap,
+  COUCOUDORO_ID, Coucoudoro, FocusLog, IDLE_COUCOUDORO, entriesOfDay, parseFocusLog, coucoudoroConfig, pause as pauseSnap, remaining, resume as resumeSnap,
   start, stop, tick as tickSnap, type CoucoudoroEvent,
 } from "../core/coucoudoro";
 import type { IslandViewName } from "../core/layout";
@@ -32,8 +35,62 @@ function task() {
   return State.tasks.find((x) => x.id === COUCOUDORO_ID);
 }
 
+const LOG_KEY = "coucou.coucoudoro.log";
+
+function loadLog() {
+  try {
+    FocusLog.entries = parseFocusLog(JSON.parse(window.localStorage.getItem(LOG_KEY) ?? "[]"));
+  } catch {
+    FocusLog.entries = [];
+  }
+}
+
+function saveLog() {
+  try {
+    window.localStorage.setItem(LOG_KEY, JSON.stringify(FocusLog.entries.slice(-500)));
+  } catch {
+    // shortcut: the history lives in this webview's localStorage; move it to a Rust file if it must survive clearing site data.
+  }
+}
+
+/** The project a session is working on right now, else the one in front. */
+function currentProject(): string | null {
+  const sessions = State.tasks.filter((x) => !x.isIntegration && x.sessionCwd);
+  const cwd = (sessions.find((x) => x.state === "working") ?? sessions.find((x) => x.id === State.focusId))?.sessionCwd;
+  return cwd ? projectName(cwd) : null;
+}
+
+/** Today's latest finished phase while no line is saved for it. */
+export function pendingNote() {
+  const last = entriesOfDay(FocusLog.entries, Date.now()).pop();
+  return last && last.note == null ? last : null;
+}
+
+/** The dictated or typed line for the phase that just ended. */
+export function saveNote(text: string) {
+  const last = pendingNote();
+  const line = text.trim();
+  if (!last || !line) return;
+  last.note = line.slice(0, 280);
+  saveLog();
+  State.notify();
+}
+
+/** Work starts: the music of the YouTube Music pill plays; rest starts: it pauses. Only with that pill declared. */
+function focusMusic(event: CoucoudoroEvent) {
+  if (!State.settings.activeIntegrations.includes(YTM_ID)) return;
+  const s = Spotify.state;
+  if (event === "workStarts") {
+    if (!s.running) void Bridge.spotifyOpen();
+    else if (!s.playing) void Bridge.spotifyControl("playPause");
+  } else if (s.playing) {
+    void Bridge.spotifyControl("playPause");
+  }
+}
+
 export function registerCoucoudoro(island: CoucoudoroHost) {
   host = island;
+  loadLog();
   // Turning the pill off ends the session (CoucoudoroController.updatePolling).
   State.subscribe(() => {
     if (!isPillActive() && (Coucoudoro.snap.phase !== "idle" || timer != null)) end();
@@ -133,6 +190,12 @@ export function tick(now = Date.now()) {
  */
 function surface(event: CoucoudoroEvent | undefined, now: number) {
   if (!event) return;
+  // A work phase ending is one more focused stretch for today.
+  if (event === "restStarts") {
+    FocusLog.entries.push({ at: now, seconds: coucoudoroConfig().work, project: currentProject(), note: null });
+    saveLog();
+  }
+  focusMusic(event);
   Coucoudoro.noticeUntil = now + BANNER_MS;
   // Working keeps the pill's place beside the one in front, through rest as well as work.
   const { phase, paused } = Coucoudoro.snap;

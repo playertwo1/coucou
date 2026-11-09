@@ -3840,3 +3840,15 @@ html[data-dir="rtl"] #views :is(.bubble, .reply .md-p, .reply .md-h, .reply .md-
   background: #ff5f57;
   color: #fff;
 }
+
+/* Coucoudoro: the line about the phase that ended, and today's focus. */
+.cd-line {
+  margin-top: 6px;
+}
+
+.cd-today {
+  margin-top: 6px;
+  white-space: pre-line;
+  font: 400 11px var(--font);
+  color: var(--dim-3);
+}

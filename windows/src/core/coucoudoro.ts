@@ -46,6 +46,43 @@ export const Coucoudoro = {
   noticeUntil: 0,
 };
 
+/** One finished work phase: when it ended, how long, on which project, and the line the user dictated. */
+export interface FocusEntry {
+  at: number;
+  seconds: number;
+  project: string | null;
+  note: string | null;
+}
+
+/** The page's copy of the day's history (island/coucoudoro.ts keeps it in localStorage). */
+export const FocusLog = { entries: [] as FocusEntry[] };
+
+/** What was stored, kept only where it has the right shape; the newest 500. */
+export function parseFocusLog(raw: unknown): FocusEntry[] {
+  if (!Array.isArray(raw)) return [];
+  const ok = raw.filter((e): e is FocusEntry =>
+    e != null && typeof e.at === "number" && typeof e.seconds === "number" &&
+    (e.project == null || typeof e.project === "string") && (e.note == null || typeof e.note === "string"));
+  return ok.slice(-500).map((e) => ({ at: e.at, seconds: e.seconds, project: e.project ?? null, note: e.note ?? null }));
+}
+
+export function entriesOfDay(entries: readonly FocusEntry[], now: number): FocusEntry[] {
+  const day = new Date(now).toDateString();
+  return entries.filter((e) => new Date(e.at).toDateString() === day);
+}
+
+/** Today's focus: total seconds, finished phases, and seconds per project, longest first. */
+export function daySummary(entries: readonly FocusEntry[], now: number) {
+  const today = entriesOfDay(entries, now);
+  const per = new Map<string, number>();
+  for (const e of today) if (e.project) per.set(e.project, (per.get(e.project) ?? 0) + e.seconds);
+  return {
+    seconds: today.reduce((n, e) => n + e.seconds, 0),
+    cycles: today.length,
+    projects: [...per].sort((a, b) => b[1] - a[1]),
+  };
+}
+
 /** Lengths under a second are pulled up to one second. */
 export function sanitize(raw: CoucoudoroConfig): CoucoudoroConfig {
   return { work: Math.max(raw.work, 1), rest: Math.max(raw.rest, 1) };

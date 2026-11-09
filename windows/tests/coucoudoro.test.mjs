@@ -5,7 +5,7 @@ import { beforeEach, test } from "node:test";
 import assert from "node:assert/strict";
 import { installFakeDom } from "./fakedom.mjs";
 import {
-  COUCOUDORO_ID, Coucoudoro, IDLE_COUCOUDORO, clock, pause, remaining, resume, sanitize, start, stop, tick,
+  COUCOUDORO_ID, Coucoudoro, IDLE_COUCOUDORO, daySummary, parseFocusLog, clock, pause, remaining, resume, sanitize, start, stop, tick,
 } from "../src/core/coucoudoro.ts";
 import {
   banner, begin, end, pause as pauseSession, pillLabel, registerCoucoudoro, resetCoucoudoro, resume as resumeSession,
@@ -190,4 +190,28 @@ test("turning the pill off ends the session", () => {
   State.settings = { ...State.settings, activeIntegrations: [] };
   State.notify();
   assert.equal(Coucoudoro.snap.phase, "idle");
+});
+
+test("the day's focus: total, phases and projects of today only", () => {
+  const now = new Date(2026, 10, 9, 15, 0).getTime();
+  const yesterday = new Date(2026, 10, 8, 15, 0).getTime();
+  const log = [
+    { at: yesterday, seconds: 1500, project: "old", note: null },
+    { at: now - min(60), seconds: 1500, project: "coucou", note: "tests" },
+    { at: now - min(30), seconds: 1500, project: "coucou", note: null },
+    { at: now - min(5), seconds: 1500, project: null, note: null },
+  ];
+  const day = daySummary(log, now);
+  assert.equal(day.seconds, 4500);
+  assert.equal(day.cycles, 3);
+  assert.deepEqual(day.projects, [["coucou", 3000]]);
+  assert.deepEqual(daySummary([], now), { seconds: 0, cycles: 0, projects: [] });
+});
+
+test("a stored history keeps only entries of the right shape", () => {
+  assert.deepEqual(parseFocusLog("nope"), []);
+  assert.deepEqual(parseFocusLog([{ at: 1, seconds: 2 }, { at: "x" }, null, { at: 3, seconds: 4, project: "p", note: "n" }]), [
+    { at: 1, seconds: 2, project: null, note: null },
+    { at: 3, seconds: 4, project: "p", note: "n" },
+  ]);
 });

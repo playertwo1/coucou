@@ -226,7 +226,7 @@ function buildOverview(actions: ViewActions): ViewHost {
   const spotifyCard = buildSpotifyCard();
   let spotifyPill: SpotifyPillHost | null = null;
   // Coucoudoro's card and pill label too: the clock runs on, the buttons keep their hover.
-  const coucoudoroCard = buildCoucoudoroCard();
+  const coucoudoroCard = buildCoucoudoroCard({ keyboard: (on) => actions.keyboard(on) });
   let coucoudoroPill: { sync(): void } | null = null;
   // WhatsApp's card too: its reply field keeps the draft and the keyboard while messages arrive.
   // Mail's card too (classic Outlook): the search field keeps its text and the keyboard.

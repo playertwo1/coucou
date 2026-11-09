@@ -42,9 +42,9 @@ Nota: o Spotify da Fase 0 continua sendo testado, porque é o que existe hoje.
 - [ ] Notetaker em modo "anotar ideia": atalho global grava a sua voz sem chamada, transcreve com o Parakeet e salva a nota com data e hora (P)
 - [ ] Modo reunião da ilha: o Mochi mostra que está gravando e as notificações menores se calam enquanto o Notetaker grava (P)
 - [ ] Histórico pesquisável de transcrições, por palavra ou por pessoa (M)
-- [ ] Coucoudoro ligado às sessões do Claude Code: tempo de foco por projeto e total do dia (M, depende do Coucoudoro)
-- [ ] Ditar uma linha ao fim de cada ciclo do Coucoudoro e guardá-la no histórico do dia (P, depende do Coucoudoro)
-- [ ] Playlist de foco no Coucoudoro com YouTube Music: abre ou pausa a música junto com o ciclo (P, depende do YouTube Music)
+- [x] Coucoudoro ligado às sessões do Claude Code: tempo de foco por projeto e total do dia (M, depende do Coucoudoro) — feito: total do dia e por projeto no cartão
+- [x] Ditar uma linha ao fim de cada ciclo do Coucoudoro e guardá-la no histórico do dia (P, depende do Coucoudoro) — feito
+- [x] Playlist de foco no Coucoudoro com YouTube Music: abre ou pausa a música junto com o ciclo (P, depende do YouTube Music) — feito (só com a pílula do YouTube Music ligada)
 
 ## Fase 2 — Ideias novas (força do Windows)
 1. **Notificações nativas do Windows com Permitir/Negar** — quando a ilha está escondida ou há app em tela cheia; o clique continua explícito. (M)
