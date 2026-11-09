@@ -62,6 +62,7 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 - [ ] Se o Windows pedir acesso ao microfone, conceder apenas pelo diálogo clicado pelo usuário.
 - [ ] Passar se o modelo carrega e a frase chega sem duplicação aos três alvos; registrar separadamente qualquer falha.
 - Checkpoint: registrar versão, idioma, três resultados e erro/log sanitizado, sem guardar áudio privado.
+- Status (2026-11-09): PENDENTE A PEDIDO DO PROPRIETÁRIO — só a abertura da build e a presença dos modelos foram verificadas; os testes de ditado nos três alvos não foram executados.
 
 ### 0.2 — Notetaker em chamada
 
@@ -70,6 +71,7 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 - [ ] Gravar um trecho de teste, parar a gravação e conferir transcrição e resumo na lista de notas.
 - [ ] Confirmar que parar a gravação encerra a captura e que a nota continua disponível após reabrir a lista.
 - Checkpoint: registrar aplicativo, fonte de áudio, presença de transcrição/resumo e falhas; não guardar áudio ou fala real como fixture.
+- Status (2026-11-09): BLOQUEADO — aguarda uma chamada de teste escolhida pelo proprietário; nenhuma gravação foi iniciada.
 
 ### 0.3 — « OK Coucou » com Anthropic
 
@@ -77,6 +79,7 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 - [ ] Enviar uma pergunta curta sem dados pessoais e conferir a resposta na ilha.
 - [ ] Conferir que indisponibilidade de rede/chave é apresentada como erro e não grava o segredo em logs.
 - Checkpoint: resultado PASS/FAIL/BLOQUEADO e mensagem sanitizada.
+- Status (2026-11-09): BLOQUEADO — Settings → Chat indicou que não há chave Anthropic configurada; nenhuma pergunta foi enviada.
 
 ### 0.4 — Hook do Claude Code e Windows Terminal
 
@@ -86,6 +89,7 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 - [ ] Repetir sem clicar: o Coucou não pode aprovar sozinho; o pedido deve continuar no terminal.
 - [ ] Usar “Abrir terminal” e confirmar que a janela da sessão correta vem à frente.
 - Checkpoint: confirmar cada uma das três decisões (permitir, negar, sem clique) e o terminal-alvo. Não marcar aprovado se só a tela do cartão foi vista.
+- Status (2026-11-09): AGUARDANDO CONFIRMAÇÃO — Claude Code foi detectado, mas os hooks não estão instalados. A prévia propõe adicionar os handlers Coucou para os 12 eventos e criar backup datado, preservando entradas existentes; nenhuma gravação foi feita.
 
 ### 0.5 — Spotify, uso do plano e resumo semanal
 
