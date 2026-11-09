@@ -56,7 +56,7 @@ Nota: o Spotify da Fase 0 continua sendo testado, porque é o que existe hoje.
 7. **Lançador rápido** — atalho global → digita (ou dita) o pedido → escolhe projeto → abre o Claude Code. Junta itens da Fase 1. (P)
 8. **Vigia de testes/builds** — o Mochi reage quando `npm test`, `cargo build` ou o CI terminam (verde/vermelho). (M)
 9. **Sugestões de regras de permissão** — "você aprovou `npm test` 12 vezes: quer adicionar em `settings.json`?" (mostra o diff, grava só com confirmação). (M)
-10. **Vários monitores** — escolher o monitor da ilha ou seguir o mouse, como no Mac. (P, verificar se já existe)
+10. [x] **Vários monitores** — escolher o monitor da ilha ou seguir o mouse, como no Mac. (P; já existe em Settings → Geral → “A ilha fica na”. A troca física não foi exercitada porque este PC tem um monitor.)
 
 ## Fase 2B — Paridade com o Claude Code (Codex, Antigravity, Hermes, Orca, herdr)
 
