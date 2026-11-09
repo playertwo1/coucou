@@ -23,6 +23,8 @@ use serde::Serialize;
 use tauri::AppHandle;
 
 pub const PILL_ID: &str = "integration_spotify";
+/// YouTube Music (Windows): the same card and controls, fed by its own media session.
+pub const YTM_PILL_ID: &str = "integration_youtubemusic";
 /// Where "Get Spotify" leads when it isn't installed.
 #[cfg(not(windows))]
 pub const DOWNLOAD_URL: &str = "https://www.spotify.com/download/linux/";
@@ -496,13 +498,15 @@ pub fn spotify_installed() -> bool {
 /// Starts the listener when the pill is declared, stops it when it is not.
 /// Called at launch and after every settings save.
 pub fn sync(app: &AppHandle, active_integrations: &[String]) {
-    let on = active_integrations.iter().any(|id| id == PILL_ID);
+    let spotify = active_integrations.iter().any(|id| id == PILL_ID);
+    let ytm = active_integrations.iter().any(|id| id == YTM_PILL_ID);
     #[cfg(target_os = "linux")]
-    linux::sync(app, on);
+    linux::sync(app, spotify);
+    // One player at a time: YouTube Music, when both pills are declared.
     #[cfg(windows)]
-    win::sync(app, on);
+    win::sync(app, spotify || ytm, ytm);
     #[cfg(not(any(target_os = "linux", windows)))]
-    let _ = (app, on);
+    let _ = (app, spotify, ytm);
 }
 
 // ── Linux: MPRIS over D-Bus ───────────────────────────────────────────────────
@@ -1355,6 +1359,17 @@ pub fn is_spotify_app(app_id: &str) -> bool {
     app_id.to_ascii_lowercase().contains("spotify")
 }
 
+/// The media session ids of YouTube Music as an app: the web app Chrome or Edge
+/// installs ("…_crx_cinhimbnkkaeohfgghhklpknlkffjgod") or a desktop client
+/// ("youtube-music", "YouTube Music"). A plain browser tab says only "Chrome",
+/// the same as any video, so it is not taken for YouTube Music.
+// shortcut: Chrome web app id only, not other Chromium forks' ids; add them when someone needs one.
+pub fn is_youtube_music_app(app_id: &str) -> bool {
+    let id = app_id.to_ascii_lowercase();
+    id.contains("cinhimbnkkaeohfgghhklpknlkffjgod")
+        || id.replace([' ', '-', '_', '.'], "").contains("youtubemusic")
+}
+
 /// Windows durations and timeline positions: 100 ns ticks → seconds.
 pub fn ticks_to_secs(ticks: i64) -> f64 {
     ticks.max(0) as f64 / 10_000_000.0
@@ -1435,6 +1450,13 @@ mod win {
         Stop,
     }
 
+    /// The player followed: false Spotify, true YouTube Music.
+    static YTM: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+    fn ytm() -> bool {
+        YTM.load(std::sync::atomic::Ordering::Relaxed)
+    }
+
     struct Shared {
         /// Bumped on every start and stop: a listener from an older one quits.
         generation: u64,
@@ -1464,7 +1486,12 @@ mod win {
 
     // ── Start / stop ──────────────────────────────────────────────────────────
 
-    pub fn sync(app: &AppHandle, on: bool) {
+    pub fn sync(app: &AppHandle, on: bool, wants_ytm: bool) {
+        // Another player asked for: stop the listener, then start it for that one.
+        if on && SHARED.lock().unwrap().active && ytm() != wants_ytm {
+            sync(app, false, wants_ytm);
+        }
+        YTM.store(wants_ytm, std::sync::atomic::Ordering::Relaxed);
         let (tx, rx) = mpsc::channel();
         let (old, generation, state) = {
             let mut s = SHARED.lock().unwrap();
@@ -1599,7 +1626,10 @@ mod win {
         let sessions = manager.GetSessions().ok()?;
         (0..sessions.Size().ok()?)
             .filter_map(|i| sessions.GetAt(i).ok())
-            .find(|s| s.SourceAppUserModelId().is_ok_and(|id| is_spotify_app(&id.to_string_lossy())))
+            .find(|s| s.SourceAppUserModelId().is_ok_and(|id| {
+                let id = id.to_string_lossy();
+                if ytm() { is_youtube_music_app(&id) } else { is_spotify_app(&id) }
+            }))
     }
 
     // ── Reading ───────────────────────────────────────────────────────────────
@@ -1863,6 +1893,10 @@ mod win {
 
     /// The installer's copy, or the Microsoft Store's (its app alias).
     pub fn installed() -> bool {
+        // YouTube Music is a web site: nothing to install.
+        if ytm() {
+            return true;
+        }
         let under = |var: &str, rest: &str| std::env::var_os(var).map(|base| PathBuf::from(base).join(rest));
         let desktop = under("APPDATA", r"Spotify\Spotify.exe").is_some_and(|p| p.is_file());
         // An app execution alias is a reparse point that is_file() can't open.
@@ -1874,6 +1908,10 @@ mod win {
     /// Spotify's URI scheme brings it forward, or starts it. Without Spotify,
     /// its download page.
     pub fn open() -> bool {
+        if ytm() {
+            crate::platform::open_url("https://music.youtube.com");
+            return true;
+        }
         let running = SHARED.lock().unwrap().state.running;
         if running || installed() {
             crate::platform::open_url("spotify:");
@@ -1999,6 +2037,16 @@ mod tests {
         assert!(applied.track_changed);
         assert_eq!(state.track, None);
         assert!(!state.playing);
+    }
+
+    #[test]
+    fn youtube_music_sessions() {
+        assert!(is_youtube_music_app("Chrome._crx_cinhimbnkkaeohfgghhklpknlkffjgod"));
+        assert!(is_youtube_music_app("com.github.th-ch.youtube-music"));
+        assert!(is_youtube_music_app("YouTube Music"));
+        assert!(!is_youtube_music_app("Chrome"));
+        assert!(!is_youtube_music_app("MSEdge"));
+        assert!(!is_youtube_music_app("Spotify.exe"));
     }
 
     #[test]

@@ -7,6 +7,7 @@
 // models of the chosen provider, asked for only once it is picked.
 
 import { h, svg, clear } from "./dom";
+import { dictateButton } from "./dictate";
 import { ICONS } from "./icons";
 import { renderMarkdown } from "./markdown";
 import { Bridge, onEvent, type ChatContext, type ModelInfo } from "../core/bridge";
@@ -229,7 +230,7 @@ export function buildPrompt(onHeightChange: () => void): ViewHost {
     spellcheck: "false",
   }) as HTMLInputElement;
   const send = h("button", { class: "send-btn", title: tl(STRINGS.send) }, svg(ICONS.arrowUp, 11));
-  const bar = h("div", { class: "chat-bar" }, input, send);
+  const bar = h("div", { class: "chat-bar" }, input, dictateButton(input), send);
 
   const modelDot = h("i", { class: "model-dot" });
   const modelName = h("span", { class: "model-name" });

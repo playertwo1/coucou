@@ -886,6 +886,8 @@ const INTEGRATIONS: IntegrationDef[] = [
     fields: [{ key: "calcom-api-key", label: N_("API key"), placeholder: "cal_…", secret: true }] },
   // Nothing to enter: Spotify is read from the OS (src-tauri/src/spotify.rs).
   { id: "integration_spotify", name: "Spotify", color: "#1DB954", fields: [] },
+  // Nothing to enter either: read from the web app's or the client's media session.
+  { id: "integration_youtubemusic", name: "YouTube Music", color: "#FF0033", fields: [] },
 ];
 
 const MAX_ACTIVE = MAX_DECLARED;
@@ -1062,6 +1064,18 @@ function generalSection(): HTMLElement {
     void save();
   });
 
+  const corner = h("select", {}) as HTMLSelectElement;
+  for (const [value, label] of [
+    ["top", N_("Notch (top centre)")], ["topLeft", N_("Top left")], ["topRight", N_("Top right")],
+    ["bottomLeft", N_("Bottom left")], ["bottomRight", N_("Bottom right")],
+  ]) corner.append(h("option", { value, text: t(label) }));
+  corner.value = settings.islandCorner;
+  if (!corner.value) corner.value = "top";
+  corner.addEventListener("change", () => {
+    settings.islandCorner = corner.value;
+    void save();
+  });
+
   const screen = h("select", {}) as HTMLSelectElement;
   screen.append(
     h("option", { value: "primary", text: t("Main display") }),
@@ -1130,6 +1144,10 @@ function generalSection(): HTMLElement {
       toggle(settings.showClock, (v) => { settings.showClock = v; void save(); }),
     ),
     h("div", { class: "hint", text: t("The date and the time in the middle of the island when it is compact.") }),
+    h("div", { class: "row" },
+      h("label", { text: t("Position") }),
+      corner,
+    ),
     h("div", { class: "row" },
       h("label", { text: t("Closed island shows") }),
       closed,

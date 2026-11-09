@@ -15,7 +15,7 @@ import {
 } from "../core/layout";
 import { Sound } from "../core/sound";
 import { State } from "../core/state";
-import { SPOTIFY_ID, Spotify, islandDances } from "../core/spotify";
+import { MUSIC_IDS, Spotify, islandDances } from "../core/spotify";
 import { BotEngine, hexToRGB } from "../mochi/engine";
 import { Greeting } from "../mochi/greeting";
 import { createMiniBot, pruneMiniBots, syncMiniBotStates, tickMiniBots } from "../mochi/minibots";
@@ -240,7 +240,7 @@ export class Island {
         // WhatsApp Desktop at the open conversation; WhatsApp Web when it isn't installed.
         else if (task.id === "integration_whatsapp") void Bridge.whatsappOpenApp();
         else if (task.id === "integration_gitea") void Bridge.openGitea();
-        else if (task.id === SPOTIFY_ID) void Bridge.spotifyOpen();
+        else if (MUSIC_IDS.includes(task.id)) void Bridge.spotifyOpen();
         else if (urls[task.id]) void Bridge.openUrl(urls[task.id]);
       },
       openUrl: (url) => {

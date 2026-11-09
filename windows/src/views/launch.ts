@@ -8,6 +8,7 @@
 // field, the way the chat's model picker opens in the chat.
 
 import { h, svg, clear } from "./dom";
+import { dictateButton } from "./dictate";
 import { ICONS } from "./icons";
 import { Bridge } from "../core/bridge";
 import { Launch, projectName } from "../core/launch";
@@ -34,7 +35,7 @@ export function buildLaunch(actions: ViewActions): ViewHost {
     spellcheck: "false",
   }) as HTMLInputElement;
   const send = h("button", { class: "send-btn launch-send" }, svg(ICONS.arrowUp, 11)) as HTMLButtonElement;
-  const bar = h("div", { class: "chat-bar launch-bar" }, input, send);
+  const bar = h("div", { class: "chat-bar launch-bar" }, input, dictateButton(input), send);
   const hint = h("div", { class: "launch-hint" });
   const menu = h("div", { class: "launch-menu picker-list" });
   const body = h(

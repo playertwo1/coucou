@@ -11,8 +11,9 @@ import { registerIntegrationHandlers, refreshConfigured } from "./island/integra
 import { registerShortcutHandlers } from "./island/shortcuts";
 import { registerVoiceHandlers } from "./island/voice";
 import { applySpotify, registerSpotifyHandlers } from "./island/spotify";
+import { registerCoucoudoro } from "./island/coucoudoro";
 import { registerWhatsAppHandlers } from "./island/whatsapp";
-import { SPOTIFY_ID } from "./core/spotify";
+import { MUSIC_IDS } from "./core/spotify";
 import { Recap } from "./recap/recap";
 import { Updates } from "./island/update";
 import { WhatsNew } from "./whats-new/controller";
@@ -164,11 +165,12 @@ async function main() {
   registerShortcutHandlers(island, () => setPaused(false));
   registerVoiceHandlers();
   registerSpotifyHandlers(island);
+  registerCoucoudoro(island);
   registerWhatsAppHandlers(island);
   // New versions: Rust offers the card, the island opens it when nothing else waits.
   await Updates.register(island);
   // Rust may have read Spotify before this page listened: ask once.
-  if (State.settings.activeIntegrations.includes(SPOTIFY_ID)) {
+  if (MUSIC_IDS.some((id) => State.settings.activeIntegrations.includes(id))) {
     void Bridge.spotifyRefresh().then((s) => s && applySpotify(island, s));
   }
 

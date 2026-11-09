@@ -6,7 +6,7 @@
 
 import { Bridge, onEvent } from "../core/bridge";
 import { pillDefinition } from "../core/pills";
-import { SPOTIFY_ID, Spotify, isAd, type SpotifyState } from "../core/spotify";
+import { MUSIC_IDS, Spotify, isAd, type SpotifyState } from "../core/spotify";
 import { State } from "../core/state";
 import { t } from "../i18n/i18n";
 
@@ -41,18 +41,18 @@ export function applySpotify(island: SpotifyHost, next: SpotifyState) {
 
 /** SpotifyController.syncTaskName: the track's title, else the pill's name. */
 export function syncPillName() {
-  const task = State.tasks.find((x) => x.id === SPOTIFY_ID);
+  const task = State.tasks.find((x) => MUSIC_IDS.includes(x.id));
   if (!task) return;
   const track = Spotify.state.track;
   const title = isAd(track) ? t("Advertisement") : (track?.title ?? "");
-  const name = title || (pillDefinition(SPOTIFY_ID)?.name ?? "Spotify");
+  const name = title || (pillDefinition(task.id)?.name ?? "Spotify");
   if (task.name !== name) task.name = name;
 }
 
 let shown = false;
 
 function refreshWhenShown() {
-  const now = State.mode === "expanded" && State.view === "overview" && State.focusTask?.id === SPOTIFY_ID;
+  const now = State.mode === "expanded" && State.view === "overview" && MUSIC_IDS.includes(State.focusTask?.id ?? "");
   if (now && !shown) void Bridge.spotifyRefresh();
   shown = now;
 }

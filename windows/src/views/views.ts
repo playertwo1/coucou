@@ -25,7 +25,9 @@ import { buildUpdate } from "./update";
 import { buildWhatsNew } from "./whatsnew";
 import { buildLaunch } from "./launch";
 import { buildSpotifyCard, buildSpotifyPill, type SpotifyPillHost } from "./spotify";
-import { SPOTIFY_ID } from "../core/spotify";
+import { MUSIC_IDS } from "../core/spotify";
+import { bindCoucoudoroPill, buildCoucoudoroCard } from "./coucoudoro";
+import { COUCOUDORO_ID } from "../core/coucoudoro";
 import { buildWhatsAppCard } from "./whatsapp";
 import { WHATSAPP_ID } from "../core/whatsapp";
 import { MAIL_ID } from "../core/mail";
@@ -223,6 +225,9 @@ function buildOverview(actions: ViewActions): ViewHost {
   // runs on, and a slider being dragged must not be rebuilt under the pointer.
   const spotifyCard = buildSpotifyCard();
   let spotifyPill: SpotifyPillHost | null = null;
+  // Coucoudoro's card and pill label too: the clock runs on, the buttons keep their hover.
+  const coucoudoroCard = buildCoucoudoroCard();
+  let coucoudoroPill: { sync(): void } | null = null;
   // WhatsApp's card too: its reply field keeps the draft and the keyboard while messages arrive.
   // Mail's card too (classic Outlook): the search field keeps its text and the keyboard.
   const mailCard = buildMailCard({ keyboard: (on) => actions.keyboard(on) });
@@ -240,7 +245,7 @@ function buildOverview(actions: ViewActions): ViewHost {
   let pillIds = "";
   let detailOpen = false;
   let lastFocus: string | null = null;
-  let mode: "ticker" | "card" | "plan" | "diff" | "spotify" | "whatsapp" | "mail" | null = null;
+  let mode: "ticker" | "card" | "plan" | "diff" | "spotify" | "whatsapp" | "mail" | "coucoudoro" | null = null;
   let cardKey = "";
   /** The list row highlighted at the last sync, to scroll only when it moves. */
   let shownSelection: number | null = null;
@@ -388,7 +393,7 @@ function buildOverview(actions: ViewActions): ViewHost {
           }));
         }
         ticker.sync(task);
-      } else if (task && task.id === SPOTIFY_ID) {
+      } else if (task && MUSIC_IDS.includes(task.id)) {
         // Its own card for every state: playing, idle, not installed.
         if (mode !== "spotify") {
           clear(leftBody);
@@ -397,6 +402,15 @@ function buildOverview(actions: ViewActions): ViewHost {
           cardKey = "";
         }
         spotifyCard.sync();
+      } else if (task && task.id === COUCOUDORO_ID) {
+        // Its own card for every state: ready, work, rest, paused.
+        if (mode !== "coucoudoro") {
+          clear(leftBody);
+          leftBody.append(coucoudoroCard.el);
+          mode = "coucoudoro";
+          cardKey = "";
+        }
+        coucoudoroCard.sync();
       } else if (task && task.id === MAIL_ID) {
         if (mode !== "mail") {
           clear(leftBody);
@@ -444,10 +458,15 @@ function buildOverview(actions: ViewActions): ViewHost {
         pillIds = pillKey;
         clear(pills);
         spotifyPill = null;
+        coucoudoroPill = null;
         for (const t of others) {
-          if (t.id === SPOTIFY_ID) {
+          if (MUSIC_IDS.includes(t.id)) {
             spotifyPill = buildSpotifyPill(t, () => actions.setFocus(t.id));
             pills.append(spotifyPill.el);
+          } else if (t.id === COUCOUDORO_ID) {
+            const pill = buildPill(t, actions);
+            coucoudoroPill = bindCoucoudoroPill(pill);
+            pills.append(pill);
           } else {
             pills.append(buildPill(t, actions));
           }
@@ -455,6 +474,7 @@ function buildOverview(actions: ViewActions): ViewHost {
         pruneMiniBots();
       }
       spotifyPill?.sync();
+      coucoudoroPill?.sync();
     },
   };
 }

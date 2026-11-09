@@ -115,6 +115,10 @@ pub struct Settings {
     /// the screen wakes it). Kept as it comes, like `mochi_outfit`: the island
     /// reads what it doesn't know as "mochi".
     pub closed_island: String,
+    /// Where the island sits on its screen: "top" (centred, where a Mac has its
+    /// notch) or "topLeft", "topRight", "bottomLeft", "bottomRight". The window
+    /// reads what it doesn't know as "top".
+    pub island_corner: String,
     /// Settings → Agents → Antigravity → Approve commands from the notch: a shell command
     /// none of Antigravity's rules covers waits for Allow / Deny on the island
     /// (agy_approvals.rs). Off by default; owned by the Rust side like `phone_link`, so
@@ -191,6 +195,7 @@ impl Default for Settings {
             phone_relay_url: String::new(),
             show_clock: false,
             closed_island: "mochi".into(),
+            island_corner: "top".into(),
             agy_approvals_enabled: false,
         }
     }
@@ -494,6 +499,7 @@ mod tests {
   "phoneRelayUrl": "wss://relay.example.workers.dev",
   "showClock": true,
   "closedIsland": "music",
+  "islandCorner": "bottomRight",
   "agyApprovalsEnabled": true
 }"##;
 
@@ -1017,6 +1023,7 @@ mod tests {
                 "phoneRelayUrl",
                 "showClock",
                 "closedIsland",
+                "islandCorner",
                 "agyApprovalsEnabled",
             ]
         );

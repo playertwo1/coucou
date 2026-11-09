@@ -351,6 +351,18 @@ mod zoom_tests {
     }
 
     #[test]
+    fn the_corner_picks_the_window_origin() {
+        let (mon, edges, win) = ((100, 0, 1920), (1040, 30), (720, 400));
+        assert_eq!(corner_origin("top", mon, edges, win), (700, 30));
+        assert_eq!(corner_origin("", mon, edges, win), (700, 30));
+        assert_eq!(corner_origin("sparkles", mon, edges, win), (700, 30));
+        assert_eq!(corner_origin("topLeft", mon, edges, win), (100, 30));
+        assert_eq!(corner_origin("topRight", mon, edges, win), (1300, 30));
+        assert_eq!(corner_origin("bottomLeft", mon, edges, win), (100, 640));
+        assert_eq!(corner_origin("bottomRight", mon, edges, win), (1300, 640));
+    }
+
+    #[test]
     fn only_a_cursor_near_the_island_is_followed() {
         let size = (PANEL_W, PANEL_H);
         assert!(is_near(360.0, 10.0, size));
@@ -425,6 +437,26 @@ fn top_inset_from(monitor_y: i32, work_y: i32) -> i32 {
     if (0..200).contains(&inset) { inset } else { 0 }
 }
 
+/// Where the window goes: centred at the top (the notch), or against one of the
+/// screen's corners ("topLeft", "topRight", "bottomLeft", "bottomRight"; the
+/// bottom ones sit on the work area, above the taskbar). `monitor` is (x, y,
+/// width), `edges` is (work-area bottom, top inset), `win` is (w, h), all physical.
+fn corner_origin(corner: &str, monitor: (i32, i32, i32), edges: (i32, i32), win: (i32, i32)) -> (i32, i32) {
+    let (mx, my, mw) = monitor;
+    let left = mx;
+    let right = mx + mw - win.0;
+    let x = match corner {
+        "topLeft" | "bottomLeft" => left,
+        "topRight" | "bottomRight" => right,
+        _ => mx + (mw - win.0) / 2,
+    };
+    let y = match corner {
+        "bottomLeft" | "bottomRight" => edges.0 - win.1,
+        _ => my + edges.1,
+    };
+    (x, y)
+}
+
 pub fn apply_geometry(app: &AppHandle, pref: &str, collapsed: Option<(f64, f64)>) {
     let Some(win) = window(app) else { return };
     let Some(m) = target_monitor(app, pref) else { return };
@@ -436,8 +468,17 @@ pub fn apply_geometry(app: &AppHandle, pref: &str, collapsed: Option<(f64, f64)>
     let (lw, lh) = collapsed.map(clamp_collapsed).unwrap_or((PANEL_W, PANEL_H));
     let pw = (lw * scale).round().max(1.0) as u32;
     let ph = (lh * scale).round().max(1.0) as u32;
-    let x = mp.x + (ms.width as i32 - pw as i32) / 2;
-    let y = mp.y + top_inset(&m);
+    let corner = app
+        .try_state::<crate::Shared>()
+        .map(|s| s.settings.lock().unwrap().island_corner.clone())
+        .unwrap_or_default();
+    let wa = m.work_area();
+    let (x, y) = corner_origin(
+        &corner,
+        (mp.x, mp.y, ms.width as i32),
+        (wa.position.y + wa.size.height as i32, top_inset(&m)),
+        (pw as i32, ph as i32),
+    );
 
     // GTK never sizes a non-resizable window below its natural size (200 px
     // here), so on Linux the 6 px wake strip would stay a 200 px block. tao

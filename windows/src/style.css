@@ -3772,3 +3772,71 @@ html[data-dir="rtl"] #views :is(.bubble, .reply .md-p, .reply .md-h, .reply .md-
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.3);
 }
+
+/* ── Coucoudoro: the card (CoucoudoroCardView, CoucoudoroViews.swift) ─────── */
+
+.cd-card .cd-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  padding-right: 12px;
+}
+
+.cd-clock {
+  font: 600 18px var(--font);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin-right: auto;
+}
+
+.cd-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.cd-btn {
+  font: 600 11px var(--font);
+  color: #e8e9ec;
+  background: rgba(255, 255, 255, 0.08);
+  border: 0;
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.cd-btn.filled {
+  color: #041018;
+}
+
+.cd-banner {
+  font: 500 11px var(--font);
+  margin-top: 3px;
+  padding-right: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The microphone beside the chat and the new-session field (views/dictate.ts). */
+.dictate-btn {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--dim-3);
+  display: grid;
+  place-items: center;
+  cursor: default;
+}
+
+.dictate-btn[hidden] {
+  display: none;
+}
+
+.dictate-btn.on {
+  background: #ff5f57;
+  color: #fff;
+}

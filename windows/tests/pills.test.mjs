@@ -45,8 +45,10 @@ test("the catalog holds the Mac's pills with the Claude Code label for Windows a
     ["integration_stripe", "Stripe", "#0570DE", "service", "Integration"],
     ["integration_music", "Apple Music", "#FA2D48", "service", "Integration"],
     ["integration_spotify", "Spotify", "#1DB954", "service", "Integration"],
+    ["integration_youtubemusic", "YouTube Music", "#FF0033", "service", "Integration"],
     ["integration_mail", "Mail", "#2F8CFF", "service", "Integration"],
     ["integration_whatsapp", "WhatsApp", "#25D366", "service", "Integration"],
+    ["integration_coucoudoro", "Coucoudoro", "#0EA5E9", "service", "Integration"],
   ];
   assert.deepEqual(
     PILL_CATALOG.filter((p) => !["integration_gitlab", "integration_gitea"].includes(p.id))
@@ -113,10 +115,12 @@ test("this build leaves out what only macOS has", () => {
   // Mail is Outlook's, and Outlook is a Windows program.
   assert.ok(windows.includes("integration_mail"));
   assert.ok(!linux.includes("integration_mail"));
+  assert.ok(windows.includes("integration_youtubemusic"));
+  assert.ok(!linux.includes("integration_youtubemusic"));
   // Spotify: MPRIS on Linux, the system media controls on Windows.
   assert.ok(linux.includes("integration_spotify"));
   assert.ok(windows.includes("integration_spotify"));
-  assert.deepEqual(linux, windows.filter((id) => id !== "integration_mail"));
+  assert.deepEqual(linux, windows.filter((id) => !["integration_mail", "integration_youtubemusic"].includes(id)));
 });
 
 test("Spotify: a service on both systems with nothing to set up", () => {

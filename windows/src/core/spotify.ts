@@ -6,6 +6,13 @@
 import type { BotStateName, IslandMode, IslandViewName } from "./layout";
 
 export const SPOTIFY_ID = "integration_spotify";
+/** YouTube Music (Windows): the same player card, read from its own media session. */
+export const YTM_ID = "integration_youtubemusic";
+export const MUSIC_IDS: readonly string[] = [SPOTIFY_ID, YTM_ID];
+/** The player the island follows when both are declared: YouTube Music, as in Rust. */
+export function musicId(activeIntegrations: readonly string[]): string {
+  return activeIntegrations.includes(YTM_ID) ? YTM_ID : SPOTIFY_ID;
+}
 /** SpotifyController.green. */
 export const SPOTIFY_GREEN = "#1DB954";
 
@@ -91,9 +98,9 @@ export function volumeLevel(volume: number): 0 | 1 | 2 | 3 {
   return 3;
 }
 
-/** Music is playing on a declared Spotify pill. */
+/** Music is playing on a declared Spotify or YouTube Music pill. */
 export function musicPlaying(s: SpotifyState, activeIntegrations: readonly string[]): boolean {
-  return s.playing && s.track != null && activeIntegrations.includes(SPOTIFY_ID);
+  return s.playing && s.track != null && MUSIC_IDS.some((id) => activeIntegrations.includes(id));
 }
 
 /** The states Mochi dances in; the rest (an alert, an error, sleep) win. */
