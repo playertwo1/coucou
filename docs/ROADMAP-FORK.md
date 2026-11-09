@@ -191,6 +191,39 @@ Só se a 0.7 achou falhas; o código já é por `session_id`, não por agente.
 
 **Ordem e dependências:** 0 → (1, 2, 3, 4, 5 em qualquer ordem) → 6 → 7 → 8. A 7 depende da 6 (agente escolhido). Itens da Fase 2 que tocam nisto: 3 (custo e tokens) e 7 (lançador rápido) devem nascer já com os quatro agentes.
 
+## Fase 2C — Pílulas configuráveis e posição livre da ilha (M)
+
+**Objetivo:** escolher quais agentes e serviços ficam visíveis e mover a ilha horizontalmente pelo topo quando ela cobre algo na tela.
+
+**Padrão desejado:** Claude Code como pílula principal; Codex, Antigravity, Grok Bot e GitHub nas quatro vagas secundárias. Resend, n8n e Vercel continuam disponíveis nas configurações, mas desligados por padrão. Desligar um serviço não apaga suas credenciais. Os agentes escolhidos permanecem visíveis quando ociosos.
+
+**Posição:** manter o seletor atual de centro/cantos e acrescentar arraste horizontal no topo, com a posição salva. Arrastar não altera a altura; clicar em “centro superior” volta ao centro.
+
+Plano detalhado: [`docs/superpowers/plans/2026-11-09-custom-pills-and-island-position.md`](superpowers/plans/2026-11-09-custom-pills-and-island-position.md). Desenho aprovado: [`docs/superpowers/specs/2026-11-09-custom-pills-and-island-position-design.md`](superpowers/specs/2026-11-09-custom-pills-and-island-position-design.md).
+
+### Etapa 0 — Confirmar e ligar o hook Grok Bot (P)
+- [ ] 0.1 Inspecionar o hook do Orca: caminho de configuração, nomes de eventos e campos; guardar fixture sem prompt, caminhos pessoais ou tokens.
+- [ ] 0.2 Adicionar Grok ao instalador seguro do Coucou (`--agent grok`), preservando as entradas existentes do Orca; traduzir eventos no relay somente se o formato real exigir.
+- [ ] 0.3 Verificar que sessões chegam à pílula `agent_grok`; não adicionar cartões de aprovação.
+
+### Etapa 1 — Seleção e padrões das pílulas (P)
+- [ ] 1.1 Adicionar `agent_grok` ao catálogo e às configurações existentes de Active pills.
+- [ ] 1.2 Trocar o padrão secundário para Codex, Antigravity, Grok Bot e GitHub; manter Claude Code como principal e o limite de quatro vagas.
+- [ ] 1.3 Migrar somente a lista antiga exata de Resend/n8n/Vercel/GitHub; preservar listas customizadas e credenciais.
+- [ ] 1.4 Testar catálogo, estado ocioso, padrão novo e migração em Rust/TypeScript.
+
+### Etapa 2 — Arraste horizontal no topo (M)
+- [ ] 2.1 Adicionar `topCustom` e `islandTopX` normalizado, limitado de 0 a 1; preservar os quatro cantos e o recuo do topo.
+- [ ] 2.2 Arrastar pelo fundo da ilha, sem iniciar em botões, campos, links ou Mochi; só mover depois do limiar de gesto e persistir ao soltar.
+- [ ] 2.3 Testar limites, monitores com escalas/origens diferentes, cliques e a posição após reabrir.
+
+### Etapa 3 — Verificação e documentação (P)
+- [ ] 3.1 Rodar `npm test`, `npm run build` e `cargo test` em `src-tauri/` e `hook/`.
+- [ ] 3.2 Conferir manualmente instalação nova e migração, as pílulas ociosas/ativas, o arraste e os locais antigos.
+- [ ] 3.3 Atualizar README, changelog e What's New nas 14 línguas.
+
+**Ordem:** 0 → 1 → 2 → 3.
+
 ## Fase 3 — Identidade própria (só se for distribuir)
 - Novo nome, personagem e sons (o código é MIT; nome Coucou, Mochi e sons são © Louis Raillé)
 - Novo `identifier` no `tauri.conf.json` (hoje `fr.louisraille.coucou`) para não colidir com o Coucou oficial
