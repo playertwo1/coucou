@@ -1,238 +1,665 @@
-# Roadmap do fork (playertwo1/coucou) — Windows
+# Roadmap do fork Windows Coucou — playertwo1/coucou
 
-Ponto de partida: `main` com a 0.6 do upstream (merge #1075). Muito do que era "só Mac"
-**já existe no Windows** nessa versão: ditado Flow (segurar tecla + Parakeet), Notetaker
-(WASAPI loopback), « OK Coucou », Spotify, uso do plano Claude/Codex, "Abrir terminal",
-Outlook clássico, resumo semanal, sons próprios. Esses itens só precisam ser **testados**.
+Atualizado em 2026-11-09. Fonte canônica de estado: `docs/ROADMAP-FORK.md`.
 
-Esforço: P = dias · M = 1–2 semanas · G = mais que isso.
+## Estado e regras de leitura
 
-## Fase 0 — Validar o que já veio na 0.6
-- [ ] Ditado Flow: baixar o Parakeet, segurar a tecla, colar em VS Code, navegador, Windows Terminal
-- [ ] Notetaker: gravar uma chamada (Meet/Teams/Discord) e conferir transcrição + resumo
-- [ ] « OK Coucou » com a chave da Anthropic
-- [ ] Hook do Claude Code: aprovar/negar pela ilha, "Abrir terminal" no Windows Terminal
-- [ ] Spotify, uso do plano, resumo semanal
-- [ ] Reiniciar o Windows e ver se abre sozinho (autostart)
+- O fork está na `main`, com a versão `windows-v0.6.2` publicada; o atualizador consulta as releases de `playertwo1/coucou`.
+- O aplicativo e várias features já têm código e testes, mas ainda falta validação manual em runtime. Não marque uma feature como concluída só porque compila.
+- Esforço: P = pequeno, M = médio, G = grande. Estimativa serve para comparar itens; uma feature M/G deve ser subdividida antes da implementação.
+- [ ] Pendente.
+- [x] Feito, com a evidência exigida pelo checkpoint.
+- Item implementado, mas com validação manual pendente: marcar o código/teste como feito e manter a caixa de runtime vazia.
+- Uma etapa condicional só pode ser marcada como N/A depois de registrar a evidência que a tornou desnecessária ou impossível.
 
-## Fase 1 — Trazer o que ainda falta do Mac
-| Item | Onde está no Mac | Esforço |
-|---|---|---|
-| Coucoudoro (pomodoro do Mochi) | `NotchBuddy/Sources/App/CoucoudoroController.swift` — no Windows só existem as strings | M |
-| Ilha num canto da tela (em vez do topo central) | Settings → Display → Position | M |
-| Arrastar o Mochi sobre uma janela para anexá-la como contexto do chat | "drag onto any window" | M |
-| Botão de ditado no chat e na "Nova sessão" (o Flow já existe, falta o botão) | mic do chat | P |
-| Atalho global para "Nova sessão do Claude Code" — **feito** (Ctrl+Alt+L, `newSession`) | Shortcuts | P |
-| Enviar arquivo solto na ilha por e-mail via Outlook clássico (`mail/` já fala com Outlook) | Mail.app | M |
-| Portfólio de cripto (carteiras + exchanges, só leitura) | Portfolio pill | G |
-| Cal.com em calendário em vez de lista | Cal.com card | P |
+### Como executar uma etapa
 
-Fora: Apple Music (não existe no Windows).
+1. Trabalhar em uma subfase por vez. Não começar a etapa dependente enquanto o checkpoint anterior não estiver fechado.
+2. Antes de uma etapa de código: `git status` limpo; `git fetch upstream && git merge upstream/main`. Se houver conflito ou alteração local, parar e resolver isso antes de prosseguir.
+3. Antes de código com UX ou comportamento novo, escrever uma spec curta em `docs/superpowers/specs/` e um plano em `docs/superpowers/plans/`. Incluir arquivos, interfaces, testes, aceite e rollback de migração quando houver.
+4. Implementar a menor mudança que cumpre o aceite. Para Fase 2B, seguir TDD. Nas demais, acrescentar os testes proporcionais à lógica alterada.
+5. Fechar o checkpoint registrando versão do app, ambiente, resultado de cada cenário e falhas sem segredos, prompts ou caminhos pessoais. Fazer um commit por subfase concluída.
+6. Não criar tag nem publicar release sem pedido explícito do proprietário.
 
-**Escolhidos para começar (decisão do dono):**
-- [x] Coucoudoro (item 1 da tabela) — código e testes prontos, falta ver no app
-- [x] Botão de ditado no chat e na "Nova sessão" (item 6) — `views/dictate.ts`, falta ver no app
-- [x] Ilha num canto da tela (item 8) — Settings → Display → Position, 4 cantos; falta ver no app
-- [x] Assinatura e atualização próprias do fork (item 9): decidido — sem certificado pago; o instalador sai sem assinatura, com SHA-256, nas releases `windows-vX.Y.Z` de `playertwo1/coucou`, e o app busca a atualização por lá (0.6.1 publicada).
-- [x] Trocar Spotify por **YouTube Music** (pílula `integration_youtubemusic`, só Windows, falta ver no app) (integração nova, no lugar do Spotify, que fica fora). Reaproveitar a leitura de sessão de mídia do Windows; muda a detecção do app e o comando de abrir.
+### Restrições do projeto para todas as etapas
 
-Nota: o Spotify da Fase 0 continua sendo testado, porque é o que existe hoje.
+- Não redesenhar nem alterar o visual de telas e pílulas existentes sem pedido explícito.
+- Não renomear IDs de pílula publicados.
+- Frases novas da interface vão em `windows/src/i18n/extra.json`, nas 13 línguas; executar a verificação de i18n existente.
+- Nunca aprovar permissão sem clique explícito. Se não houver clique ou a resposta falhar, o agente continua perguntando no próprio terminal.
+- Nunca sobrescrever configuração de agente sem backup datado, diff visível e confirmação explícita. Preservar hooks de outras ferramentas.
+- Nunca enviar e-mail automaticamente, fazer transação, armazenar chave em texto puro ou adicionar telemetria.
+- Usar dados locais quando o item disser local/offline. Não fazer fetch, push, gravação ou alteração de arquivos como efeito colateral de uma pílula somente de leitura.
 
-**Ideias novas aprovadas (Fase 1B):**
-- [x] Notetaker em modo "anotar ideia": atalho global grava a sua voz sem chamada, transcreve com o Parakeet e salva a nota com data e hora (P) — feito: Ctrl+Alt+I
-- [x] Modo reunião da ilha: o Mochi mostra que está gravando e as notificações menores se calam enquanto o Notetaker grava (P) — feito (Mochi "pensando", só aprovações e perguntas fazem som)
-- [x] Histórico pesquisável de transcrições, por palavra ou por pessoa (M) — feito: campo Search na lista de notas
-- [x] Coucoudoro ligado às sessões do Claude Code: tempo de foco por projeto e total do dia (M, depende do Coucoudoro) — feito: total do dia e por projeto no cartão
-- [x] Ditar uma linha ao fim de cada ciclo do Coucoudoro e guardá-la no histórico do dia (P, depende do Coucoudoro) — feito
-- [x] Playlist de foco no Coucoudoro com YouTube Music: abre ou pausa a música junto com o ciclo (P, depende do YouTube Music) — feito (só com a pílula do YouTube Music ligada)
+### Comandos de validação por tipo de mudança
 
-## Fase 2 — Ideias novas (força do Windows)
-1. **Notificações nativas do Windows com Permitir/Negar** — quando a ilha está escondida ou há app em tela cheia; o clique continua explícito. (M)
-2. **Modo jogo / tela cheia** — o Mochi some quando um jogo ou vídeo está em tela cheia e só reaparece para pedidos de permissão. (P)
-3. **Custo e tokens por sessão** — ler os `.jsonl` locais do Claude Code (`~/.claude/projects`) e mostrar gasto do dia/semana por projeto, sem rede. (M)
-4. **Pílula do Git** — branch, mudanças não commitadas e ahead/behind do projeto da sessão ativa; clique abre o diff. (P)
-5. **Focar a aba exata do Windows Terminal** — hoje vai para a janela; ir para a aba/painel da sessão. (M)
-6. **Histórico e busca de sessões** — linha do tempo das sessões passadas com o que cada uma fez, buscável. (M)
-7. **Lançador rápido** — atalho global → digita (ou dita) o pedido → escolhe projeto → abre o Claude Code. Junta itens da Fase 1. (P)
-8. **Vigia de testes/builds** — o Mochi reage quando `npm test`, `cargo build` ou o CI terminam (verde/vermelho). (M)
-9. **Sugestões de regras de permissão** — "você aprovou `npm test` 12 vezes: quer adicionar em `settings.json`?" (mostra o diff, grava só com confirmação). (M)
-10. [x] **Vários monitores** — escolher o monitor da ilha ou seguir o mouse, como no Mac. (P; já existe em Settings → Geral → “A ilha fica na”. A troca física não foi exercitada porque este PC tem um monitor.)
+- TypeScript e testes Windows: em `windows`, `npx tsc --noEmit` e `npm test`.
+- UI/recursos de build: em `windows`, também `npm run build`.
+- Rust do app Windows: em `windows/src-tauri`, `cargo test --lib`.
+- Relay/hook: em `windows/hook`, `cargo test`.
+- What's New de release: na raiz, `python3 scripts/test-whats-new.py`.
+- Teste manual: usar a lista de cenários do checkpoint; não substituir por typecheck ou teste unitário.
 
-## Fase 2B — Paridade com o Claude Code (Codex, Antigravity, Hermes, Orca, herdr)
+## Snapshot de validação — 2026-11-09
 
-> **Para a IA que for executar:** leia esta seção inteira antes de começar. Execute uma etapa por vez,
-> na ordem; cada subetapa termina com uma verificação e um commit. Use superpowers:executing-plans
-> (ou subagent-driven-development) e TDD. Antes de cada etapa: `git fetch upstream && git merge upstream/main`.
-> Ao terminar uma etapa, marque os `- [ ]` dela aqui e atualize as tabelas "Hoje".
+- [x] `npm run tauri dev` abriu a versão de desenvolvimento 0.6.2.
+- [x] Settings → General mostrou a posição da ilha e a opção de monitor.
+- [x] A tela de Atalhos mostrou Ctrl+Alt+L e Ctrl+Alt+I habilitados.
+- [ ] A máquina tinha um monitor: troca real entre dois monitores não foi exercitada.
+- [ ] A ação dos atalhos não foi confirmada de forma isolada: havia duas instâncias Coucou e os logs/estado eram compartilhados.
+- [ ] Ditado, gravação do Notetaker, modo reunião, busca com notas reais e reprodução do YouTube Music não foram validados nesta sessão.
+- O instalador existente no PC reportou 0.5.9; a build de desenvolvimento reportou 0.6.2. Não comparar comportamento dessas duas versões como se fossem a mesma build.
 
-**Objetivo:** tudo o que o Coucou faz com o Claude Code no Windows/Linux funciona também com Codex,
-Antigravity e Hermes Agent, e com sessões que rodam dentro do Orca e do herdr.
+## Fase 0 — Validar o que já existe
 
-**Ideia central:** Codex, Antigravity e Hermes são *agentes* (mandam eventos pelo `coucou-hook`).
-Orca e herdr são *lugares* onde um agente roda (painel, terminal, worktree): para eles a paridade é
-abrir, focar e colar dentro deles. O herdr já tem `herdr.rs`; o Orca segue o mesmo molde.
+Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplicativo Windows. Nenhuma feature nova começa antes de registrar o resultado da validação aplicável.
 
-**Onde está cada função hoje (tudo em `windows/`):**
-| Função | Arquivos |
+### 0.1 — Ditado Flow (Parakeet)
+
+- [ ] Abrir a versão de desenvolvimento 0.6.2 e iniciar/confirmar o download do modelo Parakeet.
+- [ ] Ditar uma frase de teste no VS Code; conferir que o texto aparece uma vez no campo focado.
+- [ ] Repetir no navegador e no Windows Terminal, um alvo de cada vez.
+- [ ] Se o Windows pedir acesso ao microfone, conceder apenas pelo diálogo clicado pelo usuário.
+- [ ] Passar se o modelo carrega e a frase chega sem duplicação aos três alvos; registrar separadamente qualquer falha.
+- Checkpoint: registrar versão, idioma, três resultados e erro/log sanitizado, sem guardar áudio privado.
+
+### 0.2 — Notetaker em chamada
+
+- [ ] Escolher uma chamada de teste no Meet, Teams ou Discord; anotar qual aplicativo e se é navegador ou desktop.
+- [ ] Clicar para conceder permissões de áudio que o Windows solicitar.
+- [ ] Gravar um trecho de teste, parar a gravação e conferir transcrição e resumo na lista de notas.
+- [ ] Confirmar que parar a gravação encerra a captura e que a nota continua disponível após reabrir a lista.
+- Checkpoint: registrar aplicativo, fonte de áudio, presença de transcrição/resumo e falhas; não guardar áudio ou fala real como fixture.
+
+### 0.3 — « OK Coucou » com Anthropic
+
+- [ ] Usar somente uma chave já configurada pelo usuário; se não houver, marcar BLOQUEADO e não pedir para colar o segredo no chat/log.
+- [ ] Enviar uma pergunta curta sem dados pessoais e conferir a resposta na ilha.
+- [ ] Conferir que indisponibilidade de rede/chave é apresentada como erro e não grava o segredo em logs.
+- Checkpoint: resultado PASS/FAIL/BLOQUEADO e mensagem sanitizada.
+
+### 0.4 — Hook do Claude Code e Windows Terminal
+
+- [ ] Conferir se o hook está instalado; antes de instalar/atualizar, criar backup datado, mostrar o diff e obter confirmação explícita.
+- [ ] Executar uma ação que gere pedido de permissão; confirmar que a ilha mostra Permitir/Negar.
+- [ ] Clicar Negar e confirmar que o agente recebe a recusa; repetir e clicar Permitir.
+- [ ] Repetir sem clicar: o Coucou não pode aprovar sozinho; o pedido deve continuar no terminal.
+- [ ] Usar “Abrir terminal” e confirmar que a janela da sessão correta vem à frente.
+- Checkpoint: confirmar cada uma das três decisões (permitir, negar, sem clique) e o terminal-alvo. Não marcar aprovado se só a tela do cartão foi vista.
+
+### 0.5 — Spotify, uso do plano e resumo semanal
+
+#### 0.5a — Spotify
+
+- [ ] Iniciar ou pausar uma reprodução real de teste no Spotify.
+- [ ] Conferir título/artista/estado na pílula e que os controles não agem sobre outro player.
+- Checkpoint: registrar cliente Spotify usado e resultado.
+
+#### 0.5b — Uso do plano
+
+- [ ] Abrir a tela/pílula de uso para cada provedor já configurado (Claude e Codex, quando disponíveis).
+- [ ] Comparar cota/percentual e próximo reset com a fonte do próprio provedor.
+- [ ] Conferir estado indisponível/sem autenticação sem exibir dados inventados.
+- Checkpoint: registrar provedor, fonte comparada, horário e discrepância observada; remover identificadores de conta.
+
+#### 0.5c — Resumo semanal
+
+- [ ] Abrir o resumo semanal com dados de sessões existentes.
+- [ ] Conferir intervalo de datas, agrupamento por projeto e que sessões não são contadas duas vezes.
+- Checkpoint: registrar a faixa temporal e um exemplo sanitizado de contagem.
+
+### 0.6 — Inicialização com o Windows
+
+- [ ] Verificar o estado atual da opção de iniciar com o Windows; não alterá-la sem autorização.
+- [ ] Se estiver habilitada, combinar um reinício de teste, salvar o trabalho aberto e reiniciar.
+- [ ] Após entrar no Windows, confirmar que uma única instância abre e a ilha fica utilizável.
+- [ ] Se a opção estiver desligada e o proprietário autorizar habilitá-la, repetir o reinício; caso contrário, registrar BLOQUEADO.
+- Checkpoint: estado anterior/posterior da opção, número de instâncias e resultado após login.
+
+### 0.7 — Coucoudoro: timer e foco
+
+- [x] Código e testes do Coucoudoro existem na versão do fork.
+- [ ] Iniciar um ciclo de foco e confirmar que o contador diminui; iniciar descanso e confirmar a fase correspondente.
+- [ ] Associar uma sessão a um projeto e conferir tempo do dia, por projeto e total.
+- [ ] Encerrar e reabrir a tela; conferir que o histórico do dia continua igual.
+- Checkpoint: registrar duração, projeto de teste e valores antes/depois.
+
+### 0.8 — Coucoudoro: linha ditada por fase
+
+- [x] Código e testes da nota de fim de ciclo existem.
+- [ ] Terminar um ciclo e ditar uma frase de teste quando solicitado.
+- [ ] Conferir que a frase fica no histórico do dia e associada à fase/projeto corretos.
+- [ ] Reabrir o histórico e confirmar persistência; cancelar ditado e confirmar que nenhuma frase vazia é salva.
+- Checkpoint: resultado do ciclo completo, cancelamento e persistência.
+
+### 0.9 — Playlist do YouTube Music ligada ao Coucoudoro
+
+- [x] Integração do YouTube Music existe para Windows.
+- [ ] Com a pílula ligada e uma sessão de mídia ativa, iniciar foco e conferir que a música abre/continua conforme a configuração.
+- [ ] Pausar/terminar o ciclo e conferir o comportamento de pausa definido pelo recurso.
+- [ ] Desligar a pílula e repetir: o Coucoudoro não deve comandar o YouTube Music.
+- Checkpoint: cliente (app ou web), estado da pílula, estado antes/depois. Não considerar Spotify equivalente a YouTube Music.
+
+### 0.10 — Botões de ditado no chat e Nova sessão
+
+- [x] Botões de ditado implementados em Chat e Nova sessão.
+- [ ] Clicar no microfone do Chat, ditar e conferir inserção no campo correto; confirmar que ditar não envia a mensagem.
+- [ ] Repetir em Nova sessão; confirmar que ditar não inicia sessão automaticamente.
+- [ ] Testar cancelamento, campo vazio e negação da permissão de microfone.
+- Checkpoint: quatro resultados (Chat, Nova sessão, cancelar, negar permissão).
+
+### 0.11 — Posição nos cantos e escolha de monitor
+
+- [x] Settings mostra centro/cantos e seleção do monitor.
+- [ ] Testar centro, quatro cantos, principal e “sob o cursor”; restaurar a configuração inicial ao terminar.
+- [ ] Com dois monitores físicos, mover o cursor entre eles e confirmar que a ilha permanece no monitor esperado.
+- [ ] Com um monitor apenas, registrar HARDWARE INDISPONÍVEL; não marcar troca física como aprovada.
+- Checkpoint: posições testadas, monitor selecionado, quantidade de monitores e configuração restaurada.
+
+### 0.12 — Ctrl+Alt+L: Nova sessão
+
+- [x] Atalho aparece habilitado nas configurações.
+- [ ] Com uma única instância Coucou, pressionar Ctrl+Alt+L e confirmar que abre Nova sessão.
+- [ ] Escolher uma pasta de teste e conferir que a sessão abre no projeto escolhido.
+- [ ] Cancelar antes de iniciar e confirmar que nenhum CLI/sessão foi aberto.
+- Checkpoint: ação observada, pasta, estado de cancelamento e colisões de atalhos.
+
+### 0.13 — Ctrl+Alt+I: anotar uma ideia por voz
+
+- [x] Atalho e fluxo de gravação/transcrição implementados.
+- [ ] Pressionar Ctrl+Alt+I, clicar para conceder microfone se solicitado e ditar uma frase de teste.
+- [ ] Parar a gravação; conferir transcrição, data/hora e nota salva.
+- [ ] Cancelar/recusar o microfone e confirmar que nenhuma nota falsa é criada.
+- Checkpoint: nota salva, cancelamento e permissão, sem incluir transcrição pessoal neste arquivo.
+
+### 0.14 — Modo reunião
+
+- [x] Estado visual/silêncio durante gravação implementado.
+- [ ] Começar a gravar no Notetaker e confirmar o estado de reunião da ilha.
+- [ ] Confirmar que avisos menores ficam silenciosos durante a gravação.
+- [ ] Gerar um pedido de aprovação/pergunta de teste e confirmar que esse alerta continua visível/sonoro conforme o comportamento previsto.
+- [ ] Parar a gravação e confirmar a saída do modo reunião.
+- Checkpoint: estados antes/durante/depois e avisos verificados.
+
+### 0.15 — Busca nas notas
+
+- [x] Campo de busca por palavra/pessoa implementado.
+- [ ] Preparar duas notas de teste com palavras e nomes distintos.
+- [ ] Buscar cada palavra e cada nome; confirmar nota correspondente e ausência de resultado falso.
+- [ ] Limpar a busca e confirmar que a lista completa volta.
+- Checkpoint: quatro consultas, resultado esperado e limpeza.
+
+### 0.16 — Fechamento da Fase 0
+
+- [ ] Atualizar cada caixa anterior com PASS, FAIL ou BLOQUEADO; caixa sem evidência fica pendente.
+- [ ] Para cada FAIL, abrir subfase de correção com reprodução, causa, teste e aceite; não misturar várias falhas.
+- [ ] Para cada BLOQUEADO, registrar o recurso/decisão física que falta e quem precisa fornecê-lo.
+- Checkpoint da Fase 0: build e ambiente identificados; nenhum item apresentado como testado sem observação no app.
+
+## Fase 1 — Recursos do Mac ainda não escolhidos
+
+Regra: cada item abaixo começa por descoberta e aprovação de um mini-spec. A implementação não começa enquanto a interação exata estiver indefinida.
+
+### 1.1 — Arrastar Mochi sobre uma janela para anexar contexto (M)
+
+- [ ] Ler `NotchBuddy/Sources/App/FileDropNSView.swift` e localizar o fluxo Windows atual de drag/drop e anexos do chat.
+- [ ] Definir em spec: janela-alvo, tipos de arquivo aceitos, destino (Chat atual ou novo), feedback e comportamento quando a janela/app não puder ser identificada.
+- [ ] Aprovar a spec; manter o visual existente e os limites de acesso aos arquivos.
+- [ ] Adicionar testes para caminho com espaços/Unicode, arquivo inexistente e destino ausente.
+- [ ] Implementar o menor fluxo Windows que anexa o arquivo ao contexto sem movê-lo nem sobrescrevê-lo.
+- [ ] Testar manualmente com um arquivo de texto e outro formato já aceito pelo Chat.
+- Checkpoint: o anexo correto aparece no contexto; casos inválidos não abrem arquivo diferente nem mudam dados existentes.
+
+### 1.2 — Arquivo solto → rascunho no Outlook clássico (M)
+
+- [ ] Ler `windows/src-tauri/src/mail/` e o comportamento de envio por Mail no Mac.
+- [ ] Fixar o comportamento de destino/assunto/corpo no mini-spec. Padrão proposto: abrir rascunho do Outlook com o anexo, sem destinatário presumido e sem enviar.
+- [ ] Aprovar a spec; qualquer envio continua dependendo do clique explícito do usuário em Outlook.
+- [ ] Testar arquivo válido, arquivo removido antes de abrir, Outlook indisponível e caminho com Unicode.
+- [ ] Implementar rascunho/attachment; nunca chamar “Send” automaticamente.
+- Checkpoint: rascunho abre com o arquivo escolhido; nenhum e-mail sai sem clique; falha não apaga o arquivo.
+
+### 1.3 — Portfólio de cripto, somente leitura (G)
+
+- [ ] Obter decisão do proprietário sobre exchanges/carteiras suportadas e dados a exibir (saldo, ativos, moeda de conversão).
+- [ ] Definir permissões somente leitura, armazenamento de credenciais no serviço seguro existente, atualização e dados locais no mini-spec.
+- [ ] Não implementar até as fontes e os campos serem escolhidos; chaves de saque, transações e trading ficam fora.
+- [ ] Com decisão aprovada, criar fixtures sem credenciais e testes para saldo vazio, resposta incompleta, limite de API e erro de rede.
+- [ ] Implementar uma fonte por subfase; conferir total/moeda sem arredondamento enganoso.
+- Checkpoint: credencial nunca aparece em log, nenhum endpoint de escrita é chamado e os valores batem com a fonte.
+
+### 1.4 — Cal.com em calendário em vez de lista (P)
+
+- [ ] Ler `NotchBuddy/Sources/App/CalcomPoller.swift` e o card/lista atual no Windows.
+- [ ] Definir janela temporal, navegação, fuso horário, eventos simultâneos e estados vazio/erro no mini-spec.
+- [ ] Aprovar o desenho antes de alterar uma tela existente.
+- [ ] Testar paginação, mudança de dia/fuso, ausência de eventos e erro de autenticação.
+- [ ] Implementar a visualização preservando dados e comandos atuais de abertura do evento.
+- Checkpoint: datas/horas correspondem ao fuso escolhido e não há evento duplicado ou perdido nos limites da página.
+
+Apple Music continua fora do escopo Windows.
+
+## Fase 2 — Melhorias próprias do Windows
+
+Cada item segue a sequência: descoberta do código atual → mini-spec/aceite → testes da lógica → implementação → teste manual → checkpoint. As referências a arquivos abaixo são pontos de entrada; registrar no mini-spec os arquivos exatos depois da descoberta.
+
+### 2.1 — Notificações nativas com Permitir/Negar (M)
+
+- [ ] Mapear o fluxo atual de pedidos de permissão em `windows/src/island/hooks.ts`, os comandos de aprovação em `windows/src-tauri/` e a API nativa do Windows disponível no app.
+- [ ] Definir no mini-spec quando usar toast (ilha escondida/tela cheia), conteúdo permitido e prazo de expiração.
+- [ ] Escrever testes de roteamento: clique Permitir, clique Negar, fechar/ignorar e timeout.
+- [ ] Implementar ações de toast ligadas ao mesmo pedido pendente da ilha.
+- [ ] Confirmar que nenhum caminho aprova sem clique; em timeout a pergunta continua no terminal.
+- [ ] Testar com ilha visível, escondida, tela cheia, duas solicitações e notificação expirada.
+- Checkpoint: clique explícito decide o pedido correspondente; nenhum toast atrasado decide pedido de outra sessão.
+
+### 2.2 — Modo jogo/tela cheia (P)
+
+- [ ] Mapear detecção de monitor/janela em `windows/src-tauri/src/platform/windows.rs` e a geometria/visibilidade da ilha.
+- [ ] Definir em mini-spec o que conta como tela cheia (jogo exclusivo, janela sem borda e vídeo) e quais avisos podem trazer Mochi de volta.
+- [ ] Escrever testes de transição normal → tela cheia → normal e pedido de permissão durante tela cheia.
+- [ ] Implementar ocultação/reaparecimento sem alterar as configurações salvas de posição.
+- [ ] Testar jogo ou vídeo real, Alt+Tab, trocar monitor e encerrar processo em tela cheia.
+- Checkpoint: ilha some apenas no estado definido; pedido de permissão continua visível e exige clique.
+
+### 2.3 — Custo e tokens por sessão (M; depende da paridade de agentes)
+
+- [ ] Depois da Etapa 2B.6, inventariar a fonte local de uso para Claude, Codex, Antigravity e Hermes; marcar explicitamente fonte inexistente.
+- [ ] Definir no mini-spec quais unidades/custos são confiáveis, período dia/semana e agrupamento por projeto; não estimar preço/modelo ausente.
+- [ ] Criar fixtures locais sanitizadas e testes para JSONL truncado, modelo sem preço, sessão duplicada e projeto ausente.
+- [ ] Ler apenas dados locais de cada agente; não fazer upload nem adicionar telemetria.
+- [ ] Testar soma por sessão/projeto/dia e estado “indisponível” quando faltar fonte confiável.
+- Checkpoint: totais reproduzíveis a partir das fixtures; dado desconhecido nunca aparece como zero confirmado.
+
+### 2.4 — Pílula do Git (P)
+
+- [ ] Localizar como a sessão ativa fornece a pasta do projeto e confirmar que não existe ID de pílula Git já publicado.
+- [ ] Definir no mini-spec branch, arquivos alterados, ahead/behind, clique no diff e estados sem repositório/sem upstream.
+- [ ] Fixar um ID novo e estável antes de publicar; não reutilizar nem renomear ID existente.
+- [ ] Criar testes com repositório limpo, arquivos modificados/criados, detached HEAD, sem upstream e duas sessões em projetos distintos.
+- [ ] Implementar leitura somente local; não executar fetch, pull, checkout, commit ou push.
+- [ ] Clicar na pílula e conferir que abre o diff do projeto correto; testar repositório removido durante a sessão.
+- Checkpoint: status corresponde ao projeto da sessão ativa e nenhuma operação modifica o repositório.
+
+### 2.5 — Focar a aba exata do Windows Terminal (M)
+
+- [ ] Descobrir identificadores de janela/tab/pane disponíveis para a sessão e APIs suportadas pela versão instalada do Windows Terminal.
+- [ ] Definir fallback: se não houver identificação inequívoca, focar a janela do Terminal como hoje e não uma aba arbitrária.
+- [ ] Testar duas abas com o mesmo título, painel dividido, sessão encerrada e Terminal ausente.
+- [ ] Implementar foco pela identidade da sessão; nunca executar texto/comando como efeito de foco.
+- Checkpoint: cada sessão focada corresponde à aba correta; ambiguidade usa o fallback registrado.
+
+### 2.6 — Histórico e busca de sessões (M)
+
+- [ ] Inventariar arquivos locais de sessão, retenção e campos seguros para indexar; não ler prompt completo para log.
+- [ ] Definir no mini-spec quais eventos/resumos ficam visíveis e como excluir/limpar histórico.
+- [ ] Criar testes para sessões ausentes, JSONL incompleto, sessão duplicada e consulta sem resultado.
+- [ ] Implementar busca local por projeto, agente, data e termos aprovados no mini-spec.
+- [ ] Conferir que buscar não altera arquivos de sessão e que os resultados abrem a sessão correta.
+- Checkpoint: índice local reproduzível, sem telemetria e sem conteúdo sensível em logs.
+
+### 2.7 — Lançador rápido (P; depende da Etapa 2B.6)
+
+- [ ] Reutilizar Nova sessão e o seletor de agente/projeto da Etapa 2B.6; não manter um lançador paralelo só para Claude.
+- [ ] Definir no mini-spec o atalho, o primeiro campo focado, seleção de projeto/agente, ditado e ação explícita de iniciar.
+- [ ] Testar prompt com aspas, `;`, `&`, Unicode e quebras de linha; o texto nunca é interpolado no comando do shell.
+- [ ] Testar CLI ausente, projeto removido, cancelar e voltar sem iniciar sessão.
+- [ ] Implementar para Claude, Codex, Antigravity e Hermes; o agente selecionado deve permanecer visível na confirmação.
+- Checkpoint: só inicia após ação explícita; prompt chega intacto pelo canal seguro; permissão continua independente.
+
+### 2.8 — Vigia de testes/builds (M)
+
+#### 2.8a — Comandos locais
+
+- [ ] Definir quais comandos/processos observar: `npm test` e `cargo build`, diretório de trabalho e significado de sucesso/falha/cancelamento.
+- [ ] Testar processos simultâneos, comando iniciado fora do projeto, encerramento abrupto e saída não zero.
+- [ ] Implementar leitura do exit code sem relançar nem alterar o comando observado.
+- [ ] Mostrar resultado associado ao projeto correto e não repetir alerta para o mesmo processo.
+- Checkpoint: verde só para exit code zero; vermelho para erro; cancelado não é sucesso.
+
+#### 2.8b — CI remoto
+
+- [ ] Decidir provedor/identidade de repositório e autorização de leitura; não embutir token no app.
+- [ ] Criar mini-spec separado para polling, limites e estado offline.
+- [ ] Só implementar depois da decisão; falha de rede não altera status local como se o CI tivesse passado.
+- Checkpoint: resultado mostra commit/workflow corretos e não envia código/logs do projeto.
+
+### 2.9 — Sugestões de regras de permissão (M)
+
+- [ ] Usar a proposta do roadmap: após 12 aprovações explícitas do mesmo comando, apresentar sugestão; alterar o limiar exige decisão registrada.
+- [ ] Testar normalização de espaços/argumentos, comando diferente, contador reiniciado e comandos perigosos.
+- [ ] Mostrar regra proposta e diff do arquivo de configuração; gerar backup datado.
+- [ ] Gravar somente após o usuário clicar em confirmar; fechar/ignorar mantém o arquivo byte a byte.
+- [ ] Testar parse inválido e configuração de outra ferramenta: preservar sem sobrescrever.
+- Checkpoint: nunca conceder regra por contagem sozinha; a gravação depende de clique após visualizar o diff.
+
+### 2.10 — Vários monitores (P)
+
+- [x] O código e Settings já permitem escolher monitor/seguir o cursor; a UI foi observada em 0.6.2.
+- [ ] Com hardware de dois monitores, testar mover cursor e ilha entre displays com escalas/origens diferentes.
+- [ ] Confirmar que posições e configurações continuam corretas ao desconectar/reconectar um monitor.
+- Se o equipamento de validação continuar com um monitor, registrar HARDWARE INDISPONÍVEL; manter essa caixa pendente.
+- Checkpoint: relatório lista quantidade de monitores, resolução/escala e resultados; não afirmar validação multi-monitor sem dois displays.
+
+## Fase 2B — Paridade entre agentes e ambientes
+
+Objetivo: Claude, Codex, Antigravity e Hermes devem compartilhar as funções de agente; herdr e Orca são ambientes de execução. Executar na ordem abaixo e fechar cada checkpoint antes da etapa seguinte.
+
+### Mapa de entrada no código
+
+| Função | Ponto de entrada Windows |
 |---|---|
-| Relay e tradução de eventos de cada agente | `hook/src/main.rs`, `hook/src/normalize.rs`, `hook/src/reply.rs` |
-| Instalação dos hooks/plugins de cada agente | `src-tauri/src/agents.rs` (`enum Agent`, `HERMES_PLUGIN`) |
-| Sessões, passos, permissões, perguntas | `src/island/hooks.ts` (`askedQuestions`, `recordDiff`, `handleHook`) |
-| Diff ao vivo | `src/core/diff.ts` (`buildFileDiff`: só `Edit`, `MultiEdit`, `Write`) |
-| Nova sessão | `src-tauri/src/launch.rs` (`launch_session`, `shell_command`, `powershell_script` — sempre `claude`), `src/views/launch.ts` |
-| Soltar arquivo numa sessão | `src-tauri/src/launch.rs` (`drop_into_session`), `src/views/session-drop.ts` |
-| Abrir terminal / foco no herdr | `src-tauri/src/session_window.rs`, `src-tauri/src/herdr.rs` (`focus`) |
-| Achar o executável de cada CLI | `src-tauri/src/cli_relay.rs` (`Cli::Codex` → `codex`, `Cli::Antigravity` → `agy`) |
-| Uso do plano | `src-tauri/src/codex_plan.rs`, `src/core/plan.ts` |
-| Testes | `tests/*.test.mjs` (`npm test`), `cargo test` em `src-tauri/` e em `hook/` |
+| Relay e normalização | `windows/hook/src/main.rs`, `normalize.rs`, `reply.rs` |
+| Instalação de hooks/plugins | `windows/src-tauri/src/agents.rs` |
+| Eventos e sessão na ilha | `windows/src/island/hooks.ts` |
+| Diffs | `windows/src/core/diff.ts`, `windows/src/island/hooks.ts` |
+| Nova sessão | `windows/src-tauri/src/launch.rs`, `windows/src/views/launch.ts` |
+| Soltar arquivo | `windows/src-tauri/src/launch.rs`, `windows/src/views/session-drop.ts` |
+| Foco em herdr | `windows/src-tauri/src/herdr.rs`, `session_window.rs` |
+| CLI local | `windows/src-tauri/src/cli_relay.rs` |
+| Uso de plano | `windows/src-tauri/src/codex_plan.rs`, `windows/src/core/plan.ts` |
 
-**Hoje — agentes:**
-| Função | Claude Code | Codex | Antigravity | Hermes |
-|---|---|---|---|---|
-| Sessões ao vivo, passos, resumo semanal | ✅ | ✅ | ✅ | ✅ |
-| Permitir / Negar na ilha | ✅ | ✅ | ✅ (com "Approve commands from the notch") | ❌ só observa (`HERMES_PLUGIN`) |
-| Perguntas com opções | ✅ (`AskUserQuestion`) | ? | ? | ? |
-| Diff ao vivo (+N −M) | ✅ | ❌ | ❌ | ❌ |
+### Estado conhecido antes da Fase 2B.0
+
+Nesta tabela, `✅` significa implementação identificada no código; só significa “validado” quando houver fixture e evidência da execução real. `?` permanece desconhecido até a Etapa 2B.0.
+
+| Função | Claude | Codex | Antigravity | Hermes |
+|---|---:|---:|---:|---:|
+| Sessões/etapas/resumo semanal | ✅ | ✅ | ✅ | ✅ |
+| Permitir/Negar na ilha | ✅ | ✅ | ✅ com configuração habilitada | Observador; autorização depende da API do Hermes |
+| Perguntas com opções | ✅ | ? | ? | ? |
+| Diff ao vivo | ✅ | ❌ | ❌ | ❌ |
 | Nova sessão | ✅ | ❌ | ❌ | ❌ |
-| Soltar arquivo na sessão | ✅ | ? (código é genérico) | ? | ? |
-| Abrir terminal | ✅ | ? (código é genérico) | ? | ? |
-| Uso do plano | ✅ | ✅ | ❌ | não se aplica (usa chaves de API) |
-| Chat pela assinatura | ✅ | ✅ | ✅ | não se aplica |
+| Soltar arquivo/Abrir terminal | ✅ | ? | ? | ? |
+| Uso do plano | ✅ | ✅ | ? | Não se aplica a chave de API |
 
-**Hoje — lugares:**
-| Função | herdr | Orca |
-|---|---|---|
-| Abrir terminal foca o painel/terminal da sessão | ✅ (`herdr agent focus`) | ❌ |
-| Soltar arquivo cola no painel certo | ✅ (foca antes de colar) | ❌ |
-| Nova sessão abre lá dentro, com o agente escolhido | ❌ | ❌ |
+`?` significa não validado com fixture e teste. Não converter desconhecido em suportado por inferência.
 
-`?` = ninguém testou; a Etapa 0 responde.
+### 2B.0 — Descoberta e fixtures (P; sem código de produto)
 
-**Regras que valem para todas as etapas (do `CLAUDE.md`):**
-- Nunca bloquear o agente: se o Coucou não responder, o relay sai na hora (300 ms).
-- Nunca aprovar nada sem clique explícito; sem clique, o agente pergunta no próprio terminal.
-- Nunca sobrescrever config de agente: backup datado, merge, mostrar o diff, gravar só após confirmar.
-- IDs de pílula (`agent_codex`, `agent_antigravity`, `agent_hermes`…) não mudam.
-- Não mudar o visual do que já existe; o que for novo segue o estilo atual.
-- Toda frase nova da interface vai em `src/i18n/extra.json` em todas as línguas.
-- O prompt do usuário nunca entra numa linha de comando (hoje vai por `COUCOU_PROMPT` ou arquivo temporário): manter isso para todo agente.
+Objetivo: substituir cada `?` por uma capacidade observada, impossível com evidência, ou uma pergunta de pesquisa concreta. Não editar código do app nesta etapa.
 
-**Casos que costumam quebrar (cada etapa tem que cobrir os seus):**
-1. O CLI do agente não está instalado ou não está no PATH → a Nova sessão avisa, não abre terminal quebrado.
-2. Prompt com aspas, `;`, `&`, quebras de linha → chega igual ao agente, sem virar comando.
-3. Patch do Codex com vários arquivos, arquivo criado, apagado ou renomeado → um diff por arquivo, contagens certas.
-4. Sessão sem janela encontrada → arquivo solto vai para a área de transferência ("copied"), como hoje.
-5. Coucou fechado → todos os agentes continuam funcionando e perguntando no próprio terminal.
+#### 2B.0.1 — Codex
 
-### Etapa 0 — Descobrir o que cada agente expõe (P) — sem código de produto
-Resultado: as `?` das tabelas acima viram ✅, ❌ ou "impossível", e as perguntas abaixo ficam respondidas aqui.
-- [ ] 0.1 Instalar os hooks de Codex, Antigravity e Hermes (Settings → Agents) e rodar em cada um: editar um arquivo, criar um, rodar um comando, fazer o agente perguntar algo. Copiar do `%LOCALAPPDATA%\Coucou\coucou.log` um payload de cada evento para `windows/tests/fixtures/agents/<agente>-<evento>.json` (tirar caminhos pessoais).
-- [ ] 0.2 Anotar para cada agente: nome da ferramenta de edição e campos dela (ex.: Codex `apply_patch` com o patch em texto); se existe ferramenta de pergunta com opções e se o hook a vê; se o PostToolUse traz o conteúdo editado.
-- [ ] 0.3 Hermes: ler a documentação de plugins e responder se um hook pode **esperar** e **devolver** uma decisão (allow/deny). Se não puder, marcar Permitir/Negar do Hermes como "impossível" e pular a Etapa 4.
-- [ ] 0.4 Antigravity: existe fonte local de cota/limites (como o `codex app-server` → `account/rateLimits/read`)? Se não, marcar Uso do plano como "impossível" e pular a Etapa 5.
-- [ ] 0.5 Comandos para iniciar com prompt: `codex "<prompt>"`, `agy …`, `hermes …` — anotar a forma exata e se aceitam o prompt por argumento, stdin ou variável.
-- [ ] 0.6 herdr (0.9.5 instalado): comando para criar um painel novo numa pasta rodando um comando.
-- [x] 0.6 Orca — levantado em 2026-11-09 no notebook (ver "Orca: o que já sabemos" abaixo). Falta só testar com o Coucou instalado.
-- [ ] 0.7 Testar à mão, com cada agente, "Abrir terminal" e soltar um arquivo numa sessão. Anotar o que funciona.
-- [ ] 0.8 Commit: `docs: roadmap Fase 2B — resultados da Etapa 0` (fixtures + tabelas atualizadas).
+- [ ] Preparar instalação de teste e backup dos hooks/configs; registrar diff antes de qualquer instalação ou atualização.
+- [ ] Capturar início/fim de sessão, prompt, criação/edição de arquivo, comando, pergunta, falha e encerramento; sanitizar prompts, caminhos pessoais e tokens.
+- [ ] Anotar nome de cada evento, campos disponíveis, limite/timing e comportamento com Coucou fechado.
+- [ ] Confirmar pergunta/resposta, CLI, diretório de trabalho e como enviar prompt sem shell concatenado.
+- [ ] Exercitar “Abrir terminal” e drop de arquivo; registrar PASS/FAIL e evidência.
+- Checkpoint 2B.0.1: fixture revisável cobre eventos observados, e config original pode ser restaurada pelo backup.
 
-### Etapa 1 — Soltar arquivo e Abrir terminal para todos os agentes (P)
-Só se a 0.7 achou falhas; o código já é por `session_id`, não por agente.
-- [ ] 1.1 Para cada falha da 0.7: escrever o teste que reproduz (Rust em `launch.rs`/`session_window.rs` ou `tests/launch.test.mjs`), ver falhar.
-- [ ] 1.2 Corrigir na parte comum (`session_window.rs` ou `drop_into_session`), nunca com um `if agente`, salvo quando o agente realmente difere.
-- [ ] 1.3 `npm test` e `cargo test` passam; teste à mão com o agente. Commit.
+#### 2B.0.2 — Antigravity
 
-### Etapa 2 — Diff ao vivo para Codex, Antigravity e Hermes (M)
-- [ ] 2.1 No relay (`hook/src/main.rs`), confirmar que o corte de 256 KB/512 KB e o encaminhamento do texto no PostToolUse valem para todo agente, não só Claude Code. Teste em `hook/` com as fixtures da 0.1.
-- [ ] 2.2 Em `tests/diff.test.mjs`: um teste por ferramenta de edição achada na 0.2, usando as fixtures. Codex `apply_patch`: patch com 2 arquivos → 2 diffs; arquivo novo → só `+N`; arquivo apagado → só `−M`; renomeado → caminho novo. Ver falhar.
-- [ ] 2.3 Em `src/core/diff.ts`: `buildFileDiff` passa a devolver **lista** de diffs (`FileDiff[]`), porque um patch do Codex mexe em vários arquivos; novos `case` para as ferramentas da 0.2. Ajustar `recordDiff` em `src/island/hooks.ts` para gravar cada um.
-- [ ] 2.4 `tests/livediff.test.mjs`: um evento PostToolUse do Codex vira passos `+N −M` na pílula `agent_codex`. `npm test` passa. Commit.
+- [ ] Repetir a captura de eventos da 2B.0.1 para iniciar/encerrar, edição, comando, pergunta e falha.
+- [ ] Identificar se PostToolUse contém diff/texto e se perguntas aceitam resposta externa.
+- [ ] Localizar fonte local de quota/reset; registrar caminho/formato sanitizado e comportamento quando ausente/corrompida.
+- [ ] Confirmar CLI, recepção segura do prompt, “Abrir terminal” e drop de arquivo.
+- Checkpoint 2B.0.2: capacidades de hooks, pergunta, uso e lançamento têm PASS/FAIL/IMPOSSÍVEL sustentado por fixture ou evidência.
 
-### Etapa 3 — Perguntas com opções (P, só para agentes onde a 0.2 achou uma ferramenta de pergunta)
-- [ ] 3.1 Teste em `tests/hooks.test.mjs`: o payload da pergunta do agente vira o card de opções.
-- [ ] 3.2 Em `askedQuestions` (`src/island/hooks.ts`), aceitar o nome e o formato da ferramenta do agente; em `hook/src/reply.rs`, devolver a resposta no formato que o agente espera (teste em `hook/`).
-- [ ] 3.3 Teste: pergunta respondida no terminal some da ilha (mesmo caminho do `AskUserQuestion`). Commit.
+#### 2B.0.3 — Hermes
 
-### Etapa 4 — Permitir / Negar no Hermes (M, só se a 0.3 disse que dá)
-- [ ] 4.1 Teste em `src-tauri/src/agents.rs`: o `HERMES_PLUGIN` gerado espera a resposta do relay e devolve a decisão; sem resposta em até 110 s, devolve "perguntar no Hermes".
-- [ ] 4.2 Mudar `HERMES_PLUGIN` e o tratamento do Hermes em `hook/src/reply.rs`. Sem clique = nenhuma decisão.
-- [ ] 4.3 Hooks antigos (só observadores) aparecem em Settings como "instalar de novo", como o Antigravity faz com o timeout de 10 s. Commit.
+- [ ] Instalar plugin de teste somente com backup e diff; capturar eventos de início/fim, edição, comando, pergunta e falha.
+- [ ] Provar se o plugin pode aguardar e devolver Allow/Deny; medir timeout e retorno após erro ou Coucou fechado.
+- [ ] Confirmar formato de perguntas/respostas, diff disponível, CLI e transporte seguro do prompt.
+- [ ] Testar “Abrir terminal” e drop de arquivo.
+- Checkpoint 2B.0.3: round-trip Allow/Deny está comprovado ou marcado IMPOSSÍVEL com evidência; nenhum evento foi inferido.
 
-### Etapa 5 — Uso do plano do Antigravity (M, só se a 0.4 achou fonte local)
-- [ ] 5.1 Criar `src-tauri/src/antigravity_plan.rs` no molde de `codex_plan.rs` (só busca quando a pílula aparece ou é clicada, no máximo uma vez por minuto, nunca em pausa).
-- [ ] 5.2 `tests/plan.test.mjs`: resposta de exemplo → porcentagens e horários de reset. Pílula no header igual à do Codex, desligada por padrão em Settings → Plan usage. Commit.
+#### 2B.0.4 — CLI local e transporte de prompt
 
-### Etapa 6 — Nova sessão com escolha do agente (M)
-- [ ] 6.1 Testes Rust em `launch.rs`: `shell_command(shell, agent, has_prompt)` e `powershell_script(agent, prompt_file)` geram o comando de cada agente com o prompt vindo de `COUCOU_PROMPT`/arquivo (forma exata da 0.5), nunca dentro do comando. Incluir prompt com aspas, `;` e `&`.
-- [ ] 6.2 Implementar: `enum LaunchAgent { Claude, Codex, Antigravity, Hermes }` em `launch.rs`; `launch_session(folder, prompt, agent)`. Antes de abrir, procurar o executável (reusar o localizador de `cli_relay.rs`); se não existir, devolver erro e a ilha diz qual CLI falta.
-- [ ] 6.3 `src/core/bridge.ts` (`launchSession` ganha `agent`) e `src/views/launch.ts`: escolha do agente no estilo atual da tela, lembrando o último escolhido; só mostra agentes declarados nas pílulas ou instalados. `tests/launch.test.mjs`. Strings novas em `extra.json`.
-- [ ] 6.4 Teste à mão: cada agente abre no Windows Terminal com o pedido. Commit.
+- [ ] Para Claude, Codex, Antigravity e Hermes, registrar executável, argumentos, detecção de instalação e diretório de trabalho.
+- [ ] Enviar prompt de fixture com aspas, `;`, `&` e novas linhas; conferir igualdade byte a byte no agente.
+- [ ] Registrar se o canal seguro é stdin, variável de ambiente, arquivo temporário protegido ou API do agente; rejeitar concatenação no shell.
+- Checkpoint 2B.0.4: há comando reproduzível e transporte seguro ou bloqueio documentado para cada agente.
 
-### Etapa 7 — herdr e Orca como lugar (M)
-- [ ] 7.1 herdr: Nova sessão ganha "Abrir no herdr" quando o `herdr` existe — novo painel na pasta, rodando o agente da Etapa 6 (comando da 0.6). Função nova em `herdr.rs` com teste dos argumentos (molde de `command_args`).
-- [ ] 7.2 Relay (`hook/src/main.rs`): repassar `ORCA_TERMINAL_HANDLE` no payload, como já faz com `HERDR_PANE_ID`. Validar o formato (`term_` + uuid) antes de usar. Teste em `hook/`.
-- [ ] 7.3 Criar `src-tauri/src/orca.rs` no molde de `herdr.rs`: `from_payload(payload) -> Option<Terminal>`, `observe(payload, event)` (lembra/esquece por sessão), `focus(session) -> bool` = `orca.exe terminal switch --terminal <handle> --json` e trazer a janela do Orca para frente. Executável: `orca.exe` no PATH ou `%LOCALAPPDATA%\Programs\orca\resources\bin\orca.exe` — sempre o `.exe`, nunca o `orca.cmd` (o cmd relê os argumentos). Testes iguais aos do `herdr.rs` (handle inválido → não roda nada).
-- [ ] 7.4 Ligar `orca::focus` em "Abrir terminal" e em `drop_into_session`, ao lado de `herdr::focus`. No drop, numa sessão do Orca, mandar o texto direto: `orca.exe terminal send --terminal <handle> --text "<caminhos>"` **sem** `--enter` (o usuário ainda revisa o prompt), em vez de colar com o teclado. Se o comando falhar → "copied", como hoje.
-- [ ] 7.5 Nova sessão "Abrir no Orca", quando o `orca.exe` existe e `orca status --json` diz `runtimeReachable: true`: pasta existente → `orca.exe agent launch --agent <claude|codex|antigravity|hermes> --worktree path:<pasta> --prompt <pedido> --surface terminal --focus --json`; opção "em worktree nova" → `orca.exe worktree create --name <nome> --repo path:<pasta> --agent <id> --prompt <pedido> --activate --json`. O prompt vai como um argumento só, com `Command::arg`, sem shell no meio. Conferir na Etapa 0 os ids de agente que o Orca aceita (o Hermes pode não estar). Teste dos argumentos. Commit.
+#### 2B.0.5 — herdr
 
-**Orca: o que já sabemos (levantado em 2026-11-09 no notebook):**
-- Orca 1.4.251, app desktop MIT (github.com/stablyai/orca, docs em onorca.dev/docs). Instalado em `%LOCALAPPDATA%\Programs\orca`; CLI `resources\bin\orca.exe` (e `orca.cmd`) no PATH; dados em `%APPDATA%\orca` e `%USERPROFILE%\.orca`. Quase tudo no CLI precisa do app aberto (`orca status`, `orca open`).
-- Cada tarefa roda numa worktree git própria; o agente abre como **terminal** ou **chat** (escolha Chat | CLI de cada agente). Coucou só cobre o modo terminal: no modo chat os hooks do Coucou podem nem rodar — verificar na Etapa 0.
-- Todo terminal do Orca recebe: `ORCA_TERMINAL_HANDLE` (`term_<uuid>`, o que os comandos `terminal` usam), `ORCA_PANE_KEY`, `ORCA_TAB_ID`, `ORCA_WORKTREE_ID` (`<repo-id>::<pasta>`), `ORCA_WORKSPACE_ID`, `ORCA_APP_VERSION`.
-- Comandos úteis: `orca terminal switch|send|list|read`, `orca agent launch`, `orca worktree create|current|list`, `orca status`. Todos aceitam `--json`.
-- **O Orca instala hooks próprios** nos mesmos agentes que o Coucou: `orca-agent-hook.exe claude` no `~\.claude\settings.json` (16 entradas), `codex-hook.cmd` no `~\.codex\hooks.json`, `antigravity-*.cmd` no `~\.gemini\config\hooks.json`, e um para o Grok. Eles convivem: o instalador do Coucou só acrescenta e remove as entradas dele, nunca as do Orca — ter um teste disso em `agents.rs` com um arquivo que já tem as entradas do Orca.
-- O Orca guarda o último estado de cada agente em `%APPDATA%\orca\agent-hooks\last-status.json` (com o prompt e a última resposta). O Coucou **não** lê esse arquivo: os hooks dele já trazem o mesmo, e o arquivo tem texto do usuário.
-- No notebook hoje: `codex`, `agy`, `hermes` (`%LOCALAPPDATA%\hermes\bin`) e `herdr` 0.9.5 estão instalados; os hooks do Coucou ainda **não** estão instalados em nenhum agente, e o plugin do Hermes também não (Fase 0).
+- [ ] Confirmar comandos e argumentos para criar/focar painel, iniciar agente e enviar arquivo.
+- [ ] Registrar exemplos sanitizados, versão e comportamento de herdr ausente/fechado.
+- Checkpoint 2B.0.5: comandos podem ser repetidos sem texto de arquivo ser executado como comando.
 
-### Etapa 8 — Documentar e lançar (P)
-- [ ] 8.1 `windows/README.md`: tabela "Supported agents" e textos de Nova sessão, diff ao vivo e "Open terminal" atualizados.
-- [ ] 8.2 `CHANGELOG.md`, linha na tabela de versões do README, e What's new em `windows/src/whats-new/whats-new.json` (1 a 4 itens, 14 línguas); `python3 scripts/test-whats-new.py` passa.
-- [ ] 8.3 Tabelas "Hoje" desta seção sem nenhum ❌ que não seja "impossível". Commit.
+#### 2B.0.6 — Orca
 
-**Ordem e dependências:** 0 → (1, 2, 3, 4, 5 em qualquer ordem) → 6 → 7 → 8. A 7 depende da 6 (agente escolhido). Itens da Fase 2 que tocam nisto: 3 (custo e tokens) e 7 (lançador rápido) devem nascer já com os quatro agentes.
+- [x] Descoberta inicial feita em 2026-11-09: handle `ORCA_TERMINAL_HANDLE` no formato `term_<uuid>` e CLI `orca.exe` identificados.
+- [ ] Instalar Coucou no ambiente de teste e repetir `orca status --json`; confirmar agentes, handle e eventos com app aberto.
+- [ ] Confirmar CLI para foco, envio de arquivo sem Enter, sessão existente e worktree nova; registrar saída sanitizada.
+- [ ] Verificar que os hooks existentes em `.claude`, `.codex` e `.gemini` sobrevivem à instalação, atualização e remoção.
+- Checkpoint 2B.0.6: comportamento visto com app aberto; descoberta inicial sozinha não conta como validação de integração.
+
+#### 2B.0.7 — Matriz de capacidades e encerramento
+
+- [ ] Atualizar as duas tabelas “Estado conhecido” por agente e capacidade, citando fixture/evidência local.
+- [ ] Para cada `?`, marcar suportado, IMPOSSÍVEL (com evidência) ou escrever a pergunta e o responsável pela investigação.
+- [ ] Testar “Abrir terminal” e drop em cada ambiente suportado; registrar PASS/FAIL e fallback observado.
+- [ ] Sanitizar fixtures e garantir que não contêm prompt real, caminho pessoal, token ou resposta privada.
+- Checkpoint 2B.0: nenhuma célula `?` sem próxima ação definida; fixtures e evidências são reproduzíveis e seguras.
+
+### 2B.1 — Soltar arquivo e abrir terminal (P; só se 2B.0 reproduzir falha)
+
+- [ ] Para cada falha, escrever um teste que falha em `launch.rs`, `session_window.rs` ou `tests/launch.test.mjs`.
+- [ ] Corrigir o caminho comum por `session_id`; adicionar ramificação por agente só se o protocolo realmente diferir.
+- [ ] Manter fallback atual: se a janela não existir, copiar os caminhos para a área de transferência e anunciar “copied”.
+- [ ] Rodar `npm test`, `cargo test --lib` e `cargo test` em `windows/hook`.
+- [ ] Repetir o cenário manual no agente/ambiente que falhou.
+- Se todos os cenários passarem na 2B.0, marcar N/A com a evidência e não alterar código.
+- Checkpoint 2B.1: todos os ambientes testados passam ou cada exceção está registrada como impossível.
+
+### 2B.2 — Diff ao vivo (M)
+
+#### 2B.2A — Contrato do evento e fixtures
+
+- [ ] Confirmar com fixtures que PostToolUse contém patch/texto e que os limites atuais de payload valem para cada agente suportado.
+- [ ] Acrescentar um teste por ferramenta de edição descoberta; cobrir dois arquivos, arquivo novo, apagado e renomeado.
+- Checkpoint 2B.2A: cada fixture define evento, agente, arquivos afetados e conteúdo disponível sem depender de inferência.
+
+#### 2B.2B — Montagem e registro por arquivo
+
+- [ ] Expandir `buildFileDiff` em `windows/src/core/diff.ts` para devolver `FileDiff[]`; adaptar `recordDiff` para gravar cada arquivo separadamente.
+- [ ] Preservar limites de tamanho e lidar com payload ausente/incompleto sem apresentar diff inventado.
+- Checkpoint 2B.2B: novo, editado, apagado e renomeado são representados corretamente, com teste unitário por caso.
+
+#### 2B.2C — Integração por agente
+
+- [ ] Testar que evento Codex/Antigravity/Hermes atualiza somente a pílula e a sessão corretas e calcula +N/−M.
+- [ ] Rodar testes do hook e `npm test`; fazer uma edição real por agente suportado.
+- Checkpoint 2B.2C: diff de cada agente suportado aparece na sessão correta e a validação manual fica registrada.
+
+Checkpoint 2B.2: 2B.2A–2B.2C concluídas; nenhuma alteração de arquivo pode vazar para outra sessão.
+
+### 2B.3 — Perguntas com opções (P; condicional)
+
+- [ ] Usar apenas agentes cuja Etapa 2B.0 provou uma ferramenta/formato de pergunta.
+- [ ] Testar payload→card e resposta no formato que o agente espera, em `hooks.test.mjs` e `hook/src/reply.rs`.
+- [ ] Confirmar que responder no terminal remove o card pendente da ilha.
+- Se nenhum agente expuser a API, marcar N/A com a documentação e fixture consultadas.
+- Checkpoint 2B.3: opções e resposta correspondem; pergunta nunca é respondida automaticamente.
+
+### 2B.4 — Permitir/Negar no Hermes (M; condicional à 2B.0)
+
+- [ ] Só prosseguir se o teste confirmar transporte de resposta do plugin.
+- [ ] Testar espera máxima de 110 s: clique Permitir/Negar devolve decisão; sem clique/timeout devolve “perguntar no Hermes”.
+- [ ] Atualizar `HERMES_PLUGIN` e `hook/src/reply.rs`; instalação antiga observadora deve pedir reinstalação antes de habilitar aprovação.
+- [ ] Testar erro do relay e Hermes fechado: a ferramenta nunca fica travada nem recebe allow implícito.
+- Se a API não suportar round-trip, marcar IMPOSSÍVEL com evidência e não criar aprovação visual enganosa.
+- Checkpoint 2B.4: só clique explícito decide; timeout/erro sempre volta ao terminal como pergunta.
+
+### 2B.5 — Uso do plano Antigravity (M; condicional à 2B.0)
+
+- [ ] Só prosseguir com fonte local de quota confirmada; sem fonte, registrar IMPOSSÍVEL.
+- [ ] Criar `windows/src-tauri/src/antigravity_plan.rs` no padrão de `codex_plan.rs`.
+- [ ] Testar porcentagens, horário de reset, resposta vazia e fonte corrompida.
+- [ ] Consultar no máximo uma vez por minuto, somente quando a pílula estiver visível ou for aberta; não fazer polling em pausa.
+- [ ] Atualizar configuração “Plan usage” sem habilitar por padrão.
+- Checkpoint 2B.5: valor mostrado reproduz a fonte local; ausência da fonte não vira 0%.
+
+### 2B.6 — Nova sessão com escolha do agente (M; pré-requisito para Fase 2.3 e 2.7)
+
+#### 2B.6A — Backend e transporte seguro
+
+- [ ] Implementar `LaunchAgent { Claude, Codex, Antigravity, Hermes }` e passar o agente em `launch_session(folder, prompt, agent)`.
+- [ ] Reutilizar o localizador de executáveis em `cli_relay.rs`; agente ausente retorna erro tipado sem abrir terminal inválido.
+- [ ] Definir por agente o canal de prompt seguro descoberto na 2B.0.4; nunca concatenar prompt no shell.
+- [ ] Adicionar testes para argumentos, diretório de trabalho, prompt com aspas, `;`, `&` e novas linhas; verificar que cancelamento/erro não inicia processo.
+- Checkpoint 2B.6A: comandos construídos sem shell injection e prompt recebido intacto em fixtures para todo agente suportado.
+
+#### 2B.6B — Ponte e seletor em Nova sessão
+
+- [ ] Atualizar a ponte TypeScript/Tauri e o seletor de agente na Nova sessão.
+- [ ] Listar somente agentes instalados ou declarados disponíveis; CLI ausente mostra erro localizado e opção de voltar.
+- [ ] Lembrar a última escolha sem alterar configurações do agente; cancelar fecha o seletor e não inicia processo.
+- [ ] Adicionar todas as frases novas em `windows/src/i18n/extra.json`, nas 13 línguas; preservar IDs de pílula e layout existente.
+- Checkpoint 2B.6B: seleção, ausência de agente e cancelamento têm comportamento explícito; interface compilada nas 13 línguas.
+
+#### 2B.6C — Integração e validação manual
+
+- [ ] Exercitar Nova sessão com Claude, Codex, Antigravity e Hermes, sempre na pasta escolhida e com prompt de fixture.
+- [ ] Confirmar que erro de agente ausente/falha de CLI é visível e não deixa processo ou terminal órfão.
+- [ ] Rodar `npm test`, `npx tsc --noEmit` e `cargo test --lib`; executar um lançamento manual por agente suportado.
+- Checkpoint 2B.6C: cada agente disponível abre na pasta e recebe prompt idêntico; registrar agente/versão/resultado.
+
+Checkpoint 2B.6: 2B.6A, 2B.6B e 2B.6C concluídas; libera Fase 2.3 e 2.7.
+
+### 2B.7A — herdr como ambiente (M)
+
+#### 2B.7A.1 — Criar painel e iniciar agente
+
+- [ ] Usar somente o comando comprovado na 2B.0.5 para criar painel na pasta e iniciar o agente selecionado na 2B.6.
+- [ ] Adicionar testes de argumentos ao módulo `herdr.rs`; caminhos e prompt permanecem argumentos separados, inclusive com espaços e metacaracteres.
+- Checkpoint 2B.7A.1: painel abre na pasta pedida e inicia apenas o agente escolhido.
+
+#### 2B.7A.2 — Foco, drop e fallback
+
+- [ ] Ligar foco a “Abrir terminal” e ao drop de arquivo; sessão desconhecida mantém fallback “copied”.
+- [ ] Testar manualmente criação, foco, drop, herdr ausente e painel fechado.
+- Checkpoint 2B.7A.2: foco chega ao painel correto; drop transmite caminhos como dados e falha usa fallback.
+
+Checkpoint 2B.7A: 2B.7A.1 e 2B.7A.2 concluídas com evidência manual.
+
+### 2B.7B — Orca como ambiente (M)
+
+#### 2B.7B.1 — Executável e validação do handle
+
+- [ ] Confirmar `orca status --json`, os IDs de agente e `ORCA_TERMINAL_HANDLE`; validar `term_` + UUID antes de usar.
+- [ ] Criar `windows/src-tauri/src/orca.rs`; localizar `orca.exe` no PATH ou `%LOCALAPPDATA%\\Programs\\orca\\resources\\bin\\orca.exe`, nunca executar `orca.cmd`.
+- [ ] Testar Orca ausente/fechado, JSON inválido, handle ausente/inválido e código de saída diferente de zero.
+- Checkpoint 2B.7B.1: executável e handle são validados; erro não seleciona um terminal arbitrário.
+
+#### 2B.7B.2 — Focar terminal
+
+- [ ] Testar `orca.exe terminal switch --terminal <handle> --json` com handle válido e integrar ao comando “Abrir terminal”.
+- [ ] Confirmar resultado com terminal em primeiro plano e handle errado; falha deve informar erro sem mudar sessão.
+- Checkpoint 2B.7B.2: “Abrir terminal” foca o terminal associado à sessão correta.
+
+#### 2B.7B.3 — Soltar arquivo
+
+- [ ] Enviar caminhos por `orca.exe terminal send --terminal <handle> --text <caminhos>` sem `--enter`.
+- [ ] Testar espaços, múltiplos arquivos e caracteres especiais; erro retorna ao fallback “copied”.
+- Checkpoint 2B.7B.3: terminal recebe caminhos como texto, nunca os executa automaticamente.
+
+#### 2B.7B.4 — Nova sessão e worktree
+
+- [ ] Testar Nova sessão no terminal existente e em worktree nova com `orca.exe agent launch`/`orca.exe worktree create`.
+- [ ] Passar prompt como argumento/canal seguro comprovado na 2B.0.4, sem shell intermediário; cobrir cancelamento e falha parcial.
+- [ ] Não ler `%APPDATA%\\orca\\agent-hooks\\last-status.json`, que contém prompt e resposta do usuário.
+- Checkpoint 2B.7B.4: sessão abre no destino pedido, prompt fica intacto e dados privados do arquivo de estado não são lidos.
+
+#### 2B.7B.5 — Compatibilidade dos hooks e fechamento
+
+- [ ] Confirmar que instalação, atualização e remoção mantêm hooks existentes do Orca em `.claude`, `.codex` e `.gemini`; cobrir merge/restauração em teste.
+- [ ] Testar Hermes não suportado e cada comando Orca falhando; manter fallback seguro sem permitir aprovação implícita.
+- Checkpoint 2B.7B.5: hooks de terceiros permanecem intactos e falhas não enviam arquivo/prompt a sessão errada.
+
+Checkpoint 2B.7B: etapas 2B.7B.1–2B.7B.5 concluídas com testes e evidência manual.
+
+### 2B.8 — Documentação, suíte e release (P)
+
+#### 2B.8A — Estado e documentação
+
+- [ ] Atualizar `windows/README.md` com matriz Supported agents e comportamento validado de Nova sessão, diff e Open terminal.
+- [ ] Atualizar as tabelas “Estado conhecido” com resultado e referência da evidência; `?` só permanece com pergunta de pesquisa e responsável.
+- [ ] Manter `IMPOSSÍVEL` apenas quando houver evidência reproduzível.
+- Checkpoint 2B.8A: README, tabelas e evidências concordam para cada agente/capacidade.
+
+#### 2B.8B — Suíte e gate de release
+
+- [ ] Rodar `npm test`, `npx tsc --noEmit`, `npm run build`, `cargo test --lib` em `windows/src-tauri` e `cargo test` em `windows/hook`.
+- [ ] Se e somente se o proprietário pedir release, aplicar o checklist “Release” no fim do documento; sem pedido, parar após registrar validação.
+- Checkpoint 2B.8B: comandos passam e a release só é preparada/publicada quando houver solicitação explícita.
+
+Checkpoint 2B.8: 2B.8A e 2B.8B concluídas; documentação bate com testes e execução manual.
+
+Ordem: 2B.0.1–2B.0.7 → 2B.1–2B.5 (condicionais/independentes) → 2B.6A–2B.6C → 2B.7A.1–2B.7A.2 e 2B.7B.1–2B.7B.5 → 2B.8A–2B.8B.
 
 ## Fase 2C — Pílulas configuráveis e posição livre da ilha (M)
 
-**Objetivo:** escolher quais agentes e serviços ficam visíveis e mover a ilha horizontalmente pelo topo quando ela cobre algo na tela.
+Objetivo: escolher pílulas visíveis, adicionar Grok Bot como agente e permitir arrastar a ilha horizontalmente no topo. Resend/n8n/Vercel continuam disponíveis, desligados por padrão; desativar não apaga credenciais. Claude Code permanece principal; limite de quatro pílulas secundárias. A posição livre muda só X, preservando centro e quatro cantos.
 
-**Padrão desejado:** Claude Code como pílula principal; Codex, Antigravity, Grok Bot e GitHub nas quatro vagas secundárias. Resend, n8n e Vercel continuam disponíveis nas configurações, mas desligados por padrão. Desligar um serviço não apaga suas credenciais. Os agentes escolhidos permanecem visíveis quando ociosos.
+Plano detalhado obrigatório: `docs/superpowers/plans/2026-11-09-custom-pills-and-island-position.md`; desenho: `docs/superpowers/specs/2026-11-09-custom-pills-and-island-position-design.md`.
 
-**Posição:** manter o seletor atual de centro/cantos e acrescentar arraste horizontal no topo, com a posição salva. Arrastar não altera a altura; clicar em “centro superior” volta ao centro.
+### 2C.0 — Confirmar hook do Grok Bot
 
-Plano detalhado: [`docs/superpowers/plans/2026-11-09-custom-pills-and-island-position.md`](superpowers/plans/2026-11-09-custom-pills-and-island-position.md). Desenho aprovado: [`docs/superpowers/specs/2026-11-09-custom-pills-and-island-position-design.md`](superpowers/specs/2026-11-09-custom-pills-and-island-position-design.md).
+- [ ] Inspecionar eventos/configuração do hook do Orca; fixture sanitizada sem prompt, token ou caminho pessoal.
+- [ ] Testar instalação e remoção sem apagar entradas do Orca; adicionar `Agent::Grok`/`agent_grok` só se o contrato observado for compatível.
+- [ ] Testar SessionStart, atividade e encerramento; não adicionar cartão de aprovação.
+- Checkpoint 2C.0: sessão real produz `agent_grok`; se não houver evento/configuração confiável, parar e rever spec.
 
-### Etapa 0 — Confirmar e ligar o hook Grok Bot (P)
-- [ ] 0.1 Inspecionar o hook do Orca: caminho de configuração, nomes de eventos e campos; guardar fixture sem prompt, caminhos pessoais ou tokens.
-- [ ] 0.2 Adicionar Grok ao instalador seguro do Coucou (`--agent grok`), preservando as entradas existentes do Orca; traduzir eventos no relay somente se o formato real exigir.
-- [ ] 0.3 Verificar que sessões chegam à pílula `agent_grok`; não adicionar cartões de aprovação.
+### 2C.1 — Seleção e padrões das pílulas
 
-### Etapa 1 — Seleção e padrões das pílulas (P)
-- [ ] 1.1 Adicionar `agent_grok` ao catálogo e às configurações existentes de Active pills.
-- [ ] 1.2 Trocar o padrão secundário para Codex, Antigravity, Grok Bot e GitHub; manter Claude Code como principal e o limite de quatro vagas.
-- [ ] 1.3 Migrar somente a lista antiga exata de Resend/n8n/Vercel/GitHub; preservar listas customizadas e credenciais.
-- [ ] 1.4 Testar catálogo, estado ocioso, padrão novo e migração em Rust/TypeScript.
+- [ ] Adicionar Grok ao catálogo e à seleção existente de Active pills.
+- [ ] Padrão: Claude principal; Codex, Antigravity, Grok e GitHub nas quatro vagas.
+- [ ] Migrar só a lista antiga exata Resend/n8n/Vercel/GitHub; preservar qualquer lista customizada e credenciais.
+- [ ] Testar catálogo, agente ocioso, limite quatro, default novo e migração em TypeScript/Rust.
+- Checkpoint 2C.1: instalação nova usa o padrão novo; configuração personalizada permanece idêntica.
 
-### Etapa 2 — Arraste horizontal no topo (M)
-- [ ] 2.1 Adicionar `topCustom` e `islandTopX` normalizado, limitado de 0 a 1; preservar os quatro cantos e o recuo do topo.
-- [ ] 2.2 Arrastar pelo fundo da ilha, sem iniciar em botões, campos, links ou Mochi; só mover depois do limiar de gesto e persistir ao soltar.
-- [ ] 2.3 Testar limites, monitores com escalas/origens diferentes, cliques e a posição após reabrir.
+### 2C.2 — Arraste horizontal no topo
 
-### Etapa 3 — Verificação e documentação (P)
-- [ ] 3.1 Rodar `npm test`, `npm run build` e `cargo test` em `src-tauri/` e `hook/`.
-- [ ] 3.2 Conferir manualmente instalação nova e migração, as pílulas ociosas/ativas, o arraste e os locais antigos.
-- [ ] 3.3 Atualizar README, changelog e What's New nas 14 línguas.
+- [ ] Adicionar `topCustom` e `islandTopX` normalizado de 0 a 1; centro superior redefine para 0.5.
+- [ ] Começar drag só no fundo, fora de controles/Mochi e após limiar; clique abaixo do limiar continua clicando.
+- [ ] Limitar X ao monitor e preservar Y/recuo, quatro cantos e escala/origem negativa.
+- [ ] Testar persistência ao fechar/reabrir, monitores com escalas diferentes e controles que não podem virar drag.
+- Checkpoint 2C.2: arrasta e salva sem roubar cliques nem deixar a ilha fora do monitor.
 
-**Ordem:** 0 → 1 → 2 → 3.
+### 2C.3 — Verificação/documentação
 
-## Fase 3 — Identidade própria (só se for distribuir)
-- Novo nome, personagem e sons (o código é MIT; nome Coucou, Mochi e sons são © Louis Raillé)
-- Novo `identifier` no `tauri.conf.json` (hoje `fr.louisraille.coucou`) para não colidir com o Coucou oficial
-- Releases próprias no GitHub (`windows-vX.Y.Z`) para o atualizador do fork funcionar
-- Assinatura de código (certificado) para não aparecer o aviso do SmartScreen
+- [ ] Seguir a Tarefa 4 do plano detalhado: migração, Grok idle/ativo, padrão novo, lista customizada e credenciais.
+- [ ] Validar drag recolhido/expandido, centro/bordas, cantos antigos, escala diferente de 100% e reabertura.
+- [ ] Atualizar README, CHANGELOG e What's New nas 14 línguas; `python3 scripts/test-whats-new.py` passa.
+- Checkpoint 2C.3: testes completos e validação manual passam; publicar somente com pedido explícito.
 
-## Parqueado — para revisitar depois
-- **Segunda Mente no Windows (Flutter desktop, opção 2).** Projeto grande: os plugins de celular (ML Kit, workmanager, health, pedometer, quick_actions, share_handler, agent_background_android) precisam de substituto ou saem no Windows. Exige revisar o D-042 em `segundamente/docs/DECISIONS.md`. Escopo ainda não escolhido: captura e relatório (recomendado), paridade total ou só leitura.
-- **Ponte Notetaker → Segunda Mente via Google Drive.** O Notetaker salva a transcrição em `C:\Users\notefael\Google Drive` no formato `[HH:MM:SS] Nome: fala` (já aceito pelo importador do Segunda Mente) e o celular importa pelo "Importar transcrição". Em aberto: salvar sempre ao fim da gravação ou perguntar a cada vez. O texto vai para um serviço de terceiros, então precisa de aviso e opt-in.
+## Fase 3 — Identidade própria, somente se o proprietário decidir
 
-## Como manter o fork em dia
-`git fetch upstream && git merge upstream/main` — fazer antes de começar cada item.
+- [x] Releases `windows-vX.Y.Z` do fork, SHA-256 e atualizador apontando para `playertwo1/coucou` já existem.
+- [x] Decisão atual: sem certificado pago; instalador não assinado com SHA-256.
+- [ ] 3.1 Decidir se Coucou/Mochi/sons devem ganhar nome/personagem/sons próprios; sem decisão, não alterar identidade visual.
+- [ ] 3.2 Se aprovado, definir novo `identifier` e plano de migração dos dados/permissões existentes antes de mudar `tauri.conf.json`.
+- [ ] 3.3 Testar upgrade da instalação atual, preservação de settings, hooks, permissões e caminho de update antes de publicar.
+- Checkpoint 3: não mudar identifier/nome/sons até haver decisão e teste de migração aprovados. Certificado pago continua fora de escopo.
+
+## Parqueado — não iniciar sem escolher escopo
+
+### Segunda Mente no Windows
+
+- [ ] Escolher um escopo: captura+relatório, somente leitura ou paridade total.
+- [ ] Ler D-042 em `segundamente/docs/DECISIONS.md` e listar plugins Flutter sem suporte Windows.
+- [ ] Criar spec que define o que funciona sem esses plugins e quais dados ficam locais.
+- Checkpoint: sem escopo e decisão aprovados, não criar target Windows nem substituir plugins.
+
+### Ponte Notetaker → Segunda Mente via Google Drive
+
+- [ ] Decidir salvar automaticamente ao parar a gravação ou perguntar a cada chamada.
+- [ ] Definir aviso, opt-in, formato, diretório e comportamento sem Drive instalado/conectado.
+- [ ] Testar que nada é enviado sem opt-in e que reimportar não duplica a transcrição.
+- Checkpoint: integração externa só começa após escolha do fluxo e aprovação da spec.
+
+## Checklist de release (executar apenas com pedido explícito)
+
+- [ ] CHANGELOG contém seção desta versão e README tem linha na tabela de versões.
+- [ ] `windows/src/whats-new/whats-new.json` tem 1–4 itens em 14 línguas; `python3 scripts/test-whats-new.py` passa.
+- [ ] A versão é idêntica em `windows/package.json`, `windows/package-lock.json`, `windows/src-tauri/Cargo.toml`, nas duas entradas de `windows/src-tauri/Cargo.lock` e em `windows/src-tauri/tauri.conf.json`.
+- [ ] Build/installer não assinado gerado e SHA-256 conferido; não comprar nem exigir certificado.
+- [ ] Tag `windows-vX.Y.Z` enviada ao fork; tag sozinha não inicia build.
+- [ ] Rodar `gh workflow run windows.yml -R playertwo1/coucou --ref windows-vX.Y.Z`; conferir workflow, release e asset antes de declarar publicado.
+- Nunca executar esta lista de publicação sem o proprietário pedir release.
+
+## Manter o fork atualizado
+
+Antes de cada subfase de código, partir de árvore limpa, atualizar `upstream` e integrar `upstream/main`. Resolver e registrar conflitos antes da subfase; não misturar a resolução de upstream com a feature do checkpoint.
