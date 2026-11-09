@@ -89,7 +89,7 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 - [ ] Repetir sem clicar: o Coucou não pode aprovar sozinho; o pedido deve continuar no terminal.
 - [ ] Usar “Abrir terminal” e confirmar que a janela da sessão correta vem à frente.
 - Checkpoint: confirmar cada uma das três decisões (permitir, negar, sem clique) e o terminal-alvo. Não marcar aprovado se só a tela do cartão foi vista.
-- Status (2026-11-09): INSTALADO APÓS APROVAÇÃO EXPLÍCITA — os 12 eventos receberam um handler Coucou e um backup datado foi criado. Removendo os handlers Coucou só em memória, o restante do `settings.json` corresponde ao backup. Os testes de Permitir/Negar/sem clique e Abrir terminal continuam pendentes; a sessão de teste aguarda confiança explícita em uma pasta temporária vazia.
+- Status (2026-11-09): INSTALADO APÓS APROVAÇÃO EXPLÍCITA — os 12 eventos receberam um handler Coucou e um backup datado foi criado. Removendo os handlers Coucou só em memória, o restante do `settings.json` corresponde ao backup. Os testes de Permitir/Negar/sem clique e Abrir terminal continuam pendentes; a pasta temporária vazia foi confiada explicitamente; `echo COUCOU_PERMISSION_TEST` executou uma vez e imprimiu o texto, sem leitura ou alteração de arquivos. Não apareceu cartão de Permitir/Negar do Coucou; esse resultado não valida o fluxo de permissão.
 
 ### 0.5 — Spotify, uso do plano e resumo semanal
 
