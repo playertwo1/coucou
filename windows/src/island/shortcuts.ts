@@ -65,6 +65,11 @@ export function runGlobalShortcut(host: ShortcutHost, action: string, resume: ()
       host.alert("prompt");
       break;
 
+    case "newSession":
+      resume();
+      host.alert("launch");
+      break;
+
     case "goToAlert": {
       const asking = State.tasks.find((t) => t.state === "question");
       const pending = State.pendingApproval;

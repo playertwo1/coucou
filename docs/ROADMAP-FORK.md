@@ -22,7 +22,7 @@ Esforço: P = dias · M = 1–2 semanas · G = mais que isso.
 | Ilha num canto da tela (em vez do topo central) | Settings → Display → Position | M |
 | Arrastar o Mochi sobre uma janela para anexá-la como contexto do chat | "drag onto any window" | M |
 | Botão de ditado no chat e na "Nova sessão" (o Flow já existe, falta o botão) | mic do chat | P |
-| Atalho global para "Nova sessão do Claude Code" | Shortcuts | P |
+| Atalho global para "Nova sessão do Claude Code" — **feito** (Ctrl+Alt+L, `newSession`) | Shortcuts | P |
 | Enviar arquivo solto na ilha por e-mail via Outlook clássico (`mail/` já fala com Outlook) | Mail.app | M |
 | Portfólio de cripto (carteiras + exchanges, só leitura) | Portfolio pill | G |
 | Cal.com em calendário em vez de lista | Cal.com card | P |
