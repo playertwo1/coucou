@@ -90,3 +90,15 @@ test("an export failure is visible and a successful retry reports the selected p
   assert.doesNotMatch(fixture.detail().textContent, /Destination is not writable/);
   assert.match(fixture.detail().textContent, /Saved as C:\\chosen\\Synthetic call\.md/);
 });
+
+test("the notes search: every word, case and accents ignored, in any part of the note", async () => {
+  const { noteMatches } = await import("../src/core/flow.ts");
+  const note = {
+    title: "Call · 11-09 14:00", summary: "Orçamento do projeto", keyPoints: ["Prazo em dezembro"],
+    todos: [{ id: "1", text: "Enviar proposta", done: false }],
+    speakers: [{ id: "a", name: "Marina", color: 0, isMe: false }],
+    lines: [{ id: "l", speaker: "a", start: 0, end: 1, text: "Vamos fechar o contrato" }],
+  };
+  for (const q of ["", "  ", "orcamento", "MARINA contrato", "dezembro proposta", "call 11-09"]) assert.ok(noteMatches(note, q), q);
+  for (const q of ["marina budget", "zzz"]) assert.ok(!noteMatches(note, q), q);
+});

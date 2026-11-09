@@ -33,7 +33,7 @@ Fora: Apple Music (não existe no Windows).
 - [x] Coucoudoro (item 1 da tabela) — código e testes prontos, falta ver no app
 - [x] Botão de ditado no chat e na "Nova sessão" (item 6) — `views/dictate.ts`, falta ver no app
 - [x] Ilha num canto da tela (item 8) — Settings → Display → Position, 4 cantos; falta ver no app
-- [ ] Assinatura e atualização próprias do fork (item 9): decidir entre certificado pago (remove o aviso do SmartScreen) ou manter a verificação por SHA-256 e o atualizador do `playertwo1/coucou`
+- [x] Assinatura e atualização próprias do fork (item 9): decidido — sem certificado pago; o instalador sai sem assinatura, com SHA-256, nas releases `windows-vX.Y.Z` de `playertwo1/coucou`, e o app busca a atualização por lá (0.6.1 publicada).
 - [x] Trocar Spotify por **YouTube Music** (pílula `integration_youtubemusic`, só Windows, falta ver no app) (integração nova, no lugar do Spotify, que fica fora). Reaproveitar a leitura de sessão de mídia do Windows; muda a detecção do app e o comando de abrir.
 
 Nota: o Spotify da Fase 0 continua sendo testado, porque é o que existe hoje.
@@ -41,7 +41,7 @@ Nota: o Spotify da Fase 0 continua sendo testado, porque é o que existe hoje.
 **Ideias novas aprovadas (Fase 1B):**
 - [x] Notetaker em modo "anotar ideia": atalho global grava a sua voz sem chamada, transcreve com o Parakeet e salva a nota com data e hora (P) — feito: Ctrl+Alt+I
 - [x] Modo reunião da ilha: o Mochi mostra que está gravando e as notificações menores se calam enquanto o Notetaker grava (P) — feito (Mochi "pensando", só aprovações e perguntas fazem som)
-- [ ] Histórico pesquisável de transcrições, por palavra ou por pessoa (M)
+- [x] Histórico pesquisável de transcrições, por palavra ou por pessoa (M) — feito: campo Search na lista de notas
 - [x] Coucoudoro ligado às sessões do Claude Code: tempo de foco por projeto e total do dia (M, depende do Coucoudoro) — feito: total do dia e por projeto no cartão
 - [x] Ditar uma linha ao fim de cada ciclo do Coucoudoro e guardá-la no histórico do dia (P, depende do Coucoudoro) — feito
 - [x] Playlist de foco no Coucoudoro com YouTube Music: abre ou pausa a música junto com o ciclo (P, depende do YouTube Music) — feito (só com a pílula do YouTube Music ligada)

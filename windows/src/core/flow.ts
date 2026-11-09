@@ -165,6 +165,19 @@ export interface Note {
   startLocal: string;
 }
 
+/** Every word of `query` (case and accents ignored) is in the note: its title, summary, key points,
+ *  to-dos, speakers' names or what was said. An empty query matches every note. */
+export function noteMatches(note: Note, query: string): boolean {
+  const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const text = fold([
+    note.title, note.summary ?? "", ...note.keyPoints, ...note.todos.map((x) => x.text),
+    ...note.speakers.map((s) => s.name), ...note.lines.map((l) => l.text),
+  ].join("\n"));
+  return words.every((w) => text.includes(w));
+}
+
 export interface NotesState {
   notes: Note[];
   recording: string | null;

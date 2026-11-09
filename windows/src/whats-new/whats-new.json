@@ -2,6 +2,151 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.2",
+      "items": [
+        {
+          "icon": "clock",
+          "title": {
+            "en": "Coucoudoro keeps your day",
+            "zh-Hans": "Coucoudoro 记录你的一天",
+            "hi": "Coucoudoro आपका दिन सहेजता है",
+            "es": "Coucoudoro guarda tu día",
+            "ar": "Coucoudoro يحفظ يومك",
+            "fr": "Coucoudoro garde ta journée",
+            "bn": "Coucoudoro আপনার দিন রাখে",
+            "pt-BR": "Coucoudoro guarda seu dia",
+            "ru": "Coucoudoro помнит ваш день",
+            "id": "Coucoudoro mencatat harimu",
+            "de": "Coucoudoro merkt sich deinen Tag",
+            "tr": "Coucoudoro gününü tutar",
+            "ko": "Coucoudoro가 하루를 기록해요",
+            "ja": "Coucoudoro が一日を記録"
+          },
+          "detail": {
+            "en": "Focus time per project, a line after each phase, and music that follows.",
+            "zh-Hans": "按项目统计专注时间，每段后记一句话，音乐随之播放。",
+            "hi": "प्रोजेक्ट के हिसाब से फ़ोकस समय, हर चरण के बाद एक पंक्ति, और साथ चलता संगीत।",
+            "es": "Tiempo por proyecto, una línea tras cada fase y la música que lo sigue.",
+            "ar": "وقت التركيز لكل مشروع وسطر بعد كل مرحلة وموسيقى ترافقها.",
+            "fr": "Temps par projet, une ligne après chaque phase, et la musique qui suit.",
+            "bn": "প্রতি প্রজেক্টের ফোকাস সময়, প্রতিটি ধাপের পর এক লাইন, আর সঙ্গে গান।",
+            "pt-BR": "Tempo por projeto, uma linha após cada fase e a música que acompanha.",
+            "ru": "Время по проектам, строка после каждой фазы и музыка в такт.",
+            "id": "Waktu fokus per proyek, satu baris tiap fase, dan musik yang mengikuti.",
+            "de": "Fokuszeit pro Projekt, eine Zeile nach jeder Phase und passende Musik.",
+            "tr": "Proje başına odak süresi, her aşamadan sonra bir satır ve eşlik eden müzik.",
+            "ko": "프로젝트별 집중 시간, 단계마다 한 줄, 그리고 따라오는 음악.",
+            "ja": "プロジェクト別の集中時間、各フェーズ後の一言、連動する音楽。"
+          }
+        },
+        {
+          "icon": "mic",
+          "title": {
+            "en": "Note an idea by voice",
+            "zh-Hans": "用语音记下想法",
+            "hi": "आवाज़ से विचार नोट करें",
+            "es": "Anota una idea con la voz",
+            "ar": "دوّن فكرة بصوتك",
+            "fr": "Note une idée à la voix",
+            "bn": "কণ্ঠে আইডিয়া লিখুন",
+            "pt-BR": "Anote uma ideia por voz",
+            "ru": "Записывайте идеи голосом",
+            "id": "Catat ide lewat suara",
+            "de": "Ideen per Stimme notieren",
+            "tr": "Fikri sesle not et",
+            "ko": "음성으로 아이디어 메모",
+            "ja": "声でアイデアをメモ"
+          },
+          "detail": {
+            "en": "Press Ctrl+Alt+I, speak, press again: saved with its date and time.",
+            "zh-Hans": "按 Ctrl+Alt+I，说话，再按一次：连同日期时间一起保存。",
+            "hi": "Ctrl+Alt+I दबाएँ, बोलें, फिर दबाएँ: तारीख़ और समय के साथ सहेजा गया।",
+            "es": "Pulsa Ctrl+Alt+I, habla y pulsa otra vez: se guarda con fecha y hora.",
+            "ar": "اضغط Ctrl+Alt+I وتحدّث واضغط مجددًا: يُحفظ بتاريخه ووقته.",
+            "fr": "Appuie sur Ctrl+Alt+I, parle, rappuie : gardé avec sa date et son heure.",
+            "bn": "Ctrl+Alt+I চাপুন, বলুন, আবার চাপুন: তারিখ ও সময়সহ সংরক্ষিত।",
+            "pt-BR": "Aperte Ctrl+Alt+I, fale e aperte de novo: salvo com data e hora.",
+            "ru": "Нажмите Ctrl+Alt+I, говорите, нажмите снова: сохранится с датой и временем.",
+            "id": "Tekan Ctrl+Alt+I, bicara, tekan lagi: tersimpan dengan tanggal dan jam.",
+            "de": "Strg+Alt+I drücken, sprechen, nochmal drücken: mit Datum und Uhrzeit gespeichert.",
+            "tr": "Ctrl+Alt+I'ya bas, konuş, tekrar bas: tarih ve saatiyle kaydedilir.",
+            "ko": "Ctrl+Alt+I를 누르고 말한 뒤 다시 누르면 날짜와 시간과 함께 저장돼요.",
+            "ja": "Ctrl+Alt+I を押して話し、もう一度押すと日時付きで保存。"
+          }
+        },
+        {
+          "icon": "bell",
+          "title": {
+            "en": "Quiet during a recording",
+            "zh-Hans": "录音时保持安静",
+            "hi": "रिकॉर्डिंग के दौरान शांत",
+            "es": "Silencio mientras grabas",
+            "ar": "هادئ أثناء التسجيل",
+            "fr": "Silence pendant l'enregistrement",
+            "bn": "রেকর্ডিংয়ের সময় চুপ",
+            "pt-BR": "Silêncio durante a gravação",
+            "ru": "Тишина во время записи",
+            "id": "Senyap saat merekam",
+            "de": "Ruhe während der Aufnahme",
+            "tr": "Kayıt sırasında sessiz",
+            "ko": "녹음 중에는 조용히",
+            "ja": "録音中は静かに"
+          },
+          "detail": {
+            "en": "While the Notetaker records, only requests for you still make a sound.",
+            "zh-Hans": "记录期间，只有需要你处理的请求才会出声。",
+            "hi": "नोटटेकर रिकॉर्ड करते समय केवल आपके अनुरोधों की आवाज़ आती है।",
+            "es": "Mientras el Notetaker graba, solo suenan las peticiones para ti.",
+            "ar": "أثناء التسجيل لا يصدر صوتًا إلا الطلبات الموجّهة إليك.",
+            "fr": "Pendant l'enregistrement, seules les demandes pour toi font du bruit.",
+            "bn": "রেকর্ডিংয়ের সময় শুধু আপনার জন্য অনুরোধেই আওয়াজ হয়।",
+            "pt-BR": "Enquanto o Notetaker grava, só os pedidos para você fazem som.",
+            "ru": "Пока идёт запись, звучат только запросы к вам.",
+            "id": "Saat Notetaker merekam, hanya permintaan untukmu yang berbunyi.",
+            "de": "Während der Aufnahme klingen nur Anfragen an dich.",
+            "tr": "Kayıt sürerken yalnızca senden istenenler ses çıkarır.",
+            "ko": "녹음 중에는 사용자에게 온 요청만 소리가 납니다.",
+            "ja": "録音中は、あなた宛ての依頼だけが音を鳴らします。"
+          }
+        },
+        {
+          "icon": "eye",
+          "title": {
+            "en": "Search your notes",
+            "zh-Hans": "搜索你的笔记",
+            "hi": "अपने नोट खोजें",
+            "es": "Busca en tus notas",
+            "ar": "ابحث في ملاحظاتك",
+            "fr": "Cherche dans tes notes",
+            "bn": "আপনার নোটে খুঁজুন",
+            "pt-BR": "Pesquise nas notas",
+            "ru": "Поиск по заметкам",
+            "id": "Cari di catatanmu",
+            "de": "Notizen durchsuchen",
+            "tr": "Notlarında ara",
+            "ko": "노트 검색",
+            "ja": "ノートを検索"
+          },
+          "detail": {
+            "en": "By word or by person, in titles, summaries and what was said.",
+            "zh-Hans": "按词或按人搜索标题、摘要和发言内容。",
+            "hi": "शब्द या व्यक्ति से खोजें: शीर्षक, सारांश और कही गई बातों में।",
+            "es": "Por palabra o persona: títulos, resúmenes y lo que se dijo.",
+            "ar": "بالكلمة أو بالشخص في العناوين والملخصات وما قيل.",
+            "fr": "Par mot ou par personne : titres, résumés et paroles.",
+            "bn": "শব্দ বা ব্যক্তি দিয়ে: শিরোনাম, সারাংশ ও কথায়।",
+            "pt-BR": "Por palavra ou pessoa: títulos, resumos e o que foi dito.",
+            "ru": "По слову или человеку: в заголовках, итогах и репликах.",
+            "id": "Per kata atau orang: judul, ringkasan, dan ucapan.",
+            "de": "Nach Wort oder Person: Titel, Zusammenfassungen und Gesagtes.",
+            "tr": "Kelimeye veya kişiye göre: başlık, özet ve söylenenlerde.",
+            "ko": "단어나 사람으로 제목, 요약, 발언 내용을 검색.",
+            "ja": "単語や人物で、タイトル・要約・発言を検索。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.1",
       "items": [
         {

@@ -26,6 +26,13 @@ Fixes:
 - **Mochi reads the memory pressure** as soon as he comes back on screen (#795 by @orrrrli)
 - **iPhone link**: the relay is sturdier (#1035) and no longer retries a bad device token forever (#1036), by @hasnain-amir
 
+## Windows and Linux 0.6.2 — November 9, 2026 *(playertwo1 fork)*
+
+- **Coucoudoro keeps your day** — each finished work phase is logged with the project you were on; the card shows today's focus per project, and after a phase asks for one line (type it or use the mic) that is kept with it. With the YouTube Music pill on, the music plays when work starts and pauses when rest does
+- **Note an idea by voice** *(Ctrl+Alt+I)* — your voice alone, no call: speak, press again, and the note is saved with its date and time
+- **Quiet while the Notetaker records** — Mochi listens along, and only requests for you (permissions, questions) still make a sound
+- **Search your notes** — by word or by person, in titles, summaries, to-dos and what was said
+
 ## Windows and Linux 0.6.1 — November 9, 2026 *(playertwo1 fork)*
 
 - **Coucoudoro timer** — a work and rest pill on the island, with its own card

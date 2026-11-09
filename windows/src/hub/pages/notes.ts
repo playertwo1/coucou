@@ -4,7 +4,7 @@
 import { h, clear } from "../../views/dom";
 import { t } from "../../i18n/i18n";
 import { onEvent } from "../../core/bridge";
-import { FlowBridge, clock, speakerColor, type Note, type NotesState } from "../../core/flow";
+import { FlowBridge, clock, noteMatches, speakerColor, type Note, type NotesState } from "../../core/flow";
 import type { HubContext } from "../shell";
 import { emptyState, glowCard } from "../hero";
 import { button, iconButton, segmented } from "../ui";
@@ -35,6 +35,12 @@ export async function notesPage(page: HTMLElement, ctx: HubContext) {
     ));
   }
 
+  let query = "";
+  const search = h("input", { class: "hub-input", placeholder: t("Search"), type: "search" }) as HTMLInputElement;
+  search.addEventListener("input", () => {
+    query = search.value;
+    drawList(true);
+  });
   const listEl = h("div", { class: "hub-notes-list" });
   const detail = h("div", { class: "hub-note-detail" });
   const notesContainer = h("div", { class: "hub-notes" }, listEl, detail);
@@ -69,17 +75,20 @@ export async function notesPage(page: HTMLElement, ctx: HubContext) {
     return b;
   }
 
-  function drawList() {
+  // `typing`: the search field keeps its place (and the keyboard) while the list under it is redrawn.
+  function drawList(typing = false) {
     clear(listEl);
     const rb = recordButton();
     rb.style.width = "100%";
     listEl.append(rb);
+    if (state.notes.length > 0) listEl.append(search);
+    if (typing) search.focus();
     if (startError) listEl.append(h("div", { class: "hub-warn", text: startError }));
     if (state.notes.length === 0) {
       listEl.append(h("div", { class: "hub-note", style: "padding:14px 4px", text: t("Your calls will show here. Click Record a call when one starts.") }));
     }
     let day = "";
-    for (const n of state.notes) {
+    for (const n of state.notes.filter((x) => noteMatches(x, query))) {
       const d = new Date(n.start).toDateString();
       if (d !== day) {
         day = d;
