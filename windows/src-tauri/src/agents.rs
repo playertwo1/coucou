@@ -368,12 +368,12 @@ fn apply_in(agent: Agent, home: &Path, relay: &Relay, install: bool, fingerprint
 
 // ── Shared JSON helpers ───────────────────────────────────────────────────────
 
-fn unexpected(what: &str) -> String {
+pub(crate) fn unexpected(what: &str) -> String {
     crate::i18n::tf("{what} has an unexpected type — Coucou has not touched it.", &[("what", what)])
 }
 
 /// `root[key]` as an object to edit: absent is empty, anything else is refused.
-fn object_at(root: &Map<String, Value>, key: &str) -> Result<Map<String, Value>, String> {
+pub(crate) fn object_at(root: &Map<String, Value>, key: &str) -> Result<Map<String, Value>, String> {
     match root.get(key) {
         None => Ok(Map::new()),
         Some(Value::Object(m)) => Ok(m.clone()),

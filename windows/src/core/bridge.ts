@@ -414,9 +414,12 @@ export const Bridge = {
   /** Open a terminal running the provider's sign-in command (e.g. `codex login`, `agy`). */
   subscriptionSignIn: (provider: string) =>
     callOrThrow<void>("subscription_sign_in", { provider }),
-  /** Switch Gemini / Antigravity between Google OAuth and API key. */
-  geminiSetAuthMode: (oauth: boolean) =>
-    callOrThrow<void>("gemini_set_auth_mode", { oauth }),
+  /** Diff of switching Gemini / Antigravity between Google OAuth and an API key. */
+  geminiAuthPreview: (oauth: boolean) =>
+    callOrThrow<AgentHookPlan>("gemini_auth_preview", { oauth }),
+  /** Writes it — only after an explicit click on the preview. Returns the backups taken. */
+  geminiAuthApply: (oauth: boolean, fingerprint: string) =>
+    callOrThrow<string>("gemini_auth_apply", { oauth, fingerprint }),
   /** Whether a provider can answer with this key: Claude Code stands in for a missing Anthropic one. */
   keyReady: (key: string) =>
     key === "anthropic-api-key" ? call<boolean>("claude_ready") : call<boolean>("secret_present", { key }),

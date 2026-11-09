@@ -636,10 +636,16 @@ fn subscription_sign_in(provider: String) -> Result<(), String> {
     cli_relay::launch_sign_in(&provider)
 }
 
-/// Switch Gemini / Antigravity between Google OAuth and API key.
+/// The diff of switching Gemini / Antigravity between Google OAuth and an API key.
 #[tauri::command]
-fn gemini_set_auth_mode(oauth: bool) -> Result<(), String> {
-    cli_relay::set_gemini_auth_mode(oauth)
+fn gemini_auth_preview(oauth: bool) -> Result<config_file::Plan, String> {
+    cli_relay::gemini_auth_preview(oauth)
+}
+
+/// Only ever called from an explicit click, with the preview's fingerprint.
+#[tauri::command]
+fn gemini_auth_apply(oauth: bool, fingerprint: String) -> Result<String, String> {
+    cli_relay::gemini_auth_apply(oauth, &fingerprint)
 }
 
 /// A switch under "Your AI subscriptions" moved: saved, and both windows told.
@@ -974,7 +980,8 @@ pub fn run() {
             subscription_status,
             subscription_set,
             subscription_sign_in,
-            gemini_set_auth_mode,
+            gemini_auth_preview,
+            gemini_auth_apply,
             secret_set,
             secret_clear,
             refresh_integration,

@@ -390,9 +390,9 @@ function subscriptionsSection(): HTMLElement {
           h("span", {
             class: "hint",
             style: row.signedIn ? "color:#22c55e" : "",
-            text: row.signedIn
-              ? (row.authMode ? t("Connected · {detail}", { detail: row.authMode }) : t("Connected"))
-              : (row.authMode ? t("Connected · {detail}", { detail: row.authMode }) : t("Not connected")),
+            text: !row.signedIn
+              ? t("Not connected")
+              : (row.authMode ? t("Connected · {detail}", { detail: row.authMode }) : t("Connected")),
           }),
           h("span", { class: "spacer" }),
           h("button", {
@@ -405,23 +405,50 @@ function subscriptionsSection(): HTMLElement {
 
         if (row.provider === "google") {
           const isOAuth = row.signedIn || (row.authMode ? row.authMode.toLowerCase().includes("oauth") : false);
-          const toggleRow = h("div", { class: "row", style: "margin-top:2px" });
-          toggleRow.append(
-            h("span", {
-              class: "hint",
-              text: isOAuth ? t("Connected · {detail}", { detail: "Google OAuth" }) : t("Connected · {detail}", { detail: "Gemini API key" }),
-            }),
+          // ~/.gemini/settings.json belongs to the Gemini CLI: diff, dated backup, then a click.
+          const box = h("div", { style: "display:flex;flex-direction:column;gap:4px" });
+          const back = async () => {
+            const fresh = await Bridge.subscriptionStatus();
+            if (fresh) draw(fresh);
+          };
+          box.append(h("div", { class: "row", style: "margin-top:2px" },
             h("span", { class: "spacer" }),
             h("button", {
               text: isOAuth ? t("Use API key") : t("Use Google OAuth"),
               onclick: async () => {
-                await Bridge.geminiSetAuthMode(!isOAuth);
-                const fresh = await Bridge.subscriptionStatus();
-                if (fresh) draw(fresh);
+                clear(box);
+                try {
+                  const plan = await Bridge.geminiAuthPreview(!isOAuth);
+                  const confirm = h("button", { class: "primary", text: t("Back up and write") });
+                  confirm.addEventListener("click", async () => {
+                    confirm.disabled = true;
+                    try {
+                      await Bridge.geminiAuthApply(!isOAuth, plan.fingerprint);
+                      await back();
+                    } catch (err) {
+                      confirm.disabled = false;
+                      box.append(h("div", { class: "notice err", text: String(err).replace(/^Error:\s*/, "") }));
+                    }
+                  });
+                  box.append(
+                    renderDiff(plan.diff),
+                    h("div", { class: "row" }, h("span", {
+                      class: "path",
+                      text: plan.backup ? t("Backup → {path}", { path: plan.backup }) : t("No existing file — nothing to back up."),
+                    })),
+                    h("div", { class: "row" }, confirm, h("button", { text: t("Cancel"), onclick: () => void back() })),
+                  );
+                } catch (err) {
+                  // An unreadable settings.json stops here; it is never treated as empty.
+                  box.append(
+                    h("div", { class: "notice err", text: String(err).replace(/^Error:\s*/, "") }),
+                    h("div", { class: "row" }, h("button", { text: t("Cancel"), onclick: () => void back() })),
+                  );
+                }
               },
             }),
-          );
-          lines.push(toggleRow);
+          ));
+          lines.push(box);
         }
 
         lines.push(h("div", {

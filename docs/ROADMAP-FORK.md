@@ -347,6 +347,16 @@ Cada item segue a sequência: descoberta do código atual → mini-spec/aceite �
 - Se o equipamento de validação continuar com um monitor, registrar HARDWARE INDISPONÍVEL; manter essa caixa pendente.
 - Checkpoint: relatório lista quantidade de monitores, resolução/escala e resultados; não afirmar validação multi-monitor sem dois displays.
 
+### 2.11 — Login das assinaturas e modo de autenticação do Gemini (P)
+
+Spec: `docs/superpowers/specs/2026-11-09-subscription-sign-in-design.md`; plano: `docs/superpowers/plans/2026-11-09-subscription-sign-in.md`.
+
+- [x] Estado de login somente leitura e botão Connect por CLI em Settings → Your AI subscriptions.
+- [x] Troca OAuth ↔ chave de API do Gemini via `config_file` (diff, backup datado, clique); JSON inválido é recusado sem gravar.
+- [x] Testes: `cargo test --lib` (613), `npx tsc --noEmit`, `npm test` (582) passam em 2026-11-09.
+- [ ] Manual: Connect abre o login certo de cada CLI instalada; a troca do Gemini mostra o diff, Cancel não grava, confirmar grava e cria o backup; o estado exibido bate com a CLI.
+- Checkpoint 2.11: nenhum arquivo de agente gravado sem diff + clique; nenhum token exibido ou registrado.
+
 ## Fase 2B — Paridade entre agentes e ambientes
 
 Objetivo: Claude, Codex, Antigravity e Hermes devem compartilhar as funções de agente; herdr e Orca são ambientes de execução. Executar na ordem abaixo e fechar cada checkpoint antes da etapa seguinte.

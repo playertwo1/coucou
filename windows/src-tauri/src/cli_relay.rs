@@ -25,7 +25,7 @@ use tokio::io::AsyncWriteExt;
 use crate::chat::{self, Chat, ChatContext, ChatReply, ModelInfo};
 use crate::i18n::tf;
 use crate::settings::Settings;
-use crate::{claude_code, platform, secrets, settings};
+use crate::{agents, claude_code, config_file, platform, secrets, settings};
 
 /// How long a chat turn may take: it may search the web.
 const CHAT_TIMEOUT: Duration = Duration::from_secs(180);
@@ -235,53 +235,35 @@ pub fn auth_info(cli: Cli) -> (bool, Option<String>) {
     }
 }
 
-/// Switch Gemini / Antigravity between Google OAuth ("oauth-personal") and API Key ("gemini-api-key").
-pub fn set_gemini_auth_mode(oauth: bool) -> Result<(), String> {
-    let home = platform::home_dir();
-    let settings_path = home.join(".gemini").join("settings.json");
-    let mut root: Value = if let Ok(bytes) = std::fs::read(&settings_path) {
-        serde_json::from_slice(&bytes).unwrap_or_else(|_| json!({}))
-    } else {
-        json!({})
-    };
+/// Switching Gemini / Antigravity between Google OAuth ("oauth-personal") and an
+/// API key ("gemini-api-key") changes only `security.auth.selectedType` in
+/// ~/.gemini/settings.json. It goes through config_file like every other edit
+/// of an agent's config: diff shown, dated backup, written after a click.
+fn gemini_auth_edits(home: &Path, oauth: bool) -> Vec<config_file::FileEdit<'static>> {
+    let target = if oauth { "oauth-personal" } else { "gemini-api-key" };
+    vec![config_file::FileEdit {
+        path: home.join(".gemini").join("settings.json"),
+        edit: config_file::json_edit("settings.json".into(), move |current| {
+            let root = current.as_object().cloned().unwrap_or_default();
+            let mut security = agents::object_at(&root, "security")?;
+            let mut auth = agents::object_at(&security, "auth")?;
+            auth.insert("selectedType".into(), json!(target));
+            security.insert("auth".into(), Value::Object(auth));
+            let mut next = root;
+            next.insert("security".into(), Value::Object(security));
+            Ok(Some(Value::Object(next)))
+        }),
+    }]
+}
 
-    let target_type = if oauth { "oauth-personal" } else { "gemini-api-key" };
-    if !root.is_object() {
-        root = json!({});
-    }
-    let sec = root.as_object_mut().unwrap().entry("security").or_insert_with(|| json!({}));
-    if !sec.is_object() {
-        *sec = json!({});
-    }
-    let auth = sec.as_object_mut().unwrap().entry("auth").or_insert_with(|| json!({}));
-    if !auth.is_object() {
-        *auth = json!({});
-    }
-    auth.as_object_mut().unwrap().insert("selectedType".into(), json!(target_type));
+pub fn gemini_auth_preview(oauth: bool) -> Result<config_file::Plan, String> {
+    config_file::preview(&gemini_auth_edits(&platform::home_dir(), oauth))
+}
 
-    if oauth {
-        let accounts_path = home.join(".gemini").join("google_accounts.json");
-        if let Ok(bytes) = std::fs::read(&accounts_path) {
-            if let Ok(mut acc_json) = serde_json::from_slice::<Value>(&bytes) {
-                if acc_json.get("active").map_or(true, |v| v.is_null()) {
-                    let old_account = acc_json.get("old").and_then(Value::as_array).and_then(|arr| arr.first()).cloned();
-                    if let Some(old) = old_account {
-                        if let Some(m) = acc_json.as_object_mut() {
-                            m.insert("active".into(), old);
-                        }
-                        let _ = std::fs::write(&accounts_path, serde_json::to_string_pretty(&acc_json).unwrap_or_default());
-                    }
-                }
-            }
-        }
-    }
-
-    let text = serde_json::to_string_pretty(&root).map_err(|e| e.to_string())?;
-    if let Some(parent) = settings_path.parent() {
-        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
-    }
-    std::fs::write(&settings_path, text).map_err(|e| e.to_string())?;
-    Ok(())
+/// Only ever called from an explicit click, with the preview's fingerprint.
+pub fn gemini_auth_apply(oauth: bool, fingerprint: &str) -> Result<String, String> {
+    let backups = config_file::apply(&gemini_auth_edits(&platform::home_dir(), oauth), fingerprint)?;
+    Ok(backups.iter().map(|p| p.display().to_string()).collect::<Vec<_>>().join("\n"))
 }
 
 /// Open a terminal to sign in with the provider's CLI (e.g. `codex login`, `agy`, `claude login`).
@@ -760,6 +742,35 @@ pub fn set(settings: &mut Settings, provider: &str, on: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gemini_auth_switch_keeps_the_rest_and_refuses_what_it_cannot_read() {
+        let home = config_file::tests::scratch("gemini-auth");
+        let path = home.join(".gemini").join("settings.json");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        let original = br#"{"theme":"dark","security":{"auth":{"selectedType":"gemini-api-key","x":1}}}"#;
+        std::fs::write(&path, original).unwrap();
+
+        let plan = config_file::preview(&gemini_auth_edits(&home, true)).unwrap();
+        assert!(plan.diff.contains("oauth-personal"), "{}", plan.diff);
+        // Nothing is written by the preview.
+        assert_eq!(std::fs::read(&path).unwrap(), original);
+
+        let backups = config_file::apply(&gemini_auth_edits(&home, true), &plan.fingerprint).unwrap();
+        assert_eq!(std::fs::read(&backups[0]).unwrap(), original);
+        let after: Value = serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+        assert_eq!(after, json!({"theme":"dark","security":{"auth":{"selectedType":"oauth-personal","x":1}}}));
+
+        // A stale fingerprint writes nothing.
+        assert!(config_file::apply(&gemini_auth_edits(&home, false), &plan.fingerprint).is_err());
+
+        // Invalid JSON or an odd `security` is refused, never replaced by {}.
+        for bad in [&b"{ not json"[..], &br#"{"security":"oops"}"#[..]] {
+            std::fs::write(&path, bad).unwrap();
+            assert!(config_file::preview(&gemini_auth_edits(&home, false)).is_err());
+            assert_eq!(std::fs::read(&path).unwrap(), bad);
+        }
+    }
 
     fn strings(args: &[OsString]) -> Vec<String> {
         args.iter().map(|a| a.to_string_lossy().into_owned()).collect()
