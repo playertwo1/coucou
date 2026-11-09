@@ -26,6 +26,15 @@ Fixes:
 - **Mochi reads the memory pressure** as soon as he comes back on screen (#795 by @orrrrli)
 - **iPhone link**: the relay is sturdier (#1035) and no longer retries a bad device token forever (#1036), by @hasnain-amir
 
+## Windows and Linux 0.6.1 — November 9, 2026 *(playertwo1 fork)*
+
+- **Coucoudoro timer** — a work and rest pill on the island, with its own card
+- **Dictate in the chat and in New session** — a mic button beside the field starts Flow's hands-free dictation; a second click pastes
+- **The island in a corner** *(Windows)* — Settings → Display → Position: the top centre, or any corner of the screen (the bottom ones sit above the taskbar)
+- **YouTube Music pill** *(Windows)* — what plays, with play, pause, next and previous, read from the system media controls; install YouTube Music as an app from Chrome or Edge (a plain browser tab is not told apart from other videos)
+- **New session shortcut** — Ctrl+Alt+L opens the New Claude Code session view
+- **Updates come from this fork's GitHub releases**
+
 ## Windows and Linux 0.6.0 — Unreleased
 
 - **Start a Claude Code session from the island** — the terminal tab in the island's header: pick the project (the folders your sessions ran in, or any folder), say what Claude should do, and your terminal opens there with Claude Code and your words. Windows Terminal or PowerShell on Windows; your own terminal on Linux. The prompt is never written into a command line

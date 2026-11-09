@@ -2,6 +2,151 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.1",
+      "items": [
+        {
+          "icon": "clock",
+          "title": {
+            "en": "Coucoudoro timer",
+            "zh-Hans": "Coucoudoro 计时器",
+            "hi": "Coucoudoro टाइमर",
+            "es": "Temporizador Coucoudoro",
+            "ar": "مؤقّت Coucoudoro",
+            "fr": "Minuteur Coucoudoro",
+            "bn": "Coucoudoro টাইমার",
+            "pt-BR": "Timer Coucoudoro",
+            "ru": "Таймер Coucoudoro",
+            "id": "Timer Coucoudoro",
+            "de": "Coucoudoro-Timer",
+            "tr": "Coucoudoro zamanlayıcı",
+            "ko": "Coucoudoro 타이머",
+            "ja": "Coucoudoro タイマー"
+          },
+          "detail": {
+            "en": "Work, then rest, from a pill on the island.",
+            "zh-Hans": "在岛上的标签里工作、然后休息。",
+            "hi": "आइलैंड के पिल से काम करें, फिर आराम करें।",
+            "es": "Trabaja y descansa desde una píldora de la isla.",
+            "ar": "اعمل ثم استرح من شارة على الجزيرة.",
+            "fr": "Travaille puis repose-toi depuis une pastille de l'île.",
+            "bn": "আইল্যান্ডের একটি পিল থেকে কাজ করুন, তারপর বিশ্রাম নিন।",
+            "pt-BR": "Trabalhe e descanse a partir de uma pílula da ilha.",
+            "ru": "Работайте и отдыхайте прямо с пилюли на острове.",
+            "id": "Bekerja lalu istirahat dari satu pil di island.",
+            "de": "Arbeiten und Pause machen, direkt aus einer Pille der Insel.",
+            "tr": "Adadaki bir hapdan çalış, sonra dinlen.",
+            "ko": "아일랜드의 알약에서 일하고 쉬세요.",
+            "ja": "アイランドのピルから作業と休憩ができます。"
+          }
+        },
+        {
+          "icon": "mic",
+          "title": {
+            "en": "Dictate in the chat",
+            "zh-Hans": "在聊天中听写",
+            "hi": "चैट में बोलकर लिखें",
+            "es": "Dicta en el chat",
+            "ar": "أملِ في الدردشة",
+            "fr": "Dicte dans le chat",
+            "bn": "চ্যাটে বলে লিখুন",
+            "pt-BR": "Dite no chat",
+            "ru": "Диктуйте в чате",
+            "id": "Dikte di obrolan",
+            "de": "Im Chat diktieren",
+            "tr": "Sohbette dikte et",
+            "ko": "채팅에서 음성 입력",
+            "ja": "チャットで音声入力"
+          },
+          "detail": {
+            "en": "A mic button beside the chat and New session fields.",
+            "zh-Hans": "聊天和新会话输入框旁有麦克风按钮。",
+            "hi": "चैट और नए सत्र के फ़ील्ड के पास माइक बटन।",
+            "es": "Un botón de micrófono junto al chat y a Nueva sesión.",
+            "ar": "زر ميكروفون بجانب حقلَي الدردشة والجلسة الجديدة.",
+            "fr": "Un bouton micro à côté du chat et de Nouvelle session.",
+            "bn": "চ্যাট ও নতুন সেশনের ঘরের পাশে মাইক বোতাম।",
+            "pt-BR": "Um botão de microfone ao lado do chat e de Nova sessão.",
+            "ru": "Кнопка микрофона рядом с чатом и новой сессией.",
+            "id": "Tombol mikrofon di samping kolom obrolan dan sesi baru.",
+            "de": "Ein Mikrofon-Knopf neben Chat und Neuer Sitzung.",
+            "tr": "Sohbet ve Yeni oturum alanlarının yanında mikrofon düğmesi.",
+            "ko": "채팅과 새 세션 입력란 옆의 마이크 버튼.",
+            "ja": "チャットと新規セッション欄の横にマイクボタン。"
+          }
+        },
+        {
+          "icon": "sparkles",
+          "title": {
+            "en": "The island in a corner",
+            "zh-Hans": "岛放在屏幕角落",
+            "hi": "आइलैंड स्क्रीन के कोने में",
+            "es": "La isla en una esquina",
+            "ar": "الجزيرة في زاوية",
+            "fr": "L'île dans un coin",
+            "bn": "আইল্যান্ড স্ক্রিনের কোণে",
+            "pt-BR": "A ilha num canto",
+            "ru": "Остров в углу экрана",
+            "id": "Island di sudut layar",
+            "de": "Die Insel in einer Ecke",
+            "tr": "Ada bir köşede",
+            "ko": "모서리에 놓는 아일랜드",
+            "ja": "隅に置けるアイランド"
+          },
+          "detail": {
+            "en": "Settings → Display → Position: any corner of the screen.",
+            "zh-Hans": "设置 → 显示 → 位置：屏幕的任意一角。",
+            "hi": "सेटिंग → डिस्प्ले → स्थिति: स्क्रीन का कोई भी कोना।",
+            "es": "Ajustes → Pantalla → Posición: cualquier esquina.",
+            "ar": "الإعدادات ← العرض ← الموضع: أي زاوية من الشاشة.",
+            "fr": "Réglages → Affichage → Position : n'importe quel coin.",
+            "bn": "সেটিংস → ডিসপ্লে → অবস্থান: স্ক্রিনের যেকোনো কোণ।",
+            "pt-BR": "Ajustes → Tela → Posição: qualquer canto da tela.",
+            "ru": "Настройки → Экран → Положение: любой угол экрана.",
+            "id": "Pengaturan → Tampilan → Posisi: sudut layar mana pun.",
+            "de": "Einstellungen → Anzeige → Position: jede Ecke.",
+            "tr": "Ayarlar → Ekran → Konum: ekranın herhangi bir köşesi.",
+            "ko": "설정 → 디스플레이 → 위치: 화면의 어느 모서리든.",
+            "ja": "設定 → ディスプレイ → 位置：画面のどの隅でも。"
+          }
+        },
+        {
+          "icon": "heart",
+          "title": {
+            "en": "YouTube Music pill",
+            "zh-Hans": "YouTube Music 标签",
+            "hi": "YouTube Music पिल",
+            "es": "Píldora de YouTube Music",
+            "ar": "شارة YouTube Music",
+            "fr": "Pastille YouTube Music",
+            "bn": "YouTube Music পিল",
+            "pt-BR": "Pílula do YouTube Music",
+            "ru": "Пилюля YouTube Music",
+            "id": "Pil YouTube Music",
+            "de": "YouTube-Music-Pille",
+            "tr": "YouTube Music hapı",
+            "ko": "YouTube Music 알약",
+            "ja": "YouTube Music ピル"
+          },
+          "detail": {
+            "en": "What plays, with play, pause and skip. Install it as an app.",
+            "zh-Hans": "显示正在播放的内容，可播放、暂停、切歌。请先将其安装为应用。",
+            "hi": "क्या चल रहा है, चलाएँ, रोकें, छोड़ें। इसे ऐप के रूप में इंस्टॉल करें।",
+            "es": "Lo que suena, con reproducir, pausa y saltar. Instálalo como app.",
+            "ar": "ما يُشغَّل مع تشغيل وإيقاف وتخطٍّ. ثبّته كتطبيق.",
+            "fr": "Ce qui joue, avec lecture, pause et suivant. Installe-le comme app.",
+            "bn": "কী বাজছে, প্লে, পজ ও স্কিপ সহ। এটি অ্যাপ হিসেবে ইনস্টল করুন।",
+            "pt-BR": "O que toca, com tocar, pausar e pular. Instale como app.",
+            "ru": "Что играет: пуск, пауза, пропуск. Установите как приложение.",
+            "id": "Yang sedang diputar, dengan putar, jeda, lewati. Pasang sebagai aplikasi.",
+            "de": "Was läuft, mit Play, Pause, Weiter. Als App installieren.",
+            "tr": "Çalanı gösterir; oynat, duraklat, atla. Uygulama olarak kur.",
+            "ko": "재생 중인 곡과 재생, 일시정지, 건너뛰기. 앱으로 설치하세요.",
+            "ja": "再生中の曲と再生・一時停止・スキップ。アプリとしてインストールしてください。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "items": [
         {
