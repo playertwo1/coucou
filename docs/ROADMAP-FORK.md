@@ -354,7 +354,12 @@ Spec: `docs/superpowers/specs/2026-11-09-subscription-sign-in-design.md`; plano:
 - [x] Estado de login somente leitura e botão Connect por CLI em Settings → Your AI subscriptions.
 - [x] Troca OAuth ↔ chave de API do Gemini via `config_file` (diff, backup datado, clique); JSON inválido é recusado sem gravar.
 - [x] Testes: `cargo test --lib` (613), `npx tsc --noEmit`, `npm test` (582) passam em 2026-11-09.
-- [ ] Manual: Connect abre o login certo de cada CLI instalada; a troca do Gemini mostra o diff, Cancel não grava, confirmar grava e cria o backup; o estado exibido bate com a CLI.
+- [x] Manual, troca do Gemini (build dev de `998be57`, 2026-11-09): API key → OAuth gravou só `selectedType`, com backup idêntico aos bytes anteriores; a prévia OAuth → API key mostrou o diff e o caminho do backup sem gravar; Cancelar não gravou nem criou backup; confirmar voltou a `gemini-api-key`, com o arquivo final idêntico byte a byte ao inicial.
+- [x] Manual, estado: Claude "Conectado · e-mail", Codex "Conectado · ChatGPT (OAuth)" e Gemini em chave de API "Não conectado" bateram com os arquivos.
+- [x] Corrigido — Connect com a CLI já conectada: o clique em ChatGPT abriu `codex login`, que removeu `~/.codex/auth.json` antes de concluir o novo login. Agora Connect só aparece quando a CLI está desconectada.
+- [x] Corrigido — Gemini em `oauth-personal` aparecia "Conectado · Google (OAuth)" sem conta ativa. Agora "Conectado" exige conta ativa em `google_accounts.json` ou `~/.gemini/oauth_creds.json` (teste `gemini_is_connected_only_with_a_google_sign_in_not_just_the_mode`). Limite: o login próprio do Antigravity (cofre de credenciais do Windows) não é lido.
+- [x] Manual após as correções (build dev, 2026-11-09): Claude e ChatGPT conectados sem botão Connect; Gemini em `oauth-personal` sem conta mostra "Não conectado", com Connect e "Usar chave de API". `cargo test --lib` (614) e `npm test` (582) passam.
+- [ ] Manual pendente: Connect em uma CLI desconectada conclui o login e o estado vira "Conectado" ao reabrir Settings.
 - Checkpoint 2.11: nenhum arquivo de agente gravado sem diff + clique; nenhum token exibido ou registrado.
 
 ## Fase 2B — Paridade entre agentes e ambientes

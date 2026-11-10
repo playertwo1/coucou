@@ -197,41 +197,31 @@ pub fn auth_info(cli: Cli) -> (bool, Option<String>) {
             }
             (false, None)
         }
-        Cli::Antigravity | Cli::Gemini => {
-            let settings_path = home.join(".gemini").join("settings.json");
-            let mut selected_type = None;
-            if let Ok(bytes) = std::fs::read(&settings_path) {
-                if let Ok(json) = serde_json::from_slice::<Value>(&bytes) {
-                    selected_type = json.get("security")
-                        .and_then(|s| s.get("auth"))
-                        .and_then(|a| a.get("selectedType"))
-                        .and_then(Value::as_str)
-                        .map(String::from);
-                }
-            }
-            let accounts_path = home.join(".gemini").join("google_accounts.json");
-            let mut active_email = None;
-            if let Ok(bytes) = std::fs::read(&accounts_path) {
-                if let Ok(json) = serde_json::from_slice::<Value>(&bytes) {
-                    active_email = json.get("active").and_then(Value::as_str).map(String::from);
-                }
-            }
-            if selected_type.as_deref() == Some("oauth-personal") {
-                let desc = active_email.unwrap_or_else(|| "Google (OAuth)".to_string());
-                return (true, Some(desc));
-            } else if selected_type.as_deref() == Some("gemini-api-key") {
-                return (false, Some("API Key".to_string()));
-            }
-            if let Some(email) = active_email {
-                return (true, Some(email));
-            }
-            (false, None)
-        }
+        Cli::Antigravity | Cli::Gemini => gemini_auth_info(&home),
         Cli::Cursor => (false, None),
         Cli::Copilot => {
             let path = home.join(".copilot");
             (path.exists(), None)
         }
+    }
+}
+
+/// Gemini / Antigravity: "connected" needs evidence of a Google sign-in (an
+/// active account or the CLI's OAuth credentials), not just the chosen mode.
+/// shortcut: Antigravity keeps its own sign-in in the OS credential store,
+/// which is not read here; read it if agy users see "Not connected" wrongly.
+fn gemini_auth_info(home: &Path) -> (bool, Option<String>) {
+    let dir = home.join(".gemini");
+    let read = |name: &str| std::fs::read(dir.join(name)).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok());
+    let selected_type = read("settings.json")
+        .and_then(|j| j.pointer("/security/auth/selectedType").and_then(Value::as_str).map(String::from));
+    let active_email = read("google_accounts.json")
+        .and_then(|j| j.get("active").and_then(Value::as_str).map(String::from));
+    let signed_in = active_email.is_some() || dir.join("oauth_creds.json").is_file();
+    match selected_type.as_deref() {
+        Some("oauth-personal") => (signed_in, Some(active_email.unwrap_or_else(|| "Google (OAuth)".to_string()))),
+        Some("gemini-api-key") => (false, Some("API Key".to_string())),
+        _ => (active_email.is_some(), active_email),
     }
 }
 
@@ -742,6 +732,27 @@ pub fn set(settings: &mut Settings, provider: &str, on: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gemini_is_connected_only_with_a_google_sign_in_not_just_the_mode() {
+        let home = config_file::tests::scratch("gemini-info");
+        let dir = home.join(".gemini");
+        std::fs::create_dir_all(&dir).unwrap();
+        assert_eq!(gemini_auth_info(&home), (false, None));
+
+        std::fs::write(dir.join("settings.json"), r#"{"security":{"auth":{"selectedType":"oauth-personal"}}}"#).unwrap();
+        std::fs::write(dir.join("google_accounts.json"), r#"{"active":null,"old":["a@b.c"]}"#).unwrap();
+        assert_eq!(gemini_auth_info(&home), (false, Some("Google (OAuth)".into())));
+
+        std::fs::write(dir.join("oauth_creds.json"), "{}").unwrap();
+        assert_eq!(gemini_auth_info(&home), (true, Some("Google (OAuth)".into())));
+
+        std::fs::write(dir.join("google_accounts.json"), r#"{"active":"a@b.c"}"#).unwrap();
+        assert_eq!(gemini_auth_info(&home), (true, Some("a@b.c".into())));
+
+        std::fs::write(dir.join("settings.json"), r#"{"security":{"auth":{"selectedType":"gemini-api-key"}}}"#).unwrap();
+        assert_eq!(gemini_auth_info(&home), (false, Some("API Key".into())));
+    }
 
     #[test]
     fn gemini_auth_switch_keeps_the_rest_and_refuses_what_it_cannot_read() {

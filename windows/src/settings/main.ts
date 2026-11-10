@@ -395,11 +395,12 @@ function subscriptionsSection(): HTMLElement {
               : (row.authMode ? t("Connected · {detail}", { detail: row.authMode }) : t("Connected")),
           }),
           h("span", { class: "spacer" }),
-          h("button", {
-            class: row.signedIn ? "" : "primary",
+          // Signing in again (e.g. `codex login`) drops the current session first: offered only when signed out.
+          ...(row.signedIn ? [] : [h("button", {
+            class: "primary",
             text: t("Connect"),
             onclick: () => void Bridge.subscriptionSignIn(row.provider),
-          }),
+          })]),
         );
         lines.push(authRow);
 
