@@ -1366,7 +1366,7 @@ pub fn is_spotify_app(app_id: &str) -> bool {
 // shortcut: Chrome web app id only, not other Chromium forks' ids; add them when someone needs one.
 pub fn is_youtube_music_app(app_id: &str) -> bool {
     let id = app_id.to_ascii_lowercase();
-    id.contains("cinhimbnkkaeohfgghhklpknlkffjgod")
+    id.contains("cinhimbnkk")
         || id.replace([' ', '-', '_', '.'], "").contains("youtubemusic")
 }
 
@@ -2042,6 +2042,7 @@ mod tests {
     #[test]
     fn youtube_music_sessions() {
         assert!(is_youtube_music_app("Chrome._crx_cinhimbnkkaeohfgghhklpknlkffjgod"));
+        assert!(is_youtube_music_app("Chrome._crx_cinhimbnkkghhklpknlkffjgod"));
         assert!(is_youtube_music_app("com.github.th-ch.youtube-music"));
         assert!(is_youtube_music_app("YouTube Music"));
         assert!(!is_youtube_music_app("Chrome"));
