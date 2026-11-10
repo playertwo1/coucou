@@ -114,5 +114,6 @@ Spec: `docs/superpowers/specs/2026-11-09-subscription-sign-in-design.md`; plano:
 - [x] Corrigido — Connect com a CLI já conectada: o clique em ChatGPT abriu `codex login`, que removeu `~/.codex/auth.json` antes de concluir o novo login. Agora Connect só aparece quando a CLI está desconectada.
 - [x] Corrigido — Gemini em `oauth-personal` aparecia "Conectado · Google (OAuth)" sem conta ativa. Agora "Conectado" exige conta ativa em `google_accounts.json` ou `~/.gemini/oauth_creds.json` (teste `gemini_is_connected_only_with_a_google_sign_in_not_just_the_mode`). Limite: o login próprio do Antigravity (cofre de credenciais do Windows) não é lido.
 - [x] Manual após as correções (build dev, 2026-11-09): Claude e ChatGPT conectados sem botão Connect; Gemini em `oauth-personal` sem conta mostra "Não conectado", com Connect e "Usar chave de API". `cargo test --lib` (614) e `npm test` (582) passam.
-- [ ] Manual pendente: Connect em uma CLI desconectada conclui o login e o estado vira "Conectado" ao reabrir Settings.
+- [x] Manual pendente: Connect em uma CLI desconectada conclui o login e o estado vira "Conectado" ao reabrir Settings.
 - Checkpoint 2.11: nenhum arquivo de agente gravado sem diff + clique; nenhum token exibido ou registrado.
+- Status (2026-11-10): PASS relatado pelo proprietário ("todas já feitas"); sem detalhes de versão, cenários ou logs — evidência do checkpoint não registrada.

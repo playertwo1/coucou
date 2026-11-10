@@ -17,29 +17,32 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 ### 0.1 — Ditado Flow (Parakeet)
 
 - [x] Abrir a build dev 0.6.2 (`windows/target/debug/coucou.exe`); os quatro arquivos Parakeet e os dois do diarizador estão presentes com os tamanhos esperados em `%LOCALAPPDATA%\Coucou\Models`, então não foi necessário baixar nada.
-- [ ] Ditar uma frase de teste no VS Code; conferir que o texto aparece uma vez no campo focado.
-- [ ] Repetir no navegador e no Windows Terminal, um alvo de cada vez.
-- [ ] Se o Windows pedir acesso ao microfone, conceder apenas pelo diálogo clicado pelo usuário.
-- [ ] Passar se o modelo carrega e a frase chega sem duplicação aos três alvos; registrar separadamente qualquer falha.
+- [x] Ditar uma frase de teste no VS Code; conferir que o texto aparece uma vez no campo focado.
+- [x] Repetir no navegador e no Windows Terminal, um alvo de cada vez.
+- [x] Se o Windows pedir acesso ao microfone, conceder apenas pelo diálogo clicado pelo usuário.
+- [x] Passar se o modelo carrega e a frase chega sem duplicação aos três alvos; registrar separadamente qualquer falha.
 - Checkpoint: registrar versão, idioma, três resultados e erro/log sanitizado, sem guardar áudio privado.
 - Status (2026-11-09): PENDENTE A PEDIDO DO PROPRIETÁRIO — só a abertura da build e a presença dos modelos foram verificadas; os testes de ditado nos três alvos não foram executados.
+- Status (2026-11-10): PASS relatado pelo proprietário ("todas já feitas"); sem detalhes de versão, cenários ou logs — evidência do checkpoint não registrada.
 
 ### 0.2 — Notetaker em chamada
 
-- [ ] Escolher uma chamada de teste no Meet, Teams ou Discord; anotar qual aplicativo e se é navegador ou desktop.
-- [ ] Clicar para conceder permissões de áudio que o Windows solicitar.
-- [ ] Gravar um trecho de teste, parar a gravação e conferir transcrição e resumo na lista de notas.
-- [ ] Confirmar que parar a gravação encerra a captura e que a nota continua disponível após reabrir a lista.
+- [x] Escolher uma chamada de teste no Meet, Teams ou Discord; anotar qual aplicativo e se é navegador ou desktop.
+- [x] Clicar para conceder permissões de áudio que o Windows solicitar.
+- [x] Gravar um trecho de teste, parar a gravação e conferir transcrição e resumo na lista de notas.
+- [x] Confirmar que parar a gravação encerra a captura e que a nota continua disponível após reabrir a lista.
 - Checkpoint: registrar aplicativo, fonte de áudio, presença de transcrição/resumo e falhas; não guardar áudio ou fala real como fixture.
 - Status (2026-11-09): BLOQUEADO — aguarda uma chamada de teste escolhida pelo proprietário; nenhuma gravação foi iniciada.
+- Status (2026-11-10): PASS relatado pelo proprietário ("todas já feitas"); sem detalhes de versão, cenários ou logs — evidência do checkpoint não registrada.
 
 ### 0.3 — « OK Coucou » com Anthropic
 
-- [ ] Usar somente uma chave já configurada pelo usuário; se não houver, marcar BLOQUEADO e não pedir para colar o segredo no chat/log.
-- [ ] Enviar uma pergunta curta sem dados pessoais e conferir a resposta na ilha.
-- [ ] Conferir que indisponibilidade de rede/chave é apresentada como erro e não grava o segredo em logs.
+- [x] Usar somente uma chave já configurada pelo usuário; se não houver, marcar BLOQUEADO e não pedir para colar o segredo no chat/log.
+- [x] Enviar uma pergunta curta sem dados pessoais e conferir a resposta na ilha.
+- [x] Conferir que indisponibilidade de rede/chave é apresentada como erro e não grava o segredo em logs.
 - Checkpoint: resultado PASS/FAIL/BLOQUEADO e mensagem sanitizada.
 - Status (2026-11-09): BLOQUEADO — Settings → Chat indicou que não há chave Anthropic configurada; nenhuma pergunta foi enviada.
+- Status (2026-11-10): PASS relatado pelo proprietário ("todas já feitas"); sem detalhes de versão, cenários ou logs — evidência do checkpoint não registrada.
 
 ### 0.4 — Hook do Claude Code e Windows Terminal
 
@@ -76,8 +79,8 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 ### 0.6 — Inicialização com o Windows
 
 - [x] Verificar o estado atual da opção de iniciar com o Windows; não alterá-la sem autorização.
-- [ ] Se estiver habilitada, combinar um reinício de teste, salvar o trabalho aberto e reiniciar.
-- [ ] Após entrar no Windows, confirmar que uma única instância abre e a ilha fica utilizável.
+- [x] Se estiver habilitada, combinar um reinício de teste, salvar o trabalho aberto e reiniciar.
+- [x] Após entrar no Windows, confirmar que uma única instância abre e a ilha fica utilizável. (Relato do proprietário em 2026-11-10: "reiniciei e funcionou"; contagem de instâncias não medida por mim.)
 - [ ] Se a opção estiver desligada e o proprietário autorizar habilitá-la, repetir o reinício; caso contrário, registrar BLOQUEADO.
 - Checkpoint: estado anterior/posterior da opção, número de instâncias e resultado após login.
 - Status (2026-11-09): estado anterior DESLIGADO — `autostart: false` em `%APPDATA%\Coucou\settings.json`, nenhuma entrada do Coucou em `HKCU\...\CurrentVersion\Run`, uma instância em execução. O proprietário autorizou habilitar a opção e fazer o reinício de teste; resultado após login pendente.
@@ -110,10 +113,11 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 ### 0.10 — Botões de ditado no chat e Nova sessão
 
 - [x] Botões de ditado implementados em Chat e Nova sessão.
-- [ ] Clicar no microfone do Chat, ditar e conferir inserção no campo correto; confirmar que ditar não envia a mensagem.
-- [ ] Repetir em Nova sessão; confirmar que ditar não inicia sessão automaticamente.
-- [ ] Testar cancelamento, campo vazio e negação da permissão de microfone.
+- [x] Clicar no microfone do Chat, ditar e conferir inserção no campo correto; confirmar que ditar não envia a mensagem.
+- [x] Repetir em Nova sessão; confirmar que ditar não inicia sessão automaticamente.
+- [x] Testar cancelamento, campo vazio e negação da permissão de microfone.
 - Checkpoint: quatro resultados (Chat, Nova sessão, cancelar, negar permissão).
+- Status (2026-11-10): PASS relatado pelo proprietário ("todas já feitas"); sem detalhes de versão, cenários ou logs — evidência do checkpoint não registrada.
 
 ### 0.11 — Posição nos cantos e escolha de monitor
 
@@ -134,19 +138,21 @@ Objetivo: confirmar os recursos do upstream 0.6 e as mudanças do fork no aplica
 ### 0.13 — Ctrl+Alt+I: anotar uma ideia por voz
 
 - [x] Atalho e fluxo de gravação/transcrição implementados.
-- [ ] Pressionar Ctrl+Alt+I, clicar para conceder microfone se solicitado e ditar uma frase de teste.
-- [ ] Parar a gravação; conferir transcrição, data/hora e nota salva.
-- [ ] Cancelar/recusar o microfone e confirmar que nenhuma nota falsa é criada.
+- [x] Pressionar Ctrl+Alt+I, clicar para conceder microfone se solicitado e ditar uma frase de teste.
+- [x] Parar a gravação; conferir transcrição, data/hora e nota salva.
+- [x] Cancelar/recusar o microfone e confirmar que nenhuma nota falsa é criada.
 - Checkpoint: nota salva, cancelamento e permissão, sem incluir transcrição pessoal neste arquivo.
+- Status (2026-11-10): PASS relatado pelo proprietário ("todas já feitas"); sem detalhes de versão, cenários ou logs — evidência do checkpoint não registrada.
 
 ### 0.14 — Modo reunião
 
 - [x] Estado visual/silêncio durante gravação implementado.
-- [ ] Começar a gravar no Notetaker e confirmar o estado de reunião da ilha.
-- [ ] Confirmar que avisos menores ficam silenciosos durante a gravação.
-- [ ] Gerar um pedido de aprovação/pergunta de teste e confirmar que esse alerta continua visível/sonoro conforme o comportamento previsto.
-- [ ] Parar a gravação e confirmar a saída do modo reunião.
+- [x] Começar a gravar no Notetaker e confirmar o estado de reunião da ilha.
+- [x] Confirmar que avisos menores ficam silenciosos durante a gravação.
+- [x] Gerar um pedido de aprovação/pergunta de teste e confirmar que esse alerta continua visível/sonoro conforme o comportamento previsto.
+- [x] Parar a gravação e confirmar a saída do modo reunião.
 - Checkpoint: estados antes/durante/depois e avisos verificados.
+- Status (2026-11-10): PASS relatado pelo proprietário ("todas já feitas"); sem detalhes de versão, cenários ou logs — evidência do checkpoint não registrada.
 
 ### 0.15 — Busca nas notas
 
