@@ -69,6 +69,13 @@ Objetivo: substituir cada `?` por uma capacidade observada, impossível com evid
 - [ ] Enviar prompt de fixture com aspas, `;`, `&` e novas linhas; conferir igualdade byte a byte no agente.
 - [ ] Registrar se o canal seguro é stdin, variável de ambiente, arquivo temporário protegido ou API do agente; rejeitar concatenação no shell.
 - Checkpoint 2B.0.4: há comando reproduzível e transporte seguro ou bloqueio documentado para cada agente.
+- Status (2026-11-10), parcial — teste de transporte com prompt de 2 linhas (aspas, `;`, `&`, `|`, `^`, `%PATH%`, `$HOME`, crase, `$(...)`, barra invertida, acento), pedindo eco entre marcadores, sem shell (argv direto); aprovado se o eco contém o texto exato:
+  - Claude Code 2.1.322: PASS por stdin (`claude -p --tools ""`).
+  - Codex 0.167.0: PASS por stdin (`codex exec ... -`).
+  - Hermes 0.22.5: PASS por stdin (`hermes chat -Q --query-file -`).
+  - Grok 1.0.70 (instalado via npm, shim `.cmd`): `--prompt-file` PASS; `-p <texto>` FAIL com quebra de linha (o argumento é cortado no shim; uma linha só passa). Canal seguro: arquivo de prompt. Decisão do proprietário (2026-11-10): Grok fica fora da Fase 2B por enquanto; resultado guardado só como referência.
+  - Antigravity (`agy` 1.5.3): INCONCLUSIVO — cota esgotada (429 RESOURCE_EXHAUSTED, reinicia em ~132 h); repetir quando a cota voltar. O `cli_relay.rs` usa `-p` por argumento (agy é .exe, não shim), o que ainda precisa de prova com quebra de linha.
+  - Pendente: executáveis/diretório de trabalho por agente (registro formal) e o teste de Antigravity.
 
 #### 2B.0.5 — herdr
 
