@@ -1,6 +1,6 @@
 # Roadmap do fork Windows Coucou — playertwo1/coucou
 
-Atualizado em 2026-11-09. Fonte canônica de estado: este índice e os arquivos de fase em `docs/roadmap/`.
+Atualizado em 2026-11-11. Fonte canônica de estado: este índice e os arquivos de fase em `docs/roadmap/`.
 
 ## Estado e regras de leitura
 
@@ -49,7 +49,7 @@ Decisões que deram origem às fases M: `docs/questionario/2026-11-09-mochi-assi
 | Ordem | Fase | Arquivo | Estado |
 |---:|---|---|---|
 | 1 | 0 — Validar o que já existe | [fase-0-validacao.md](roadmap/fase-0-validacao.md) | Em andamento |
-| 2 | 1 — Recursos do Mac ainda não escolhidos | [fase-1-recursos-mac.md](roadmap/fase-1-recursos-mac.md) | Pendente |
+| 2 | 1 — Recursos do Mac ainda não escolhidos | [fase-1-recursos-mac.md](roadmap/fase-1-recursos-mac.md) | Em andamento (1.2 concluída; 1.1 e 1.3 abertas) |
 | 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Em andamento (2.11) |
 | 4 | 2B — Paridade entre agentes e ambientes | [fase-2b-paridade-agentes.md](roadmap/fase-2b-paridade-agentes.md) | Pendente |
 | 5 | 2C — Pílulas configuráveis e posição livre | [fase-2c-pilulas-posicao.md](roadmap/fase-2c-pilulas-posicao.md) | Pendente |
