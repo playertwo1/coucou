@@ -256,6 +256,22 @@ mod tests {
         assert!(!m.contains_key("cwd"));
     }
 
+    // Real Codex 0.167.0 events (sanitized): already in Claude Code's shape, so nothing changes.
+    #[test]
+    fn captured_codex_events_pass_through_unchanged() {
+        let events: Vec<Value> =
+            serde_json::from_str(include_str!("../../tests/fixtures/codex-0.167.0-events.json")).unwrap();
+        assert_eq!(events.len(), 9);
+        for original in events {
+            let name = original["hook_event_name"].as_str().unwrap();
+            assert_eq!(event(name), name);
+            let mut m = obj(original.clone());
+            fields(&mut m, &no_env);
+            assert_eq!(Value::Object(m.clone()), original, "{name}");
+            assert_eq!(refine(name, &m), name);
+        }
+    }
+
     #[test]
     fn a_stop_with_an_error_status_is_a_failure() {
         assert_eq!(refine("Stop", &obj(json!({ "status": "error" }))), "StopFailure");

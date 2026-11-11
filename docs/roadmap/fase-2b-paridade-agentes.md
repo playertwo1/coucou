@@ -46,6 +46,27 @@ Objetivo: substituir cada `?` por uma capacidade observada, impossível com evid
 - [ ] Confirmar pergunta/resposta, CLI, diretório de trabalho e como enviar prompt sem shell concatenado.
 - [ ] Exercitar “Abrir terminal” e drop de arquivo; registrar PASS/FAIL e evidência.
 - Checkpoint 2B.0.1: fixture revisável cobre eventos observados, e config original pode ser restaurada pelo backup.
+- Status (2026-11-10), parcial — captura real com Codex 0.167.0 (`codex exec`, sandbox workspace-write, pasta temporária; hook de captura temporário em `~/.codex/hooks.json` com backup datado, aprovado pelo proprietário em `/hooks`; depois removido e o arquivo restaurado do backup). Sessão: criar um arquivo e rodar um comando. Eventos e campos (sem conteúdo):
+  - `SessionStart`: session_id, transcript_path, cwd, model, permission_mode, source.
+  - `UserPromptSubmit`: + turn_id, prompt.
+  - `PreToolUse`: + tool_name (`Bash`), tool_input (`command`), tool_use_id.
+  - `PostToolUse`: o mesmo + tool_response (texto/string).
+  - `Stop`: + stop_hook_active, last_assistant_message. `SessionEnd`: + reason (chegou duas vezes).
+  - Achado: criar o arquivo veio como `Bash` (não houve ferramenta de patch/edição), então não há diff estruturado nesse caso; o diff ao vivo (2B.2) precisa de outra captura com `apply_patch`, se existir.
+  - Hook não aprovado em `/hooks` não roda no `codex exec` (primeira tentativa não gravou nada).
+  - Pendente: pergunta/permissão, falha, Interrupt, comportamento com Coucou fechado, "Abrir terminal" e drop.
+  - Fixture sanitizada criada: `windows/tests/fixtures/codex-0.167.0-events.json` (9 eventos; ids, caminhos, prompt, comando e saída trocados por marcadores; usada pelo teste `captured_codex_events_pass_through_unchanged` em `windows/hook/src/normalize.rs`: o relay não altera nenhum desses eventos; `cargo test` em `windows/hook` passa, 36 testes). Nesta captura `permission_mode` veio `bypassPermissions` e `SessionStart.source` veio `startup`. A captura bruta ficou fora do repo.
+- Status (2026-11-10), parcial — tentativa de segunda captura com Codex CLI 0.167.0 em área temporária, após aprovação do hook em `/hooks`. O logger passou no self-check de escopo, mas não gravou eventos:
+  - A saída JSON da sessão mostrou um item `file_change` que atualizou o arquivo sintético existente (`BEFORE` → `AFTER`); não há evento de hook `PreToolUse`/`PostToolUse` correspondente no logger, então o caminho de edição segue inconclusivo.
+  - A falha controlada (`cmd.exe /d /c exit 23`) e a tentativa final de escrita fora da pasta foram bloqueadas antes da execução por `Bash/Service/CreateInstance/E_ACCESSDENIED`; não houve `PermissionRequest` nem criação do arquivo externo.
+  - `~/.codex/hooks.json` foi restaurado do backup datado; o hash original foi conferido e os 20 handlers anteriores permanecem. Fixture e teste existentes não foram alterados.
+  - Pendente: fora do Codex, `wsl.exe --status`, `--list --quiet` e `wsl.exe -d Ubuntu --cd <temp> -- bash -lc pwd` passaram; o shell Bash interno do Codex continua falhando com `E_ACCESSDENIED`. O Ubuntu WSL não tem um Codex CLI Linux independente: `codex` resolve para o shim Windows, cujo executável não está disponível do WSL. Ainda falta explicar por que o logger não recebeu eventos; repetir somente após nova autorização para consumir cota.
+- Status (2026-11-10), parcial — nova sessão sintética com Codex CLI 0.167.0, após aprovação do handler em `/hooks`:
+  - Causa provável do logger vazio na tentativa anterior: `capture.ps1` dependia de `COUCOU_CODEX_CAPTURE_FILE` e `COUCOU_CODEX_CAPTURE_CWD`, variáveis que o comando dos hooks não definia. O logger foi corrigido para derivar a pasta permitida e o arquivo a partir de `$PSScriptRoot`; o self-check registrou o evento sintético dentro do `cwd` permitido e ignorou um `cwd` externo.
+  - A sessão em `workspace-write` alterou o arquivo existente (`BEFORE` → `AFTER`) por um item interno `file_change`; um patch com marcador inexistente falhou. A tentativa de criar `outside-probe.txt` no diretório pai também foi concluída, sem prompt de permissão. Essas operações não geraram linhas no logger nem eventos `PermissionRequest`, `PreToolUse` ou `PostToolUse`; o transcript local também não contém metadados de hook. Leitura somente de código na tag oficial `rust-v0.167.0`: `ApplyPatchHandler` emite payloads de pré e pós-uso com `tool_name=apply_patch`, enquanto o emissor da mesma operação apresenta o item `file_change` ([código do handler](https://github.com/openai/codex/blob/rust-v0.167.0/codex-rs/core/src/tools/handlers/apply_patch.rs#L348-L394), [emissor de eventos](https://github.com/openai/codex/blob/rust-v0.167.0/codex-rs/core/src/tools/events.rs#L230-L251)). Portanto, a ausência de linhas indica que o hook não foi executado ou que o logger não registrou essa execução; não indica falta de suporte de `apply_patch`. A causa segue inconclusiva.
+  - Nenhuma permissão de ferramenta foi aprovada. `~/.codex/hooks.json` foi restaurado do novo backup datado; os 20 handlers originais foram preservados. A fixture permanece inalterada.
+  - A revisão automática bloqueou a remoção de `outside-probe.txt`, que contém somente o marcador sintético e permanece na pasta temporária da captura. O Bash interno não foi exercitado nesta sessão; o `E_ACCESSDENIED` segue sem solução.
+  - Pendente: capturar uma ferramenta suportada que dispare `PreToolUse`/`PostToolUse`, obter `PermissionRequest` sem aprovar a ação e esclarecer a escrita interna fora do workspace. Outra sessão requer nova autorização de cota.
 
 #### 2B.0.2 — Antigravity
 
@@ -54,6 +75,7 @@ Objetivo: substituir cada `?` por uma capacidade observada, impossível com evid
 - [ ] Localizar fonte local de quota/reset; registrar caminho/formato sanitizado e comportamento quando ausente/corrompida.
 - [ ] Confirmar CLI, recepção segura do prompt, “Abrir terminal” e drop de arquivo.
 - Checkpoint 2B.0.2: capacidades de hooks, pergunta, uso e lançamento têm PASS/FAIL/IMPOSSÍVEL sustentado por fixture ou evidência.
+- Status (2026-11-10), INCONCLUSIVO — consulta somente à versão e à ajuda do `agy 1.5.3`; nenhum `--print`, sessão ou pedido remoto foi iniciado. O log local do Antigravity tem 145 ocorrências de `429`, mas a leitura sanitizada não extraiu timestamp nem indicação de reset, então não prova que a cota retornou. 2B.0.2 não iniciado; aguarda evidência confiável do reset e autorização antes de gastar cota.
 
 #### 2B.0.3 — Hermes
 
@@ -62,10 +84,21 @@ Objetivo: substituir cada `?` por uma capacidade observada, impossível com evid
 - [ ] Confirmar formato de perguntas/respostas, diff disponível, CLI e transporte seguro do prompt.
 - [ ] Testar “Abrir terminal” e drop de arquivo.
 - Checkpoint 2B.0.3: round-trip Allow/Deny está comprovado ou marcado IMPOSSÍVEL com evidência; nenhum evento foi inferido.
+- Status (2026-11-10), parcial — Hermes Agent 0.22.5; descoberta somente de leitura, sem sessão de agente, instalação de plugin ou edição de configuração:
+  - `hermes --help` lista gestão de plugins e hooks de shell; o CLI também expõe `plugins.enabled` como allowlist de plugins do usuário.
+  - O manifesto do plugin Coucou (`coucou`, v1.0) e seu código existem em `~/.hermes/plugins/coucou`, mas `coucou` não consta em `plugins.enabled`; não confirmei que esteja carregado. `hermes plugins list` não retornou em 30 segundos e foi interrompido. A configuração não foi alterada.
+  - O plugin existente registra início/fim de sessão, pré/pós-chamada de ferramenta e pedido de aprovação. Ele envia os eventos ao relay em modo fire-and-forget; `pre_approval_request` é reportado como `PreToolUse` e `post_tool_call` envia só o nome da ferramenta, sem resposta nem diff.
+  - O código local (`hermes_cli/plugins.py`) declara `pre_approval_request` e `post_approval_response` como observadores cujos retornos são ignorados. `pre_tool_call` pode devolver `block` (veto) ou `approve` (encaminhar para decisão humana); não há Allow automático do plugin. Portanto, round-trip Allow/Deny pelo observador de aprovação é IMPOSSÍVEL segundo esse contrato. É evidência estática, não teste de runtime.
+  - Pendente: sessão de captura e verificação de runtime. Pedir confirmação antes de iniciar a sessão, pois pode consumir cota. Timeout, erro, Coucou fechado, diff e round-trip em runtime não verificados.
+- Status (2026-11-10), parcial — proposta temporária preparada; naquele momento o plugin ainda não estava instalado e o perfil Hermes não tinha sido alterado. O self-check passou: seis callbacks foram registrados; a chamada sintética dentro do `cwd` permitido foi registrada com o caminho redigido, e outra fora foi ignorada. O backup datado correspondia à configuração ativa; aguardava autorização para adicionar somente `coucou-capture-test` a `plugins.enabled`.
+- Status (2026-11-10), parcial — após autorização explícita, o plugin `coucou-capture-test` foi instalado no perfil Hermes e habilitado com uma única entrada em `plugins.enabled`. A comparação confirmou que essa é a única diferença em relação ao backup datado; os hashes dos arquivos instalados coincidem com a proposta testada. Nenhuma sessão de agente foi iniciada. A captura de runtime aguarda autorização separada, pois pode consumir cota.
+- Status (2026-11-10), parcial — primeira sessão Hermes 0.22.5 em workspace sintético, com `file`/`terminal`, limite de cinco turnos e orçamento de dois minutos. O fixture mudou de `BEFORE_SYNTHETIC` para `AFTER_SYNTHETIC`. A saída do terminal fornecida pelo proprietário confirmou o comando sintético com exit code 0 e a falha esperada ao ler o fixture ausente; não houve outras verificações nem acesso fora do workspace. Nenhum arquivo de eventos foi criado, então os hooks continuam sem captura observável.
+- Status (2026-11-10), parcial — segunda sessão autorizada repetiu a tarefa em outro workspace; o runner definiu as variáveis do logger dentro do processo Hermes e passou no self-check. O fixture mudou para `AFTER_SYNTHETIC`, mas o arquivo de eventos não apareceu; o fixture ausente permaneceu ausente. O resultado do comando e da falha não foi observado nesta tentativa. A causa da ausência de hooks permanece inconclusiva; nenhuma permissão foi aprovada automaticamente. Outra sessão exige nova autorização de cota.
+- Status (2026-11-10), parcial — inspeção somente de leitura do Hermes 0.22.5 confirmou que os nomes dos hooks usados constam em `VALID_HOOKS` e que `HERMES_PLUGINS_DEBUG=1` expõe logs de descoberta/registro. Um runner temporário com esse diagnóstico e transcript foi preparado, mas não iniciado. O modo de debug também acrescenta linhas ao log local do Hermes; uma terceira sessão pode consumir mais cota e pede autorização explícita.
 
 #### 2B.0.4 — CLI local e transporte de prompt
 
-- [ ] Para Claude, Codex, Antigravity e Hermes, registrar executável, argumentos, detecção de instalação e diretório de trabalho.
+- [x] Para Claude, Codex, Antigravity e Hermes, registrar executável, argumentos, detecção de instalação e diretório de trabalho (registro de 2026-11-10 abaixo).
 - [ ] Enviar prompt de fixture com aspas, `;`, `&` e novas linhas; conferir igualdade byte a byte no agente.
 - [ ] Registrar se o canal seguro é stdin, variável de ambiente, arquivo temporário protegido ou API do agente; rejeitar concatenação no shell.
 - Checkpoint 2B.0.4: há comando reproduzível e transporte seguro ou bloqueio documentado para cada agente.
@@ -75,13 +108,26 @@ Objetivo: substituir cada `?` por uma capacidade observada, impossível com evid
   - Hermes 0.22.5: PASS por stdin (`hermes chat -Q --query-file -`).
   - Grok 1.0.70 (instalado via npm, shim `.cmd`): `--prompt-file` PASS; `-p <texto>` FAIL com quebra de linha (o argumento é cortado no shim; uma linha só passa). Canal seguro: arquivo de prompt. Decisão do proprietário (2026-11-10): Grok fica fora da Fase 2B por enquanto; resultado guardado só como referência.
   - Antigravity (`agy` 1.5.3): INCONCLUSIVO — cota esgotada (429 RESOURCE_EXHAUSTED, reinicia em ~132 h); repetir quando a cota voltar. O `cli_relay.rs` usa `-p` por argumento (agy é .exe, não shim), o que ainda precisa de prova com quebra de linha.
-  - Pendente: executáveis/diretório de trabalho por agente (registro formal) e o teste de Antigravity.
+  - Registro formal (2026-11-10, lido no código de `windows/src-tauri`; sem execução nova):
+    - Claude Code: executável `claude`, procurado por `platform::cli_candidates` (PATH, `%APPDATA%\npm\claude.cmd`, Volta, pnpm, `~\.bun\bin`, `~\.local\bin`); detecção por `claude_code::available()` (`claude_code.rs:46-52`). Relay: `claude -p` com argumentos de `args(request)`, diretório de trabalho `settings::local_dir()/relay`, prompt por stdin (`claude_code.rs:60-72`). Nova sessão: `launch.rs` abre Windows Terminal ou PowerShell na pasta escolhida; o prompt vai por arquivo temporário e entra por `$env:COUCOU_PROMPT` (`launch.rs:147-156`), sem concatenar no shell.
+    - Codex CLI: executável `codex`, detecção por `installed("openai")` (`cli_relay.rs:66`, `:131`). Relay: `codex exec --json ... -` com diretório `relay`; prompt por stdin sempre (`cli_relay.rs:445`). Uso do plano: `codex app-server` por stdin/stdout (`codex_plan.rs:59-61`). Nova sessão: não existe para Codex (etapa 2B.6).
+    - Antigravity CLI: executável `agy` (`cli_relay.rs:64`), detecção por `installed("google")`, que prefere o Antigravity ao Gemini. Relay: `agy -p <prompt> --output-format json --mode plan --disable-slash-commands`, diretório `relay`, prompt pelos argumentos (`cli_relay.rs:387`, `:446`). Esse canal ainda não tem prova com quebra de linha (INCONCLUSIVO acima). Nova sessão: não existe.
+    - Hermes: o app não chama a CLI do Hermes hoje; só instala o plugin de hooks (`agents.rs:130`). O teste de transporte (`hermes chat -Q --query-file -`) foi feito fora do app. Executável, detecção e diretório dependem da etapa 2B.6.
+  - Pendente: teste de Antigravity (cota esgotada) com quebra de linha, e a comparação byte a byte dos quatro agentes.
 
 #### 2B.0.5 — herdr
 
 - [ ] Confirmar comandos e argumentos para criar/focar painel, iniciar agente e enviar arquivo.
 - [ ] Registrar exemplos sanitizados, versão e comportamento de herdr ausente/fechado.
 - Checkpoint 2B.0.5: comandos podem ser repetidos sem texto de arquivo ser executado como comando.
+- Status (2026-11-10), parcial — lido em `herdr 0.9.5` (`--help`, sem alterar estado):
+  - Versão instalada: `herdr 0.9.5` em `%USERPROFILE%\.herdr\packages\standalone\releases\0.9.5-x86_64-pc-windows-msvc\herdr`.
+  - Criar painel: `herdr pane split <PANE_ID> --direction right|down --cwd <PATH>` ou `--current`; criar aba: `herdr tab create --cwd <PATH> --label <TEXT>`; criar workspace: `herdr workspace create --cwd <PATH>`.
+  - Iniciar agente: `herdr agent start <NAME> --kind <KIND> --pane <ID> [-- AGENT_ARG...]`. `KIND` inclui `claude`, `codex`, `agy`, `hermes`, entre outros. O painel precisa estar no prompt do shell. Não consta na ajuda se os argumentos passam por shell.
+  - Focar: `herdr agent focus <target>`, `herdr pane focus`, `herdr tab focus`.
+  - Enviar arquivo/texto: `herdr pane send-text <PANE_ID> <TEXT>` envia texto literal, sem Enter. `herdr pane run <PANE_ID> <COMMAND>...` envia texto e Enter, ou seja, executa; não usar para caminhos de arquivo (drop).
+  - Ausente/fechado: sem servidor, `herdr status` mostra `server: not running`, e `agent list`/`pane list` respondem `server_not_running` (`herdr` precisa ser iniciado).
+  - Pendente: exercitar create/focus/send-text contra um servidor herdr em execução (exige iniciar o herdr, que muda a janela do usuário; deixado para decisão posterior) e confirmar que `agent start` não passa o argumento por shell.
 
 #### 2B.0.6 — Orca
 
@@ -90,6 +136,14 @@ Objetivo: substituir cada `?` por uma capacidade observada, impossível com evid
 - [ ] Confirmar CLI para foco, envio de arquivo sem Enter, sessão existente e worktree nova; registrar saída sanitizada.
 - [ ] Verificar que os hooks existentes em `.claude`, `.codex` e `.gemini` sobrevivem à instalação, atualização e remoção.
 - Checkpoint 2B.0.6: comportamento visto com app aberto; descoberta inicial sozinha não conta como validação de integração.
+- Status (2026-11-10), parcial — Orca 1.4.255 com o app aberto, só leitura (`status` e `--help`; nada foi criado, focado nem enviado):
+  - Executável: `%LOCALAPPDATA%\Programs\orca\resources\bin\orca.exe` existe e também está no PATH. `orca status --json` respondeu `ok: true`, `app.running: true`, `runtime.state: ready`.
+  - `ORCA_TERMINAL_HANDLE` não existe no ambiente desta sessão (não roda dentro de um terminal do Orca); o formato do handle segue só da descoberta de 2026-11-09.
+  - Foco: `orca terminal switch --terminal <handle> --json`. Envio: `orca terminal send --terminal <handle> --text <t>`; sem `--enter` o texto vai ao PTY como está (bytes de controle passam, então o caminho deve ser filtrado); com `--enter` e agente reconhecido o prompt vai por colagem entre colchetes.
+  - Nova sessão: `orca agent launch --agent <id> [--worktree <seletor>] [--prompt <t>] [--surface terminal]`; worktree nova: `orca worktree create --name <n> [--repo ...] [--agent <id>] [--prompt <t>]`. O prompt é argumento, sem shell intermediário na nossa parte.
+  - Hooks do Orca já coexistem com os do Coucou em `~/.codex/hooks.json` (visto ao ler o arquivo).
+  - Execução real (2026-11-10, Orca 1.4.255; `orca terminal list --json` devolveu 2 shells sem agente, um `cmd.exe` e um `pwsh.exe`; testado no `pwsh.exe`): `terminal switch` com o handle válido → `ok: true`, `navigated: true`, foco no terminal certo. Handle inexistente (`term_` + UUID zerado) → `ok: false`, `terminal_handle_stale`, sem trocar de terminal. `terminal send --text 'C:\My Dir\a b;c&d.txt'` sem `--enter` → `accepted: true`, `bytesWritten: 21` (igual ao tamanho do texto); a leitura da tela logo depois devolveu `ok: true`, mas não conferi o conteúdo da linha de entrada. A limpeza com Ctrl+U (`\x15`) falhou com `terminal_not_writable`: o terminal já estava com `status: "exited"` (não sei se o shell saiu sozinho ou se foi fechado), então não ficou texto pendente em shell vivo. Lição para a implementação: tratar `terminal_not_writable` e `terminal_handle_stale` como falha e cair no fallback "copied". Não testado: `agent launch` e `worktree create` (criariam sessão/worktree), nem envio com agente rodando.
+  - Pendente: `agent launch`/`worktree create`, e a sobrevivência dos hooks na instalação, atualização e remoção.
 
 #### 2B.0.7 — Matriz de capacidades e encerramento
 
