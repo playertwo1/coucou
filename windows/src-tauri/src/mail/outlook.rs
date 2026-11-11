@@ -1,7 +1,8 @@
 // Classic Outlook on Windows, driven through its own COM objects by a small PowerShell
 // script: the Windows counterpart of Apple Mail's AppleScript on the Mac (MailController.swift).
 //
-// Coucou attaches to the Outlook already open (GetActiveObject) and never starts it. No
+// Coucou attaches to the Outlook already open (GetActiveObject, or New-Object only while an
+// OUTLOOK.EXE runs in the user's session) and never starts it. No
 // sign-in, no app registration, no admin consent: it is the user's Outlook, on the user's PC.
 // The new Outlook for Windows has no COM objects, so it is not reached this way.
 //
@@ -63,7 +64,15 @@ pub fn ps(s: &str) -> String {
 const PRELUDE: &str = r#"$ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 try { $ol = [System.Runtime.InteropServices.Marshal]::GetActiveObject('Outlook.Application') }
-catch { Write-Output '{"error":"notRunning"}'; exit 0 }
+catch {
+  # Office joins the running-object table only once it first loses focus: an Outlook just
+  # opened is missed above. Outlook is single-instance, so this hands back the open one.
+  # shortcut: Outlook closing between the check and New-Object would start it; tiny window.
+  $sid = (Get-Process -Id $PID).SessionId
+  $open = Get-Process -Name OUTLOOK -ErrorAction SilentlyContinue | Where-Object { $_.SessionId -eq $sid }
+  try { if (-not $open) { throw 'closed' }; $ol = New-Object -ComObject Outlook.Application }
+  catch { Write-Output '{"error":"notRunning"}'; exit 0 }
+}
 $ns = $ol.GetNamespace('MAPI')
 function Coucou-Address($i) {
   try {
@@ -248,6 +257,25 @@ pub fn open_script(entry_id: &str, store_id: &str, reply_body: Option<&str>) -> 
     ))
 }
 
+/// A canonical Windows path without its verbatim prefix (`\\?\C:\x` → `C:\x`,
+/// `\\?\UNC\server\share` → `\\server\share`): Outlook crashes in Attachments.Add on `\\?\`.
+pub fn plain_path(path: &str) -> String {
+    match (path.strip_prefix(r"\\?\UNC\"), path.strip_prefix(r"\\?\")) {
+        (Some(unc), _) => format!(r"\\{unc}"),
+        (None, Some(rest)) => rest.to_string(),
+        _ => path.to_string(),
+    }
+}
+
+/// Opens a new draft with one attachment (`path` already through `plain_path`). Nothing is sent.
+pub fn draft_script(path: &str, subject: &str) -> String {
+    script(&format!(
+        "$m = $ol.CreateItem(0)\n$m.Subject = {}\n$null = $m.Attachments.Add({})\n$m.Display()\nWrite-Output '{{\"ok\":true}}'",
+        ps(subject),
+        ps(path)
+    ))
+}
+
 /// Saves a message's attachments (only `only` when given) in `folder`; prints their names.
 pub fn save_attachments_script(entry_id: &str, store_id: &str, folder: &str, only: Option<&str>) -> String {
     let test = only.map_or("$true".to_string(), |n| format!("$a.FileName -eq {}", ps(n)));
@@ -418,7 +446,9 @@ mod tests {
     fn the_list_attaches_and_never_starts_outlook() {
         let s = list_script(12);
         assert!(s.contains("GetActiveObject('Outlook.Application')"));
-        assert!(!s.contains("New-Object -ComObject"), "never starts Outlook");
+        let gate = s.find("Get-Process -Name OUTLOOK").expect("checks Outlook is open");
+        let attach = s.find("New-Object -ComObject").expect("attaches to a just-opened Outlook");
+        assert!(gate < attach && s.contains("if (-not $open) { throw"), "never starts Outlook");
         assert!(s.contains("$n -lt 12") && s.contains("GetDefaultFolder(6)") && s.contains("ConvertTo-Json"));
     }
 
@@ -462,6 +492,15 @@ mod tests {
         assert!(s.contains("$m.To = 'a@x.fr; b@x.fr'"));
         assert!(s.contains("$m.Subject = 'Plan ''Lyon'''"));
         assert!(s.contains("$m.Attachments.Add('C:\\p 1.pdf')") && s.contains("$m.Send()"));
+        assert_eq!(plain_path(r"\\?\C:\Coucou\inbox\a.pdf"), r"C:\Coucou\inbox\a.pdf");
+        assert_eq!(plain_path(r"\\?\UNC\server\share\a.pdf"), r"\\server\share\a.pdf");
+        assert_eq!(plain_path(r"C:\a.pdf"), r"C:\a.pdf");
+        assert_eq!(plain_path(r"\\server\share\a.pdf"), r"\\server\share\a.pdf");
+        let draft = draft_script(&plain_path("\\\\?\\C:\\Coucou\\inbox\\note d'été 漢字.pdf"), "note d'été 漢字.pdf");
+        assert!(!draft.contains(r"\\?\"), "Outlook never gets a verbatim path");
+        assert!(draft.contains("$m.Subject = 'note d''été 漢字.pdf'"));
+        assert!(draft.contains("$m.Attachments.Add('C:\\Coucou\\inbox\\note d''été 漢字.pdf')"));
+        assert!(draft.contains("$m.Display()") && !draft.contains(".Send()") && !draft.contains("$m.To"));
         let r = open_script("E", "S", Some("Merci"));
         assert!(r.contains("$i.Reply()") && r.contains("Display()") && !r.contains("Send()"));
         assert!(save_attachments_script("E", "S", "C:\\t", Some("plans.pdf")).contains("$a.FileName -eq 'plans.pdf'"));

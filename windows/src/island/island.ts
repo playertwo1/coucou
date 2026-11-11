@@ -152,6 +152,8 @@ export class Island {
   private uploadTens = 0;
   private uploadDone = false;
   private dragLeaveTimer: number | null = null;
+  /** The view an alert() is opening on, while its forceHome() runs. */
+  private alertView: IslandViewName | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -205,6 +207,7 @@ export class Island {
     const actions: ViewActions = {
       setView: (v) => this.setView(v),
       cancelDrop: () => this.discardDrop(),
+      draftDroppedFile: () => this.draftDroppedFile(),
       collapse: () => this.collapse(),
       foldApproval: () => this.foldApproval(),
       setFocus: (id) => {
@@ -363,12 +366,14 @@ export class Island {
     // the header, which stays visible on top of it exactly as on macOS.
     this.uploadCanvas = new UploadCanvas({
       ask: () => {
+        if (!State.droppedFileReady) return;
         State.promptContext = State.droppedFile
           ? { kind: "file", name: State.droppedFile.name, path: State.droppedFile.path }
           : null;
         this.setView("prompt");
       },
       cancel: () => this.discardDrop(),
+      draft: () => this.draftDroppedFile(),
     });
     this.sessionDrop = buildSessionDropList();
     this.uploadCanvas.el.append(this.sessionDrop.el);
@@ -541,7 +546,14 @@ export class Island {
   /** Alert from the hook server: open on this view. Pinned alerts never auto-close. */
   alert(view: IslandViewName) {
     this.fsm.pinned = State.isPinned;
-    this.fsm.forceHome();
+    // Going home opens on openingView(): make that the alert's view, or the detour
+    // through the default view ends a drop sequence that has just started.
+    this.alertView = view;
+    try {
+      this.fsm.forceHome();
+    } finally {
+      this.alertView = null;
+    }
     this.expand(view);
   }
 
@@ -556,6 +568,7 @@ export class Island {
    * permission or question always comes first.
    */
   private openingView(): IslandViewName {
+    if (this.alertView) return this.alertView;
     return this.updateHintOn() ? "update" : State.defaultView();
   }
 
@@ -768,6 +781,7 @@ export class Island {
   private swallow(path: string) {
     const name = path.split(/[\\/]/).pop() || "file";
     State.droppedFile = { name, path };
+    State.droppedFileReady = false;
     State.promptContext = { kind: "file", name, path };
     State.chatHistory = [];
     void Bridge.chatReset();
@@ -790,11 +804,13 @@ export class Island {
         // Cancelled (or replaced by another drop) while the copy was running.
         if (State.droppedFile?.path !== path) return;
         State.droppedFile = { name: file.name, path: file.path };
+        State.droppedFileReady = true;
         State.promptContext = { kind: "file", name: file.name, path: file.path };
         State.notify();
       })
       .catch((err) => {
         if (State.droppedFile?.path !== path) return;
+        State.droppedFileReady = false;
         UploadSeq.deactivate();
         State.noteMessage = String(err).replace(/^Error:\s*/, "");
         this.engine.animateMorph(0);
@@ -811,8 +827,30 @@ export class Island {
   /** "Cancel" on the dropped file: forget it, so the chat does not pick it up. */
   private discardDrop() {
     State.droppedFile = null;
+    State.droppedFileReady = false;
     State.promptContext = null;
     this.setView(State.defaultView());
+  }
+
+  private async draftDroppedFile() {
+    const file = State.droppedFile;
+    if (!file || !State.droppedFileReady) return;
+    try {
+      await Bridge.mailDraft(file.path);
+      if (State.droppedFile?.path !== file.path) return;
+      State.droppedFile = null;
+      State.droppedFileReady = false;
+      State.promptContext = null;
+      State.noteMessage = t("Draft opened in Outlook.");
+    } catch (err) {
+      if (State.droppedFile?.path !== file.path) return;
+      State.noteMessage = String(err).replace(/^Error:\s*/, "");
+      Sound.play("error");
+    }
+    this.setView("note");
+    window.setTimeout(() => {
+      if (State.mode === "expanded" && State.view === "note") this.setView(State.defaultView());
+    }, 2400);
   }
 
   /**

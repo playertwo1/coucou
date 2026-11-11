@@ -921,6 +921,7 @@ pub fn run() {
             mail::mail_search,
             mail::mail_detail,
             mail::mail_open,
+            mail::mail_draft,
             mail::mail_act,
             mail::mail_triage,
             mail::mail_triage_set,

@@ -40,6 +40,8 @@ export interface ViewActions {
   setView(v: IslandViewName): void;
   /** "Cancel" on a dropped file: forgets it and goes back home. */
   cancelDrop(): void;
+  /** Opens a draft with the dropped file in classic Outlook. */
+  draftDroppedFile(): Promise<void>;
   collapse(): void;
   /** Folds a waiting card to the compact island without answering it. */
   foldApproval(): void;

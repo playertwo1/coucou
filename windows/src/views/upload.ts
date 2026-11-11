@@ -1,11 +1,9 @@
 // Drop zone, upload progress and the "what do you want to do with it" card —
 // ports of UploadView / UploadingView / ChooseView from IslandViewContent.swift.
-//
-// Sending a file by email is not in the Windows v1, so `choose` offers the one
-// action the spec asks for: ask a question about it.
 
 import { h, clear } from "./dom";
 import { State } from "../core/state";
+import { HOST_OS } from "../core/pills";
 import type { ViewActions, ViewHost } from "./views";
 import { N_, t, tl } from "../i18n/i18n";
 
@@ -87,19 +85,49 @@ export function buildUploading(): ViewHost {
 export function buildChoose(actions: ViewActions): ViewHost {
   const title = h("div", { class: "title" });
   const sub = h("div", { class: "sub", text: tl("What do you want to do with it?") });
+  let drafting = false;
+  const ask = h("button", {
+    class: "btn primary",
+    text: tl("Ask a question"),
+    onclick: () => {
+      if (State.droppedFileReady && !drafting) actions.setView("prompt");
+    },
+  });
+  const cancel = h("button", {
+    class: "btn secondary",
+    text: tl("Cancel"),
+    onclick: () => {
+      if (!drafting) actions.cancelDrop();
+    },
+  });
+  const email = HOST_OS === "windows"
+    ? h("button", {
+        class: "btn secondary",
+        text: tl("Send by email"),
+        onclick: async () => {
+          if (drafting || !State.droppedFileReady) return;
+          drafting = true;
+          syncButtons();
+          try {
+            await actions.draftDroppedFile();
+          } finally {
+            drafting = false;
+            syncButtons();
+          }
+        },
+      })
+    : null;
+  function syncButtons() {
+    ask.disabled = drafting || !State.droppedFileReady;
+    cancel.disabled = drafting;
+    if (email) email.disabled = drafting || !State.droppedFileReady;
+  }
   const row = h(
     "div",
     { class: "actions" },
-    h("button", {
-      class: "btn primary",
-      text: tl("Ask a question"),
-      onclick: () => actions.setView("prompt"),
-    }),
-    h("button", {
-      class: "btn secondary",
-      text: tl("Cancel"),
-      onclick: () => actions.cancelDrop(),
-    }),
+    ask,
+    cancel,
+    email,
   );
   const el = h(
     "div",
@@ -114,6 +142,7 @@ export function buildChoose(actions: ViewActions): ViewHost {
   return {
     el,
     sync() {
+      syncButtons();
       clear(title);
       title.append(
         h("b", { text: State.droppedFile?.name ?? t("file") }),

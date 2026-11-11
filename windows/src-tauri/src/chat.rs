@@ -184,21 +184,13 @@ fn checked_context(context: ChatContext) -> Result<ChatContext, String> {
     match context {
         ChatContext::File { name, path } => {
             let inbox = crate::files::inbox_dir();
-            if !is_inside(&inbox, std::path::Path::new(&path)) {
+            if crate::files::canonical_file_in_dir(&inbox, std::path::Path::new(&path)).is_none() {
                 return Err(crate::i18n::t("Only a file dropped on the island can be sent with a question."));
             }
             Ok(ChatContext::File { name, path })
         }
         other => Ok(other),
     }
-}
-
-/// True when `path` is a regular file directly inside `dir`, both resolved
-/// (no `..`, no symlink pointing out of it).
-fn is_inside(dir: &std::path::Path, path: &std::path::Path) -> bool {
-    let (Ok(dir), Ok(file)) = (dir.canonicalize(), path.canonicalize()) else { return false };
-    file.parent() == Some(dir.as_path())
-        && std::fs::symlink_metadata(&file).map(|m| m.is_file()).unwrap_or(false)
 }
 
 /// One chat turn with the provider chosen in the settings.
@@ -387,16 +379,16 @@ mod tests {
         std::fs::write(inbox.join("a.txt"), b"a").unwrap();
         std::fs::write(base.join("secret.txt"), b"s").unwrap();
         std::fs::write(inbox.join("sub").join("b.txt"), b"b").unwrap();
-        assert!(is_inside(&inbox, &inbox.join("a.txt")));
-        assert!(!is_inside(&inbox, &base.join("secret.txt")));
-        assert!(!is_inside(&inbox, &inbox.join("..").join("secret.txt")));
-        assert!(!is_inside(&inbox, &inbox.join("sub").join("b.txt")));
-        assert!(!is_inside(&inbox, &inbox.join("missing.txt")));
-        assert!(!is_inside(&inbox, &inbox));
+        assert!(crate::files::canonical_file_in_dir(&inbox, &inbox.join("a.txt")).is_some());
+        assert!(crate::files::canonical_file_in_dir(&inbox, &base.join("secret.txt")).is_none());
+        assert!(crate::files::canonical_file_in_dir(&inbox, &inbox.join("..").join("secret.txt")).is_none());
+        assert!(crate::files::canonical_file_in_dir(&inbox, &inbox.join("sub").join("b.txt")).is_none());
+        assert!(crate::files::canonical_file_in_dir(&inbox, &inbox.join("missing.txt")).is_none());
+        assert!(crate::files::canonical_file_in_dir(&inbox, &inbox).is_none());
         #[cfg(unix)]
         {
             std::os::unix::fs::symlink(base.join("secret.txt"), inbox.join("link.txt")).unwrap();
-            assert!(!is_inside(&inbox, &inbox.join("link.txt")));
+            assert!(crate::files::canonical_file_in_dir(&inbox, &inbox.join("link.txt")).is_none());
         }
         let _ = std::fs::remove_dir_all(&base);
     }

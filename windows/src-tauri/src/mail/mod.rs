@@ -311,6 +311,29 @@ pub async fn mail_open(message: Message, reply: bool) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Opens a draft with a file from Coucou's inbox. Nothing is sent.
+#[tauri::command]
+pub async fn mail_draft(path: String) -> Result<(), String> {
+    let inbox = crate::files::inbox_dir();
+    let file = crate::files::canonical_file_in_dir(&inbox, std::path::Path::new(&path))
+        .ok_or_else(|| crate::i18n::t("Only files dropped on the island can be added."))?;
+    let subject = file
+        .file_name()
+        .ok_or_else(|| crate::i18n::t("Only files dropped on the island can be added."))?
+        .to_string_lossy();
+    let path = outlook::plain_path(&file.to_string_lossy());
+    outlook::run(outlook::draft_script(&path, &subject), TIMEOUT)
+        .await
+        .map(|_| ())
+        .map_err(|e| {
+            crate::log::line(format!("[mail] draft: {e}"));
+            match e {
+                RunError::NotRunning => crate::i18n::t("Open the classic Outlook, then try again."),
+                e => e.to_string(),
+            }
+        })
+}
+
 /// An action on a message, from the user's click in the card.
 #[tauri::command]
 pub async fn mail_act(app: AppHandle, message: Message, kind: String) -> Result<(), String> {

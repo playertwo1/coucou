@@ -402,6 +402,8 @@ export const Bridge = {
     callOrThrow<LocalServer>("local_connect", { provider, url }),
   /** Copies a dropped file into the inbox. */
   ingestFile: (path: string) => callOrThrow<DroppedFile>("ingest_file", { path }),
+  /** Opens a draft in classic Outlook with a file from Coucou's inbox. */
+  mailDraft: (path: string) => callOrThrow<void>("mail_draft", { path }),
   /** Only ever tells you whether a key exists — never its value. */
   secretPresent: (key: string) => call<boolean>("secret_present", { key }),
   /** Whether Claude can answer: the API key, or else the user's own Claude Code. */

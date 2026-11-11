@@ -1021,6 +1021,21 @@
       "ko": "완료! Claude Code 세션에서 다음 답이 오면 숫자가 나타나요.",
       "ja": "完了しました。数値は Claude Code セッションの次の返信のあとに表示されます。"
     },
+    "Draft opened in Outlook.": {
+      "zh-Hans": "Outlook 草稿已打开。",
+      "hi": "Outlook में ड्राफ़्ट खुल गया।",
+      "es": "El borrador se abrió en Outlook.",
+      "ar": "فُتحت المسودة في Outlook.",
+      "fr": "Le brouillon est ouvert dans Outlook.",
+      "bn": "Outlook-এ খসড়াটি খোলা হয়েছে।",
+      "pt-BR": "O rascunho foi aberto no Outlook.",
+      "ru": "Черновик открыт в Outlook.",
+      "id": "Draf dibuka di Outlook.",
+      "de": "Der Entwurf wurde in Outlook geöffnet.",
+      "tr": "Taslak Outlook'ta açıldı.",
+      "ko": "Outlook에서 초안이 열렸어요.",
+      "ja": "Outlook で下書きを開きました。"
+    },
     "Drop": {
       "zh-Hans": "拖放",
       "hi": "छोड़ें",
@@ -1980,6 +1995,21 @@
       "tr": "Outlook’ta aç",
       "ko": "Outlook에서 열기",
       "ja": "Outlook で開く"
+    },
+    "Open the classic Outlook, then try again.": {
+      "zh-Hans": "请打开经典版 Outlook，然后重试。",
+      "hi": "क्लासिक Outlook खोलें, फिर दोबारा कोशिश करें।",
+      "es": "Abre el Outlook clásico y vuelve a intentarlo.",
+      "ar": "افتح Outlook الكلاسيكي، ثم حاول مرة أخرى.",
+      "fr": "Ouvre Outlook (le classique), puis réessaie.",
+      "bn": "ক্লাসিক Outlook খুলুন, তারপর আবার চেষ্টা করুন।",
+      "pt-BR": "Abra o Outlook clássico e tente de novo.",
+      "ru": "Откройте классический Outlook и попробуйте снова.",
+      "id": "Buka Outlook klasik, lalu coba lagi.",
+      "de": "Öffne das klassische Outlook und versuche es noch einmal.",
+      "tr": "Klasik Outlook’u aç, sonra yeniden dene.",
+      "ko": "클래식 Outlook을 연 다음 다시 시도하세요.",
+      "ja": "クラシック版 Outlook を開いてから、もう一度お試しください。"
     },
     "Open in VS Code": {
       "zh-Hans": "在 VS Code 中打开",

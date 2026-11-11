@@ -23,6 +23,14 @@ pub fn inbox_dir() -> PathBuf {
     settings::local_dir().join("inbox")
 }
 
+/// Returns the canonical regular file when it is a direct child of `dir`.
+pub(crate) fn canonical_file_in_dir(dir: &Path, path: &Path) -> Option<PathBuf> {
+    let (Ok(dir), Ok(file)) = (dir.canonicalize(), path.canonicalize()) else { return None };
+    (file.parent() == Some(dir.as_path())
+        && std::fs::symlink_metadata(&file).map(|m| m.is_file()).unwrap_or(false))
+    .then_some(file)
+}
+
 // ── Paths a real drop delivered ─────────────────────────────────────────────
 //
 // `ingest_file` is callable from the page, so on its own it would copy any file

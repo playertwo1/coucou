@@ -6,6 +6,7 @@
 // exactly as on macOS, because this canvas draws its own.
 
 import { State } from "../core/state";
+import { HOST_OS } from "../core/pills";
 import { SCRIPT_FONTS } from "../core/fonts";
 import { N_, isRtl, t } from "../i18n/i18n";
 import {
@@ -17,9 +18,10 @@ const FONT = `system-ui, "Segoe UI Variable Text", "Segoe UI", ${SCRIPT_FONTS}, 
 
 /** The card's inner right edge: no text runs past it. */
 const TEXT_RIGHT = USC.CARD_X + USC.CARD_W - 16;
-/** The two choose buttons, as drawn and as hit areas. */
+/** The choose buttons, as drawn and as hit areas. */
 const ASK_BTN = { x: 114, w: 168 };
 const CANCEL_BTN = { x: 290, w: 120 };
+const EMAIL_BTN = { x: 418, w: 120 };
 /** Drop-zone chips (English keys, shown with `t()`). */
 const CHIPS = [N_("PDF"), N_("Images"), N_("Code"), N_("Docs")];
 
@@ -111,6 +113,8 @@ export interface UploadCanvasActions {
   ask(): void;
   /** Secondary button. */
   cancel(): void;
+  /** Opens a draft in classic Outlook. */
+  draft(): Promise<void>;
 }
 
 export class UploadCanvas {
@@ -120,6 +124,10 @@ export class UploadCanvas {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D | null;
   private overlay: HTMLElement;
+  private askButton: HTMLButtonElement;
+  private cancelButton: HTMLButtonElement;
+  private emailButton: HTMLButtonElement | null;
+  private drafting = false;
   private sizedFor = 0;
   /** Where the drop text stops: sooner while the sessions are listed on the right. */
   textRight: number = TEXT_RIGHT;
@@ -131,9 +139,10 @@ export class UploadCanvas {
 
     // Invisible hit areas at the reference button positions. The labels are
     // painted on the canvas; these only catch the click.
-    const mk = (x: number, w: number, onclick: () => void) => {
+    const mk = (x: number, w: number, label: string, onclick: () => void) => {
       const b = document.createElement("button");
       b.className = "upload-hit";
+      b.setAttribute("aria-label", label);
       b.style.left = `${x}px`;
       b.style.top = "113px";
       b.style.width = `${w}px`;
@@ -143,17 +152,37 @@ export class UploadCanvas {
     };
     this.overlay = document.createElement("div");
     this.overlay.id = "upload-overlay";
-    this.overlay.append(mk(ASK_BTN.x, ASK_BTN.w, actions.ask), mk(CANCEL_BTN.x, CANCEL_BTN.w, actions.cancel));
+    this.askButton = mk(ASK_BTN.x, ASK_BTN.w, t("Ask a question about it"), () => {
+      if (!this.drafting && State.droppedFileReady) actions.ask();
+    });
+    this.cancelButton = mk(CANCEL_BTN.x, CANCEL_BTN.w, t("Cancel"), () => {
+      if (!this.drafting) actions.cancel();
+    });
+    this.emailButton = HOST_OS === "windows"
+      ? mk(EMAIL_BTN.x, EMAIL_BTN.w, t("Send by email"), () => {
+          if (this.drafting || !State.droppedFileReady) return;
+          this.drafting = true;
+          this.syncButtons();
+          void actions.draft().then(
+            () => { this.drafting = false; this.syncButtons(); },
+            () => { this.drafting = false; this.syncButtons(); },
+          );
+        })
+      : null;
+    this.overlay.append(this.askButton, this.cancelButton);
+    if (this.emailButton) this.overlay.append(this.emailButton);
 
     this.el = document.createElement("div");
     this.el.id = "upload-layer";
     this.el.append(this.canvas, this.overlay);
 
     this.ctx = this.canvas.getContext("2d");
+    this.syncButtons();
   }
 
   /** `wallTime` in seconds drives the marching dashes, like the macOS timeline. */
   draw(f: UploadFrame, wallTime: number) {
+    this.syncButtons();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     if (this.sizedFor !== dpr) {
       this.sizedFor = dpr;
@@ -171,6 +200,17 @@ export class UploadCanvas {
 
     // The buttons only exist once the choose card has faded in.
     this.overlay.style.display = f.chooseAlpha > 0.5 ? "block" : "none";
+  }
+
+  private syncButtons() {
+    this.askButton.disabled = this.drafting || !State.droppedFileReady;
+    this.cancelButton.disabled = this.drafting;
+    this.askButton.setAttribute("aria-label", t("Ask a question about it"));
+    this.cancelButton.setAttribute("aria-label", t("Cancel"));
+    if (this.emailButton) {
+      this.emailButton.disabled = this.drafting || !State.droppedFileReady;
+      this.emailButton.setAttribute("aria-label", t("Send by email"));
+    }
   }
 
   // ── Scene ─────────────────────────────────────────────────────────────────
@@ -357,6 +397,14 @@ export class UploadCanvas {
     ctx.fill();
     const cancel = fitted(ctx, t("Cancel"), CANCEL_BTN.w - 14, 500, 12.5);
     text(ctx, cancel.s, CANCEL_BTN.x + CANCEL_BTN.w / 2, 126, cancel.font, "#F1F2F4", "center");
+
+    if (HOST_OS === "windows") {
+      ctx.fillStyle = "rgba(255,255,255,0.09)";
+      rr(ctx, EMAIL_BTN.x, 113, EMAIL_BTN.w, 26, 13);
+      ctx.fill();
+      const email = fitted(ctx, t("Send by email"), EMAIL_BTN.w - 14, 500, 12.5);
+      text(ctx, email.s, EMAIL_BTN.x + EMAIL_BTN.w / 2, 126, email.font, "#F1F2F4", "center");
+    }
     ctx.restore();
   }
 
