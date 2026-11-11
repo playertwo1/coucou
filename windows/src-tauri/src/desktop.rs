@@ -221,6 +221,8 @@ struct Inner {
     overlay: bool,
     /// Top-left corner, in the mode's space.
     pos: (f64, f64),
+    /// Where a drag from the desktop began: dropped on a window, he goes back there.
+    drag_origin: (f64, f64),
     /// Layer mode: logical size of the display he lives on.
     display: Option<(f64, f64)>,
     /// Poll mode: the click-through state last applied.
@@ -246,6 +248,8 @@ impl Desktop {
 struct Dropped {
     from: Source,
     home: bool,
+    /// Dropped on another app's window: its app, title and URL for the chat.
+    context: Option<crate::chat::ChatContext>,
 }
 
 #[derive(Serialize, Clone)]
@@ -597,20 +601,40 @@ fn target_spot(app: &AppHandle, d: &Desktop, anywhere: bool) -> Option<(f64, f64
     }
 }
 
-/// The drop, wherever it came from: home if it is over the island's panel,
-/// otherwise his new spot.
+/// The drop, wherever it came from: home if it is over the island's panel;
+/// over another app's window, that window becomes the chat's context and he
+/// goes back where the drag began; otherwise his new spot.
 async fn finish_drop(app: &AppHandle, d: &Desktop, pos: (f64, f64), from: Source) {
     let s = side(app, d);
     let center = (pos.0 + s / 2.0, pos.1 + s / 2.0);
     let home = island_anchor(app, d)
         .map(|(cx, top, scale)| logic::home_zone(cx, top, scale).contains(center))
         .unwrap_or(false);
+    // The window under the pointer, for a drag that began on the desktop. Out
+    // of the island a drop only places him (the Mac attaches there too: the
+    // owner chose to keep dragging out for placing). Windows only: the poll
+    // knows the cursor.
+    let context = if home || from != Source::Desktop || d.mode != DesktopMode::Poll {
+        None
+    } else {
+        tauri::async_runtime::spawn_blocking(|| {
+            platform::cursor_physical().and_then(|(x, y)| crate::window_context::at(x, y))
+        })
+        .await
+        .ok()
+        .flatten()
+    };
     {
         let mut i = d.inner.lock().unwrap();
         i.carry = None;
         i.landed = !home;
     }
-    if home {
+    if context.is_some() {
+        // Back to where he sat before the drag.
+        let origin = d.inner.lock().unwrap().drag_origin;
+        refresh(app, d);
+        fly(app, d, origin, SNAP_MS, logic::ease_out_back).await;
+    } else if home {
         if from == Source::Island {
             // Back where he came from: he simply reappears in the island.
             hide(app, d);
@@ -626,7 +650,7 @@ async fn finish_drop(app: &AppHandle, d: &Desktop, pos: (f64, f64), from: Source
         }
         remember_spot(app, d, spot, true);
     }
-    let _ = app.emit_to(island::WINDOW_LABEL, "desktop-mochi-dropped", Dropped { from, home });
+    let _ = app.emit_to(island::WINDOW_LABEL, "desktop-mochi-dropped", Dropped { from, home, context });
 }
 
 // ── Poll (Windows) ────────────────────────────────────────────────────────────
@@ -749,10 +773,11 @@ pub async fn desktop_mochi_carry_end(app: AppHandle, x: f64, y: f64) {
 pub async fn desktop_mochi_drag_begin(app: AppHandle) -> Option<(f64, f64)> {
     let d = app.state::<Arc<Desktop>>().inner().clone();
     let pos = {
-        let i = d.inner.lock().unwrap();
+        let mut i = d.inner.lock().unwrap();
         if !i.landed || i.carry.is_some() {
             return None;
         }
+        i.drag_origin = i.pos;
         i.pos
     };
     // A drag takes over from a snap still settling him.

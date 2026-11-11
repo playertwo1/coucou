@@ -108,6 +108,8 @@ pub struct Settings {
     pub phone_relay_url: String,
     /// The date and time in the middle of the compact island. Off by default.
     pub show_clock: bool,
+    /// Let Mochi react to Windows vitals while he is visible.
+    pub mochi_reacts_to_pc: bool,
     /// What the closed island shows at the top of the screen, where the Mac
     /// has its notch: "mochi" (the Mac's island on a screen without a notch),
     /// "time", "datetime", "claude" (the plan's usage), "music" (what plays),
@@ -194,6 +196,7 @@ impl Default for Settings {
             phone_relay: false,
             phone_relay_url: String::new(),
             show_clock: false,
+            mochi_reacts_to_pc: true,
             closed_island: "mochi".into(),
             island_corner: "top".into(),
             agy_approvals_enabled: false,
@@ -498,6 +501,7 @@ mod tests {
   "phoneRelay": true,
   "phoneRelayUrl": "wss://relay.example.workers.dev",
   "showClock": true,
+  "mochiReactsToPc": false,
   "closedIsland": "music",
   "islandCorner": "bottomRight",
   "agyApprovalsEnabled": true
@@ -604,6 +608,12 @@ mod tests {
         assert_eq!(loaded.desktop_mochi, DesktopMochiPref::default());
         assert!(!loaded.desktop_mochi.on_desktop);
         assert_eq!(loaded.mochi_outfit, "witchHat");
+    }
+
+    #[test]
+    fn pc_reactions_are_on_by_default_and_for_old_settings() {
+        assert!(Settings::default().mochi_reacts_to_pc);
+        assert!(parse(&custom_with("mochiReactsToPc", None)).unwrap().mochi_reacts_to_pc);
     }
 
     #[test]
@@ -774,6 +784,7 @@ mod tests {
             ("mainPill", json!(["agent_cursor"])),
             ("screen", Value::Null),
             ("shortcuts", json!("Ctrl+Alt+A")),
+            ("mochiReactsToPc", json!("yes")),
         ] {
             let loaded = parse(&custom_with(key, Some(wrong)))
                 .unwrap_or_else(|| panic!("a file with a bad {key} was thrown away"));
@@ -1022,6 +1033,7 @@ mod tests {
                 "phoneRelay",
                 "phoneRelayUrl",
                 "showClock",
+                "mochiReactsToPc",
                 "closedIsland",
                 "islandCorner",
                 "agyApprovalsEnabled",

@@ -156,7 +156,7 @@ pub fn chat_prompt(history: &[Value], first: bool, context: Option<&ChatContext>
         }
         out.push_str("</conversation>\n\nThe user's new message:\n");
     }
-    match context.filter(|_| first) {
+    match chat::for_turn(first, context) {
         Some(ChatContext::File { name, path }) => {
             out.push_str(&format!("File: {name} (read it at {path})\n\n"));
         }
@@ -233,6 +233,7 @@ mod tests {
         assert!(chat_prompt(&history, false, Some(&file), "why?").ends_with("message:\nwhy?"));
         let win = ChatContext::Window { app_name: "Code".into(), title: "main.rs".into(), url: None };
         assert_eq!(chat_prompt(&[], true, Some(&win), "q"), "Context — App: Code, Window: main.rs\n\nq");
+        assert!(chat_prompt(&history, false, Some(&win), "q").ends_with("message:\nContext — App: Code, Window: main.rs\n\nq"));
     }
 
     #[test]

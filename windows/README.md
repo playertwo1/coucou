@@ -651,15 +651,18 @@ on; other agents and Claude Desktop ask in their own window.
   its `spotify:` link, and without Spotify **Get Spotify** opens its download
   page. Windows gives no Spotify link for the track, so an ad is told apart by
   having a title and no artist or album.
-- Not in this version: sending a dropped file by email and dragging Mochi onto
-  a window to attach it as context. On the Mac, email goes through Resend or
-  Apple Mail's scripting; neither has a safe equivalent that attaches a file
-  here, and the drop card would need a third button it doesn't have.
+- A dropped file goes by email through a classic Outlook draft (Windows only):
+  the draft opens with the file attached, no recipient, and is never sent
+  without your click. The Mac uses Resend or Apple Mail's scripting.
+- Mochi dropped on another app's window attaches that window to the chat (its
+  app, title and, in Chrome, Edge, Brave, Vivaldi, Opera or Firefox, the
+  address bar's URL) only when he is dragged from his spot on the desktop: out
+  of the island, a drop always places him, where the Mac attaches too.
+  Windows only.
 - New versions: the Mac checks the downloaded app's Developer ID signature and
   notarization; the Windows installer isn't code-signed yet, so it is checked
   against the SHA-256 GitHub publishes for it, and the installer (not Coucou)
   replaces the app and starts it again.
-- Cal.com shows the next bookings as a list rather than the Mac's calendar.
 - The Cursor pill carries both Cursor Agent's own hooks and Claude Code running
   in Cursor's terminal.
 - Hermes: Coucou writes the plugin but does not run the `hermes` CLI, so it is
@@ -684,8 +687,10 @@ on; other agents and Claude Desktop ask in their own window.
 - Keyboard shortcuts use `Ctrl+Alt` where the Mac uses `⌃⌥`, with different
   keys (see [Keyboard shortcuts](#keyboard-shortcuts)), and `Ctrl` where the
   Mac uses `⌘` inside the island. "Bring the terminal forward" is "Open
-  terminal" here. Not in this version: attaching the front window (its id is
-  kept for later). The island only reads its own shortcuts while it has the
+  terminal" here. **Attach the front window** (`Ctrl+Alt+F`, the Mac's `⌃⌥W`)
+  takes the window in front when the keys go down; with Coucou itself in
+  front there is nothing to attach (the Mac falls back to the last other app),
+  and on Linux it doesn't read windows yet. The island only reads its own shortcuts while it has the
   keyboard: in the chat, or after a global shortcut opened it. `Ctrl+↓`
   `Ctrl+↑` `Ctrl+O` walk the GitHub lists, as on the Mac, and the highlighted
   row scrolls into view where the Mac's three-row list doesn't follow it; in the
@@ -718,8 +723,7 @@ on; other agents and Claude Desktop ask in their own window.
   the island's text right to left but not its layout: Mochi and the pills keep
   their sides.
 - Mochi on the desktop dances to Spotify. While he dances he stays awake (the
-  Mac lets him doze off mid-dance). Dropping him on a window doesn't attach it
-  to the chat. While he
+  Mac lets him doze off mid-dance). While he
   sleeps, the transparent square around him (120 px) takes the first mouse
   move, which wakes him and gives the rest back to the desktop.
 

@@ -62,8 +62,7 @@ pub const ACTIONS: &[ActionDef] = &[
     action("openChat", "Ctrl+Alt+Space", true, true),
     action("goToAlert", "Ctrl+Alt+A", true, true),
     action("jumpToTerminal", "Ctrl+Alt+T", true, true),
-    // Dragging Mochi onto a window is not in this version.
-    action("attachFrontWindow", "Ctrl+Alt+F", true, false),
+    action("attachFrontWindow", "Ctrl+Alt+F", true, true),
     action("nextPill", "Ctrl+Alt+Right", true, true),
     action("prevPill", "Ctrl+Alt+Left", true, true),
     action("muteToggle", "Ctrl+Alt+S", true, true),
@@ -328,6 +327,13 @@ pub fn dispatch<R: Runtime>(app: &AppHandle<R>, action: &str) {
     crate::log::line(format!("shortcut {action}"));
     if action == "wardrobeToggle" {
         let _ = app.emit_to(WINDOW_LABEL, "open-wardrobe", ());
+    } else if action == "attachFrontWindow" {
+        // Read now, while the user's window is still in front; off this thread,
+        // since a browser's address bar can take a moment.
+        let app = app.clone();
+        std::thread::spawn(move || {
+            let _ = app.emit_to(WINDOW_LABEL, "window-context", crate::window_context::front());
+        });
     } else {
         let _ = app.emit_to(WINDOW_LABEL, "shortcut", action.to_string());
     }
@@ -645,7 +651,6 @@ mod wayland {
             assert_eq!(of(&r, "desktopToggle").status, Status::Refused);
             // Never handed over: untouched.
             assert_eq!(of(&r, "toggleIsland").status, Status::Off);
-            assert_eq!(of(&r, "attachFrontWindow").status, Status::NotPorted);
         }
 
         #[test]
@@ -736,14 +741,12 @@ mod tests {
     }
 
     #[test]
-    fn the_action_not_ported_yet_is_reserved_not_registered() {
+    fn every_action_is_ported_and_only_the_island_toggle_starts_off() {
         let plan = plan(&Bindings::new(), never);
         for (def, outcome) in plan {
-            let reserved = def.id == "attachFrontWindow";
-            assert_eq!(def.ported, !reserved);
+            assert!(def.ported, "{}", def.id);
             match outcome {
-                Ok(_) => assert!(def.ported && def.enabled_by_default, "{}", def.id),
-                Err(s) if reserved => assert_eq!(s.status, Status::NotPorted),
+                Ok(_) => assert!(def.enabled_by_default, "{}", def.id),
                 Err(s) => assert_eq!((def.id, s.status), ("toggleIsland", Status::Off)),
             }
         }
@@ -859,7 +862,8 @@ mod tests {
         assert_eq!(from_args(&args(&["coucou", "--shortcut"])), None);
         assert_eq!(from_args(&args(&["coucou", "--shortcut", "rm -rf"])), None);
         assert_eq!(from_args(&args(&["coucou", "--shortcut", "desktopToggle"])), Some("desktopToggle"));
-        assert_eq!(from_args(&args(&["coucou", "--shortcut", "attachFrontWindow"])), None);
+        assert_eq!(from_args(&args(&["coucou", "--shortcut", "attachFrontWindow"])), Some("attachFrontWindow"));
+        assert_eq!(from_args(&args(&["coucou", "--shortcut", "attachEverything"])), None);
         assert_eq!(from_args(&args(&["coucou"])), None);
     }
 }

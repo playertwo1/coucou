@@ -75,3 +75,12 @@ test("weeks, a day's calls and a call's details scroll between the card's header
   root.querySelector(".cal-booking").fire("click");
   assert.match(check("booking").body.textContent, /Line 4/);
 });
+
+test("a late call sits on its local day, whatever day it is in UTC", () => {
+  const late = new Date(2026, 9, 28, 23, 30);
+  const root = calendarDetail({ rangeStart: new Date(2026, 9, 1).getTime(), rangeEnd: new Date(2026, 10, 30).getTime(),
+    bookings: [{ id: "1", title: "Late", start: late.toISOString(), end: new Date(late.getTime() + 1800000).toISOString() }] },
+    () => {}, () => {});
+  const marked = root.find(".cal-day").filter((el) => el.textContent.endsWith("•")).map((el) => el.getAttribute("data-day"));
+  assert.deepEqual(marked, ["2026-10-28"]);
+});

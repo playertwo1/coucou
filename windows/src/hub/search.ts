@@ -3,6 +3,7 @@
 // Port of SettingsSearch.swift and SettingsSearchMatch.swift.
 
 import { t } from "../i18n/i18n";
+import { HOST_OS } from "../core/pills";
 import type { PageId } from "./shell";
 
 export interface SettingsSearchEntry {
@@ -106,7 +107,10 @@ export const SETTINGS_ENTRIES: SettingsSearchEntry[] = [
   { id: "general.sound", page: "general", title: "Sound", terms: ["Enable sounds", "Volume", "Open sounds folder", "Reload sounds"] },
   { id: "general.behavior", page: "general", title: "Behavior", terms: ["Open on hover", "Close after", "Hide after", "alerts.all-pills"] },
   { id: "general.display", page: "general", title: "Display", terms: ["Show Mochi on", "Screen with the notch", "Main screen (menu bar)", "Follow the mouse"] },
-  { id: "general.vitals", page: "general", title: "vitals.title", terms: ["vitals.toggle"] },
+  ...(HOST_OS === "windows" ? [{
+    id: "general.vitals", page: "general", title: "Mochi reacts to your PC",
+    terms: ["Mochi reacts to your CPU, memory, temperature and battery while he is visible."],
+  } satisfies SettingsSearchEntry] : []),
   { id: "general.hotkey", page: "general", title: "Hotkey", terms: ["Show island with shortcut", "Shortcut"] },
   { id: "general.startup", page: "general", title: "Startup", terms: ["Launch at Mac startup"] },
   { id: "general.update", page: "general", title: "update.settings.title", terms: [] },

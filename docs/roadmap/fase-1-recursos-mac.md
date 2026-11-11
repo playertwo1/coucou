@@ -7,11 +7,11 @@ Regra: cada item abaixo começa por descoberta e aprovação de um mini-spec. A 
 ### 1.1 — Arrastar Mochi sobre uma janela para anexar contexto (M)
 
 - [x] Ler `NotchBuddy/Sources/App/WindowContextCapture.swift`, `IslandWindowController.windowContextAtPoint` e `DesktopMochi.handleDragRelease`; localizar o fluxo Windows de arraste e contexto do Chat.
-- [ ] Definir em spec: janela-alvo, tipos de arquivo aceitos, destino (Chat atual ou novo), feedback e comportamento quando a janela/app não puder ser identificada.
-- [ ] Aprovar a spec; manter o visual existente e os limites de acesso aos arquivos.
-- [ ] Adicionar testes para caminho com espaços/Unicode, arquivo inexistente e destino ausente.
-- [ ] Implementar o menor fluxo Windows que anexa o arquivo ao contexto sem movê-lo nem sobrescrevê-lo.
-- [ ] Testar manualmente com um arquivo de texto e outro formato já aceito pelo Chat.
+- [x] Definir em spec: janela-alvo, destino (Chat atual), feedback e comportamento quando a janela/app não puder ser identificada. Tipos de arquivo saíram do escopo: o gesto anexa metadados da janela, não arquivos.
+- [x] Aprovar a spec; manter o visual existente e os limites de acesso aos arquivos.
+- [x] Adicionar testes: título Unicode/longo, janela sem título, barra de endereço vazia ou com busca, contexto em turno seguinte, falha de envio mantém o contexto.
+- [x] Implementar o menor fluxo Windows que anexa o contexto da janela sem ler, mover nem sobrescrever arquivos.
+- [ ] Testar manualmente: Mochi do desktop sobre um navegador (URL), outro app (sem URL), área de trabalho/barra de tarefas (só reposiciona), Chat vazio e com histórico, e arraste para fora da ilha (só posiciona).
 - Checkpoint: o anexo correto aparece no contexto; casos inválidos não abrem arquivo diferente nem mudam dados existentes.
 
 ### 1.2 — Arquivo solto → rascunho no Outlook clássico (M)
@@ -43,6 +43,8 @@ Regra: cada item abaixo começa por descoberta e aprovação de um mini-spec. A 
 
 ### 1.3 — Portfólio de cripto, somente leitura (G)
 
+**Descartado (2026-11-11), decisão do proprietário:** não vai usar. Nada foi implementado.
+
 - [ ] Obter decisão do proprietário sobre exchanges/carteiras suportadas e dados a exibir (saldo, ativos, moeda de conversão).
 - [ ] Definir permissões somente leitura, armazenamento de credenciais no serviço seguro existente, atualização e dados locais no mini-spec.
 - [ ] Não implementar até as fontes e os campos serem escolhidos; chaves de saque, transações e trading ficam fora.
@@ -52,13 +54,84 @@ Regra: cada item abaixo começa por descoberta e aprovação de um mini-spec. A 
 
 ### 1.4 — Cal.com em calendário em vez de lista (P)
 
-- [ ] Ler `NotchBuddy/Sources/App/CalcomPoller.swift` e o card/lista atual no Windows.
-- [ ] Definir janela temporal, navegação, fuso horário, eventos simultâneos e estados vazio/erro no mini-spec.
-- [ ] Aprovar o desenho antes de alterar uma tela existente.
-- [ ] Testar paginação, mudança de dia/fuso, ausência de eventos e erro de autenticação.
-- [ ] Implementar a visualização preservando dados e comandos atuais de abertura do evento.
+**Descartado (2026-11-11), decisão do proprietário:** não usa Cal.com. A visão do upstream (#1006) continua no app, sem alteração; o teste manual não será feito. O registro abaixo fica como referência.
+
+- [x] Ler `NotchBuddy/Sources/App/CalcomPoller.swift` e o card/lista atual no Windows.
+- [x] Definir janela temporal, navegação, fuso horário, eventos simultâneos e estados vazio/erro — já definidos pelo upstream (#1006), sem mini-spec própria do fork.
+- [x] Aprovar o desenho antes de alterar uma tela existente — N/A: a visão já está na `main`; nada foi alterado.
+- [ ] Testar paginação, mudança de dia/fuso, ausência de eventos e erro de autenticação — automatizados, exceto o erro de autenticação (ver status).
+- [x] Implementar a visualização preservando dados e comandos atuais de abertura do evento.
 - Checkpoint: datas/horas correspondem ao fuso escolhido e não há evento duplicado ou perdido nos limites da página.
 
+**Status 1.4 (2026-11-11): parcial, já implementado pelo upstream, teste manual pendente —** a descoberta mostrou que o calendário já existe no Windows: PR #1006 (@lazarevtill, commits `0c36e64` e `3b8752d`), visão mês → dia → reserva no card existente, com o botão "Abrir Cal.com" mantido. O que cada parte cobre:
+- `calcom.rs`: janela de 60 dias com paginação por cursor (até 10 páginas de 100). Um id repetido ou um cursor repetido viram erro, sem duplicar a reserva. Resposta limitada a 2 MB e timeout.
+- `core/calendar.ts`: dado inválido vira erro, diferente de calendário vazio. Os dias usam o fuso local.
+- `views/calendar.ts`: não navega para fora do intervalo buscado.
+- Teste novo: uma reserva às 23:30 locais fica no dia local, mesmo caindo no dia seguinte em UTC. Rodado em processo com quatro fusos (UTC+14, UTC-7, UTC+0 e o da máquina, UTC-3; o deslocamento foi conferido em cada execução): 5/5 em cada. `npm test`: 588 aprovados.
+- Não coberto por teste: o erro de autenticação (401 mostra "API error 401" pelo caminho genérico; `fetch` usa URL fixa e não tem teste HTTP) e uma reserva que atravessa a meia-noite (aparece só no dia de início).
+- Teste manual com chave Cal.com real: pendente, depende do proprietário.
+
+### 1.5 — Atalho: anexar a janela da frente ao Chat (P)
+
+Mac: `IslandWindowController.performAttachFrontWindow` (⌃⌥W). No Windows o atalho `attachFrontWindow` (Ctrl+Alt+F) já existe nas configurações, mas não faz nada (`island/shortcuts.ts`).
+- [x] Mini-spec: janela em foco no momento do atalho (nunca a do Coucou), mesmo contexto da 1.1 (app, título, URL), Chat aberto com o chip; sem janela identificável, som de erro e nada muda.
+- [x] Aprovar a mini-spec (proprietário, 2026-11-11).
+- [x] Testes: evento com contexto abre o Chat com a janela pendente; evento vazio não muda nada; o atalho deixou de ser reservado nos dois lados; `--shortcut attachFrontWindow` aceito. O envio único é o da 1.1.
+- [x] Implementar reaproveitando `window_context.rs` (`front()`).
+- [x] Teste manual do atalho: Ctrl+Alt+F funcionou (confirmado pelo proprietário, 2026-11-11).
+- [ ] Cobertura restante: navegador, outro app e área de trabalho/sem alvo.
+- Checkpoint: o atalho anexa a janela que estava em foco; sem alvo, nada muda.
+
+**Status 1.5 (2026-11-11): parcial, código pronto —** `shortcuts::dispatch` lê a janela em foco numa thread própria assim que o atalho dispara, antes de a ilha pegar o foco, e manda `window-context` à ilha. A ilha guarda o contexto, toca o som de aprovação, faz o Mochi sorrir e abre o Chat. Se a janela em foco for o Coucou, a área de trabalho ou a barra de tarefas, o Mochi faz cara feia, toca o som de erro e nada muda. Diferença do Mac: lá, com o próprio app em frente, o atalho usa o último app externo; aqui não há contexto. No Linux, o atalho só diz que não há janela (anotado no código). README do Windows corrigido: e-mail pelo Outlook, Mochi sobre janela e este atalho; a linha antiga do Cal.com foi removida. `cargo test --lib` (619 aprovados, 6 ignorados), `npx tsc --noEmit` e `npm test` (590 aprovados) passaram. O proprietário confirmou que Ctrl+Alt+F funcionou; os alvos e casos restantes não foram especificados.
+
+### 1.6 — Captura de área da tela e perguntar sobre ela (G)
+
+Mac: `ScreenCapture.swift`, `CaptureCardView.swift` (⌘⇧S). Recortar parte da tela; Mochi engole a imagem; a ilha oferece colar no prompt, copiar, anotar ou perguntar no Chat. Com Flow, segurar a tecla e falar envia imagem e fala juntas.
+- [ ] Descoberta: API de recorte do Windows (ferramenta do sistema ou captura própria), onde a imagem fica (pasta local do Coucou, limpeza), quais provedores do Chat aceitam imagem.
+- [ ] Mini-spec com as ações do card, limite de tamanho, e o caso Flow; aprovar.
+- [ ] Subdividir antes de implementar (captura → card → Chat → Flow).
+- Checkpoint: a imagem só sai da máquina quando o usuário pergunta no Chat; cancelar não deixa arquivo para trás.
+
+### 1.7 — Mochi sente o PC (M)
+
+Mac: `MachineVitals.swift`, `VitalsHoverLine.swift`, `WorkStreak.swift`. CPU alta → suor, PC quente → vermelho, pouca memória → inchado, bateria baixa → cansado e depois dormindo; linha sob a ilha ao passar o mouse ("CPU 94 % · node, Chrome"); sono depois de horas seguidas com os agentes, até uma pausa de 20 min.
+- [x] Descoberta: fontes no Windows para CPU, memória, bateria e temperatura. O Windows não dá temperatura sem admin; o proprietário escolheu ler a do HWiNFO.
+- [x] Mini-spec aprovada (2026-11-11): `docs/superpowers/specs/2026-11-11-mochi-feels-the-pc-design.md`, em 4 subfases.
+- [x] 1.7a — Leitura: `vitals.rs` e o comando `vitals_read`.
+- [x] 1.7b — Humores no motor (porta do `MochiMood.swift`). Conferência visual pendente, junto com a 1.7c.
+- [ ] 1.7c — Linha sob a ilha, opção nas Configurações, traduções, busca.
+- [ ] 1.7d — Horas com os agentes (`WorkStreak`).
+- [ ] Teste manual com carga real, bateria e HWiNFO (Gadget e memória compartilhada).
+
+**Status 1.7a (2026-11-11): código pronto —** `vitals.rs`, comando `vitals_read(top)`, sem laço no Rust: a ilha vai chamar a cada 3 s só com o Mochi na tela.
+- *O que lê:* CPU (`GetSystemTimes`), carga de memória, bateria, ociosidade e os dois apps que mais gastaram CPU (só quando pedido). Temperatura da CPU pelo HWiNFO, primeiro o Gadget no registro, senão a memória compartilhada.
+- *Leitor da memória compartilhada:* escrito a partir dos deslocamentos do formato, sem código de terceiros (a referência pública é GPL). Cada leitura é limitada ao tamanho da região; o texto ANSI é lido como Latin-1.
+- *Testes:* 7 de unidade (delta de CPU, bateria ausente, ranking por nome, °F, escolha do sensor da CPU, Gadget com vírgula decimal e lacunas, memória com cabeçalho inválido e contagem além do fim). Mais um `#[ignore]` que leu esta máquina de verdade: CPU 10 %, memória 70 %, bateria 80 % na tomada, top Node/Python, sem temperatura (HWiNFO fechado).
+- *Teste real (2026-11-11):* `cargo test --lib vitals::tests::reads_this_machine -- --ignored --nocapture` leu CPU, memória, bateria e ociosidade, mas retornou `temperature: None`. A abertura somente para leitura de `Global\\HWiNFO_SENS_SM2` falhou com `FileNotFoundException`; o processo atual não tem janela visível no inventário. Ainda não comprova a leitura de temperatura.
+- *Verificação:* `cargo test --lib` e `npx tsc --noEmit` passaram.
+
+**Status 1.7b (2026-11-11): código pronto, conferência visual pendente —** o desenho foi portado do Mac sem mudar valores.
+- *`src/mochi/mood.ts`:* as partes puras: o humor, o voo das gotas, os saltos e a onda de calor.
+- *`engine.ts`:* os ganchos nos mesmos pontos do Mac. CPU alta: suor, saltos de pânico, olhar assustado, piscadas nervosas, olhos menores e tremendo. PC quente: rubor e ondas de calor. Memória curta: inchado. Cansado: olhos pesados e bocejo. Bateria quase vazia: dormindo com z's.
+- *Regras do Mac mantidas:* nada disso aparece enquanto ele pede algo (permissão, pergunta, erro), e os minis das pílulas nunca sentem o PC. O humor entra no `busy` do motor, para a ilha não parar a animação no meio.
+- *Testes:* `tests/mood.test.mjs`, com 10 testes e relógio controlado: voo e fim das gotas, saltos, ondas, cada humor no motor, pedido vence o humor, minis, e o desenho num canvas falso (rubor, gotas e 3 ondas acrescentam ao quadro).
+- *Verificação:* `npm test` (600 aprovados), `npx tsc --noEmit` e `npm run build` passaram.
+- *Ligação feita na 1.7c:* leitura de PC passa a definir `moodTarget` na ilha e no desktop; os minis seguem calmos.
+- Checkpoint: nada é lido com a ilha escondida; os dados ficam na máquina.
+- Achado resolvido na 1.7c: `general.vitals` agora aponta para a opção traduzida do Windows.
+
+**Status 1.7c (2026-11-11): parcial —** o mapeamento puro aplica os limiares do Mac para CPU, temperatura, memória e bateria. A ilha lê `vitals_read` a cada 3 s somente no Windows, com a opção ligada e o Mochi visível na ilha ou no desktop; ambos recebem `moodTarget`, e os minis não são alterados. A linha hover mostra no máximo duas partes e até dois processos. A opção `mochiReactsToPc` fica ligada por padrão, aparece em Geral apenas no Windows e tem textos em `extra.json` nas 13 línguas; a busca foi corrigida. Ao conectar à tomada com bateria abaixo de 20 %, Mochi fica feliz e toca `pop`.
+- *Testes:* `tests/vitals.test.mjs` (7), testes Rust de Settings (39), `npm test` (607 aprovados), `npx tsc --noEmit`, `npm run build` e `node scripts/gen-strings.mjs --check` passaram. A suíte completa Rust teve 626 aprovados, 1 falha e 7 ignorados; a falha é `mail::pdf::tests::a_pdf_is_cut_into_pages_with_their_text`, que não encontrou um caminho no ambiente.
+- *Simulação sintética (2026-11-11):* `node --import ./tests/setup.mjs --test tests/vitals.test.mjs tests/mood.test.mjs` (17/17) e `cargo test --lib vitals::tests` (7 passaram, 1 teste de máquina real ignorado). CPU 94 %, 91 °C, memória 98 % e bateria 14 % fora da tomada produziram `busy=0.667`, `hot=0.8`, `full=1`, `tired=1`, `asleep=false`; o resumo foi `CPU 94 % · node, Chrome · Your PC is hot`. Conectar com bateria em 19 % gerou a condição; em 20 %, não. Teste das funções puras, sem efeito visual no app.
+- *Renderização sintética no Tauri dev (2026-11-11):* pelo hook dev `window.__island`, sem mockar o IPC nativo, a ilha desenhou a linha `CPU 94 % · node, Chrome · Seu PC está muito quente`; a 9 % de bateria fora da tomada, desenhou Mochi dormindo e `Bateria 9 %`. A transição sintética 19 % desconectado → conectado fez o helper retornar verdadeiro; o teste disparou o emote `happy` e `Sound.play("pop")`. O buffer estava carregado/habilitado e uma voz ficou ativa após a interação que retomou o áudio. A tela foi capturada do WebView dev; `vitals_read` real e o clique físico de hover não foram simulados por esse hook.
+- *Teste manual pendente:* leitura de temperatura com o mapa real do HWiNFO e validação do ciclo normal de 3 s via IPC. O HWiNFO portátil 8.60-6120 foi baixado do espelho SAC listado pela página oficial; a assinatura REALiX é válida. O usuário confirmou UAC e ativou Shared Memory Support. Depois, com o HWiNFO 8.54-6090 iniciado em modo somente sensores, a leitura real retornou `temperature: None` e o mapa compartilhado não existia; o processo estava sem janela. Checkpoint ainda aberto.
+
+**Preparação 1.7d (2026-11-11): parcial —** plano em `docs/superpowers/plans/2026-11-11-mochi-work-streak-plan.md`. Nenhum teste ou código da 1.7d. O proprietário confirmou os três seams (timestamps puros, `hooks.test.mjs` via `registerHookHandlers`, composição em `moodFromVitals`). Com `State.paused`, os cinco eventos de trabalho contam: o registro entra antes do `return` de `handleHook`, sem revelar a ilha, sem som e sem alterar a recusa de um pedido pendente. `StatusLine` fica fora. O código continua bloqueado pelo checkpoint aberto da 1.7c.
+
+**Não escolhidos (2026-11-11):** seguir o "Não perturbe" do Windows (o Mac fica quieto no Foco). Não apresentados ao proprietário, ficam pendentes de decisão: print da tela inteira com miniatura arrastável (⌘⇧2; o Windows já tem Win+PrtScn e Win+Shift+S), e no « OK Coucou » e-mail com busca de contato e anexo, e tocar uma faixa do Spotify direto (hoje abre a busca). Só do Mac, sem equivalente: Apple Music, resumos com Apple Intelligence, reconhecimento de fala da Apple, demo da App Store.
+
 Apple Music continua fora do escopo Windows.
+
+**Status 1.1 (2026-11-11): parcial, código pronto, teste manual pendente —** spec aprovada com URL do navegador e só para o Mochi que já está no desktop, como no Mac (`docs/superpowers/specs/2026-11-10-window-context-attach-design.md`). `window_context.rs` acha a janela de outro app sob o cursor no instante em que o Mochi é solto, de frente para trás. Ignora as janelas do Coucou, as ocultas, minimizadas, de outra área de trabalho virtual e as sobreposições click-through. A área de trabalho e a barra de tarefas encerram a busca sem contexto. Lê app e título; em Chrome/Edge/Brave/Vivaldi/Opera/Firefox, lê a URL da barra de endereço pela UI Automation (1,5 s no máximo, só leitura). `desktop.rs` devolve o Mochi à posição de antes do arraste e manda o contexto à ilha, que toca o som de aprovação, abre o Chat e mostra o título no chip existente. `chat::for_turn` deixa o contexto de janela ir em qualquer turno (o de arquivo continua só no primeiro); o contexto sai uma vez por envio bem-sucedido e fica pendente se o envio falhar. Corrigido também: `ChatContext` não aceitava `appName` vindo da página (faltava `rename_all_fields`). `cargo test --lib` (619 aprovados, 6 ignorados), `npx tsc --noEmit`, `npm test` (587 aprovados) e `npm run build` passaram. Nesta continuação, os testes automatizados de contexto/atalho passaram (3 Rust, 48 TS). No reteste, `tauri dev` abriu com Vite isolado na porta 1421, mas `focus-window` retornou `ACTION_FAILED`; não executei o arraste real nem confirmei o contexto anexado. Checkpoint não fechado.
 
 **Status (2026-11-10): parcial —** a descoberta confirma que o recurso Mac arrasta o Mochi sobre uma janela para anexar metadados da janela. O roadmap misturava esse gesto com o fluxo separado de arquivo solto (tipos de arquivo, caminhos e cópia); a mini-spec proposta esclarece o escopo e aguarda aprovação do proprietário. Implementação não iniciada.

@@ -276,7 +276,7 @@ pub fn send_paste(shift: bool) -> Result<(), String> {
 }
 
 /// A window's program: "outlook", "Outlook".
-fn program_of(hwnd: HWND) -> Option<(String, String)> {
+pub(crate) fn program_of(hwnd: HWND) -> Option<(String, String)> {
     unsafe {
         let mut pid = 0u32;
         GetWindowThreadProcessId(hwnd, Some(&mut pid as *mut u32));

@@ -107,6 +107,8 @@ export interface Settings {
   alertsFromAllPills: boolean;
   /** Date and time in the middle of the compact island. */
   showClock: boolean;
+  /** Let Mochi react to Windows vitals while he is visible. */
+  mochiReactsToPc: boolean;
   /** What the closed island shows at the top of the screen (see core/closed.ts). */
   closedIsland: string;
   /** Where the island sits: "top" (the notch) or topLeft, topRight, bottomLeft, bottomRight. */
@@ -183,6 +185,7 @@ export const DEFAULT_SETTINGS: Settings = {
   openOnHover: false,
   alertsFromAllPills: false,
   showClock: false,
+  mochiReactsToPc: true,
   closedIsland: "mochi",
   islandCorner: "top",
   absenceInterval: 180,
@@ -245,6 +248,8 @@ class AppState {
   promptContext: PromptContext | null = null;
   droppedFile: { name: string; path: string } | null = null;
   droppedFileReady = false;
+  /** Mochi dropped on another app's window: sent with the next question, once. */
+  windowContext: { appName: string; title: string; url?: string | null } | null = null;
   noteMessage: string | null = null;
   searchResult: SearchResult | null = null;
   chatHistory: ChatMessage[] = [];

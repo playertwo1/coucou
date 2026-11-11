@@ -17,8 +17,8 @@ use crate::{claude, cli_relay, local_chat, openai_compat, secrets};
 
 pub const ANTHROPIC: &str = "anthropic";
 
-#[derive(Debug, Clone, Deserialize)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum ChatContext {
     File { name: String, path: String },
     Window { app_name: String, title: String, url: Option<String> },
@@ -149,9 +149,15 @@ pub fn window_line(app_name: &str, title: &str, url: Option<&str>) -> String {
     text
 }
 
+/// The context this turn carries: a dropped file only on the first question, a
+/// window (Mochi dropped on it) on whichever turn it was dropped before.
+pub fn for_turn(first: bool, context: Option<&ChatContext>) -> Option<&ChatContext> {
+    context.filter(|c| first || matches!(c, ChatContext::Window { .. }))
+}
+
 /// The plain-text record of what the user asked, context included.
 pub fn plain_question(first: bool, context: Option<&ChatContext>, query: &str) -> String {
-    match context.filter(|_| first) {
+    match for_turn(first, context) {
         Some(ChatContext::File { name, .. }) => format!("File: {name}\n\n{query}"),
         Some(ChatContext::Window { app_name, title, url }) => {
             format!("{}\n\n{query}", window_line(app_name, title, url.as_deref()))
@@ -348,12 +354,18 @@ mod tests {
     }
 
     #[test]
-    fn context_goes_with_the_first_question_only() {
+    fn a_file_goes_with_the_first_question_a_window_with_any() {
         let file = ChatContext::File { name: "a.txt".into(), path: "/x/a.txt".into() };
         assert_eq!(plain_question(true, Some(&file), "why?"), "File: a.txt\n\nwhy?");
         assert_eq!(plain_question(false, Some(&file), "why?"), "why?");
         let win = ChatContext::Window { app_name: "Code".into(), title: "main.rs".into(), url: None };
         assert_eq!(plain_question(true, Some(&win), "q"), "Context — App: Code, Window: main.rs\n\nq");
+        // The page's shape (bridge.ts ChatContext), both ways.
+        let page = serde_json::json!({ "kind": "window", "appName": "Code", "title": "main.rs", "url": null });
+        let parsed: ChatContext = serde_json::from_value(page.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), page);
+        // Mochi dropped on a window mid-conversation: it rides with that turn.
+        assert_eq!(plain_question(false, Some(&win), "q"), "Context — App: Code, Window: main.rs\n\nq");
         assert_eq!(window_line("Edge", "Docs", Some("https://x.dev")), "Context — App: Edge, Window: Docs, URL: https://x.dev");
     }
 

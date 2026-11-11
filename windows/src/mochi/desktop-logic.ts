@@ -8,6 +8,7 @@
 // not needed: a point on the desktop is used as the OS reports it.
 
 import type { BotEmoteName, BotStateName } from "../core/layout";
+import type { MochiMood } from "./mood";
 import type { Outfit } from "./wardrobe";
 
 /** What the island tells the desktop window, whenever it changes. */
@@ -17,6 +18,7 @@ export interface DesktopSnapshot {
   outfit: Outfit;
   soundEnabled: boolean;
   soundVolume: number;
+  moodTarget: MochiMood;
   /** Tray → Pause: he dozes off and stays asleep. */
   paused: boolean;
   /** Music plays: he dances (the compact island's rules, core/spotify.ts). */

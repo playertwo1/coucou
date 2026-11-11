@@ -15,7 +15,7 @@ import { closedIsland } from "../core/closed";
 import type { UpdateStatus } from "../core/update";
 import { SOUND_NAMES } from "../core/sound";
 import {
-  MAX_DECLARED, PILL_CATEGORIES, availablePills, chooseMainPill, isComingSoon, mainPillChoices,
+  HOST_OS, MAX_DECLARED, PILL_CATEGORIES, availablePills, chooseMainPill, isComingSoon, mainPillChoices,
   sanitizeDeclared, toggleDeclared, type PillDefinition,
 } from "../core/pills";
 import { h, clear } from "../views/dom";
@@ -1173,10 +1173,14 @@ function generalSection(): HTMLElement {
 
   const sound = toggle(settings.soundEnabled, (v) => { settings.soundEnabled = v; void save(); });
   const openOnHover = toggle(settings.openOnHover, (v) => { settings.openOnHover = v; void save(); });
+  const pcVitals = HOST_OS === "windows"
+    ? toggle(settings.mochiReactsToPc, (v) => { settings.mochiReactsToPc = v; void save(); })
+    : null;
   const autostart = toggle(settings.autostart, (v) => { settings.autostart = v; void save(); });
   generalSync = () => {
     setSwitch(sound, settings.soundEnabled);
     setSwitch(openOnHover, settings.openOnHover);
+    if (pcVitals) setSwitch(pcVitals, settings.mochiReactsToPc);
     setSwitch(autostart, settings.autostart);
     // A field being edited keeps what is in it; it catches up when it is left.
     if (document.activeElement !== volume) volume.value = String(settings.soundVolume);
@@ -1203,6 +1207,13 @@ function generalSection(): HTMLElement {
       openOnHover,
     ),
     h("div", { class: "hint", text: t("Hovering the island opens it; it folds again shortly after the pointer leaves. Click inside to keep it open.") }),
+    ...(pcVitals ? [
+      h("div", { class: "row" },
+        h("label", { text: t("Mochi reacts to your PC") }),
+        pcVitals,
+      ),
+      h("div", { class: "hint", text: t("Mochi reacts to your CPU, memory, temperature and battery while he is visible.") }),
+    ] : []),
     h("div", { class: "row" },
       h("label", { text: t("Open for every pill’s alerts") }),
       toggle(settings.alertsFromAllPills, (v) => { settings.alertsFromAllPills = v; void save(); }),

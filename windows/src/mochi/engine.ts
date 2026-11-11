@@ -7,6 +7,10 @@
 import { Ease, lerp, type EaseFn } from "../core/anim";
 import { Sound } from "../core/sound";
 import type { BotEmoteName, BotStateName } from "../core/layout";
+import {
+  CALM, dropAt, dropGone, heatWave, hopAt, isCalm, nextHop, restingHop, throwDrop,
+  type MochiMood, type MoodDrop,
+} from "./mood";
 import { PUMPKIN_BODY, drawOutfitBehind, drawOutfitFront, makeHead } from "./outfits";
 import type { Outfit } from "./wardrobe";
 
@@ -234,6 +238,24 @@ export class BotEngine {
   /** Dancing to music; `dancingLevel` follows it, 0→1 in 0.3 s, 1→0 in 0.5 s. */
   isDancing = false;
   dancingLevel = 0;
+
+  // How the PC feels (mood.ts): vitals.ts sets the target, the levels ease towards it.
+  moodTarget: MochiMood = CALM;
+  moodBusy = 0;
+  moodHot = 0;
+  moodFull = 0;
+  moodTired = 0;
+  moodDrops: MoodDrop[] = [];
+  private nextMoodDrop = 0;
+  private nextMoodYawn = 0;
+  private hop = restingHop();
+  private moodShiftApplied = 0;
+  private moodLiftApplied = 0;
+  // Stressed eyes: where they dart, when next, their tremble, the next nervous blink.
+  private stressLook = { x: 0, y: 0 };
+  private nextStressLook = 0;
+  private stressTremble = { x: 0, y: 0 };
+  private nextNervousBlink = 0;
 
   // Mouth spring (fraction of R)
   slotH = 0; slotHTarget = 0; slotHVel = 0; isChewing = false;
@@ -569,6 +591,9 @@ export class BotEngine {
       this.cfg.bounces || this.cfg.scans || this.cfg.breathes || this.cfg.zz || this.cfg.sweat ||
       this.isMini ||
       this.isDancing || this.dancingLevel > 0.001 ||
+      // A mood plays on its own (hops, drops, yawns), and fades out over frames.
+      (!this.isMini && (!isCalm(this.moodTarget) || this.moodDrops.length > 0 ||
+        this.moodBusy + this.moodHot + this.moodFull + this.moodTired > 0.01 || !this.hop.landed)) ||
       Math.abs(this.tgYaw - this.yaw) > 0.002 ||
       Math.abs(this.tgPitch - this.pitch) > 0.002 ||
       Math.abs(this.tgTilt - this.tilt) > 0.002 ||
@@ -597,6 +622,8 @@ export class BotEngine {
   update(dt: number) {
     const n = now();
     const nowMs = performance.now();
+    // The stressed hop of the last frame comes off first.
+    this.undoMoodOffsets();
 
     for (const tw of [...this.tweens.values()]) {
       const k = tw.keys[tw.index];
@@ -668,6 +695,9 @@ export class BotEngine {
     }
 
     if (this.isMini && n > this.miniNextBehavior) this.doMiniBehaviorLoop();
+
+    // The PC's mood (sweat, puffed up, tired) adjusts the targets above.
+    this.updateMood(dt, n);
 
     const kLook = 1 - Math.pow(0.0025, dt);
     if (!this.locks.has("yaw")) this.yaw += (this.tgYaw - this.yaw) * kLook;
@@ -766,6 +796,217 @@ export class BotEngine {
     }
   }
 
+  // ── The PC's mood (MochiMood.swift) ─────────────────────────────────────────
+
+  /** States where the mood shows: Mochi is not asking for anything. */
+  private get moodShows(): boolean {
+    return ["idle", "working", "thinking", "searching", "finished"].includes(this.state);
+  }
+
+  /** Takes back last frame's hop offset before anything else moves Mochi. */
+  private undoMoodOffsets() {
+    if (this.moodShiftApplied !== 0) { this.ox -= this.moodShiftApplied; this.moodShiftApplied = 0; }
+    if (this.moodLiftApplied !== 0) { this.oy -= this.moodLiftApplied; this.moodLiftApplied = 0; }
+  }
+
+  /** Eases the levels towards `moodTarget` and plays their animations. */
+  private updateMood(dt: number, n: number) {
+    if (this.isMini) return;
+    const shows = this.moodShows;
+    const calmState = this.state === "idle" || this.state === "finished";
+    const target = this.moodTarget;
+    const k = 1 - Math.pow(0.25, dt);
+    this.moodBusy += ((shows ? target.busy : 0) - this.moodBusy) * k;
+    this.moodHot += ((shows ? target.hot : 0) - this.moodHot) * k;
+    this.moodFull += ((shows ? target.full : 0) - this.moodFull) * k;
+    this.moodTired += ((calmState ? target.tired : 0) - this.moodTired) * k;
+    const sleeping = calmState && target.asleep;
+
+    this.updateStress(n);
+
+    // Short memory: puffed up.
+    if (this.moodFull > 0.02) {
+      this.tgSx *= 1 + 0.07 * this.moodFull;
+      this.tgSy *= 1 - 0.035 * this.moodFull;
+    }
+
+    // Sweat: drops thrown from his sides, in bursts at full load, now and then when only warm.
+    if (n > this.nextMoodDrop) {
+      if (this.moodBusy > 0.4) {
+        this.pushDrop(n);
+        if (Math.random() < 0.35) this.pushDrop(n);
+        this.nextMoodDrop = n + 0.18 + Math.random() * 0.22;
+      } else if (this.moodHot > 0.6) {
+        this.pushDrop(n);
+        this.nextMoodDrop = n + 0.6 + Math.random() * 0.5;
+      } else {
+        this.nextMoodDrop = n + 0.3;
+      }
+    }
+    this.moodDrops = this.moodDrops.filter((d) => !dropGone(d, n));
+
+    // Low battery or long hours: heavy eyes, the odd yawn; nearly empty: asleep with his z's.
+    const ownEye = this.eyeOverride === null || this.eyeOverride === "tired" || this.eyeOverride === "closed";
+    if (sleeping) {
+      if (ownEye) { this.eyeOverride = "closed"; this.eyeOverrideUntil = n + 0.4; }
+      this.tgYaw = 0;
+      this.tgPitch = -0.14;
+      if (n > this.nextMoodYawn) {
+        this.emit("z", 1);
+        this.nextMoodYawn = n + 1.6;
+      }
+    } else if (this.moodTired > 0.5) {
+      if (ownEye) { this.eyeOverride = "tired"; this.eyeOverrideUntil = n + 0.4; }
+      this.tgPitch -= 0.06 * this.moodTired;
+      if (n > this.nextMoodYawn) {
+        if (this.nextMoodYawn > 0) this.triggerEmote("yawn");
+        this.nextMoodYawn = n + 24 + Math.random() * 12;
+      }
+    }
+  }
+
+  private pushDrop(n: number) {
+    this.moodDrops.push(throwDrop(n, this.ox, this.oy));
+    if (this.moodDrops.length > 28) this.moodDrops.shift();
+  }
+
+  /**
+   * The processor at full load: Mochi panics, hopping from side to side at
+   * random, quick and short, leaning into each hop, squashing when he lands,
+   * eyes darting where he jumps.
+   */
+  private updateStress(n: number) {
+    const level = this.moodBusy;
+    let hop = this.hop;
+    if (level <= 0.02 && Math.abs(hop.to) <= 0.005 && hop.landed) {
+      this.stressTremble = { x: 0, y: 0 };
+      return;
+    }
+    const p = hop.duration > 0 ? Math.min(1, (n - hop.start) / hop.duration) : 1;
+    if (p >= 1) {
+      if (!hop.landed) {
+        hop.landed = true;
+        // The landing squash.
+        this.anim("sy", [[0.86, 60, Ease.out], [1, 140, Ease.out]]);
+        this.anim("sx", [[1.1, 60, Ease.out], [1, 140, Ease.out]]);
+      }
+      if (n > hop.start + hop.duration + hop.rest) this.hop = hop = nextHop(hop, level, n);
+    }
+    const q = Math.min(1, hop.duration > 0 ? (n - hop.start) / hop.duration : 1);
+    const { x, lift, dir } = hopAt(hop, q);
+    const amount = Math.min(1, level * 1.4);
+    if (!this.locks.has("ox")) {
+      this.moodShiftApplied = x * amount;
+      this.ox += this.moodShiftApplied;
+    }
+    if (!this.locks.has("oy")) {
+      this.moodLiftApplied = -lift * amount;
+      this.oy += this.moodLiftApplied;
+    }
+    if (!hop.landed) this.tgTilt += dir * 0.12 * Math.sin(Math.PI * q) * amount;
+
+    // A scared look: the eyes dart from spot to spot, quick and jerky, and blink
+    // nervously, sometimes twice.
+    if (level > 0.3) {
+      if (n > this.nextStressLook) {
+        const back = Math.random() < 0.3;
+        this.stressLook = {
+          x: back ? -this.stressLook.x * 0.8 : -0.85 + Math.random() * 1.7,
+          y: -0.3 + Math.random() * 0.48,
+        };
+        this.nextStressLook = n + 0.16 + Math.random() * 0.29;
+      }
+      this.tgYaw = this.stressLook.x;
+      this.tgPitch = this.stressLook.y;
+      // Snap towards the new spot faster than a calm look.
+      if (!this.locks.has("yaw")) this.yaw += (this.tgYaw - this.yaw) * 0.2 * amount;
+      if (!this.locks.has("pitch")) this.pitch += (this.tgPitch - this.pitch) * 0.2 * amount;
+      if (n > this.nextNervousBlink) {
+        if (this.nextNervousBlink > 0 && !this.locks.has("open")) {
+          if (Math.random() < 0.3) {
+            this.anim("open", [[0.06, 60, Ease.inOut], [1, 90, Ease.out], [0.06, 60, Ease.inOut], [1, 120, Ease.out]]);
+          } else {
+            this.blink();
+          }
+        }
+        this.nextNervousBlink = n + 1 + Math.random() * 1.4;
+      }
+    }
+    const tremble = Math.min(1, level * 1.3);
+    this.stressTremble = tremble > 0.01
+      ? { x: Math.sin(n * 63) * 0.012 * tremble, y: Math.cos(n * 51) * 0.01 * tremble }
+      : { x: 0, y: 0 };
+  }
+
+  /** Flushed while the PC is warm (inside the body's transform). */
+  private drawMoodTint(x: CanvasRenderingContext2D, body: Path2D, ry: number) {
+    if (this.moodHot <= 0.01 || this.morph >= 0.5 || this.isMini) return;
+    const a = this.moodHot * (1 - this.morph * 2);
+    const g = x.createLinearGradient(0, ry, 0, -ry * 0.6);
+    g.addColorStop(0, `rgba(255,92,61,${0.42 * a})`);
+    g.addColorStop(1, "rgba(255,92,61,0)");
+    x.fillStyle = g;
+    x.fill(body);
+  }
+
+  /** What goes over Mochi in world space: sweat drops and heat waves. */
+  private drawMoodExtras(x: CanvasRenderingContext2D, R: number, ry: number, cx: number, cy: number) {
+    if (this.isMini || this.morph >= 0.3) return;
+    const n = now();
+    if (this.moodDrops.length) {
+      // Each drop follows its arc from where it left his side.
+      const baseX = cx - this.ox * R;
+      const baseY = cy - this.oy * R;
+      for (const drop of this.moodDrops) {
+        const a = n - drop.born;
+        if (a < 0) continue;
+        const at = dropAt(drop, a);
+        x.save();
+        x.globalAlpha = drop.alpha * Math.min(1, a / 0.06) * Math.min(1, Math.max(0, (1.05 - at.y) / 0.25));
+        x.translate(baseX + at.x * R, baseY + at.y * R);
+        x.rotate(Math.atan2(at.vy, drop.vx) - Math.PI / 2);
+        // It wobbles a little as it flies.
+        const wob = 1 + Math.sin(a * 22 + drop.wobble) * 0.08;
+        const s = R * drop.size;
+        const long = drop.stretch * wob;
+        const tear = new Path2D();
+        tear.moveTo(0, -s * 1.15 * long);
+        tear.quadraticCurveTo((s * 0.9) / wob, s * 0.2, 0, s * 0.7);
+        tear.quadraticCurveTo((-s * 0.9) / wob, s * 0.2, 0, -s * 1.15 * long);
+        // From a pale sky blue to a deeper blue, lighter at the top.
+        const rgb = (r: number, g: number, b: number) => `rgb(${Math.round(r * 255)},${Math.round(g * 255)},${Math.round(b * 255)})`;
+        const grad = x.createLinearGradient(0, -s * long, 0, s * 0.7);
+        grad.addColorStop(0, rgb(0.72 - 0.2 * drop.tint, 0.88 - 0.12 * drop.tint, 1));
+        grad.addColorStop(1, rgb(0.36 - 0.12 * drop.tint, 0.68 - 0.14 * drop.tint, 0.98));
+        x.fillStyle = grad;
+        x.fill(tear);
+        x.fillStyle = `rgba(255,255,255,${0.4 + 0.35 * drop.tint})`;
+        x.beginPath();
+        x.ellipse(-s * 0.25, -s * 0.1 * long + s * 0.16 * long, s * 0.11, s * 0.16 * long, 0, 0, Math.PI * 2);
+        x.fill();
+        x.restore();
+      }
+    }
+
+    // Heat waves: three wavy lines rising above the head.
+    if (this.moodHot > 0.5) {
+      const a = (this.moodHot - 0.5) * 2;
+      const t = n - this.t0;
+      x.save();
+      x.strokeStyle = "rgb(255,140,77)";
+      x.lineWidth = Math.max(1, R * 0.07);
+      x.lineCap = "round";
+      for (let i = 0; i < 3; i++) {
+        const wave = heatWave(i, t, cx, cy, R, ry);
+        x.globalAlpha = a * wave.opacity;
+        x.beginPath();
+        wave.points.forEach(([px, py], j) => (j ? x.lineTo(px, py) : x.moveTo(px, py)));
+        x.stroke();
+      }
+      x.restore();
+    }
+  }
+
   // ── Dancing ─────────────────────────────────────────────────────────────────
 
   setDancing(dancing: boolean) {
@@ -824,8 +1065,10 @@ export class BotEngine {
 
     const body = this.bodyPath(rx, ry, R);
     this.drawBody(x, body, R, rx, ry);
+    // A warm PC flushes him.
+    this.drawMoodTint(x, body, ry);
 
-    const blushVal = Math.max(this.blush, this.tint * 0.5) * (1 - this.morph);
+    const blushVal = Math.max(this.blush, this.tint * 0.5, this.moodHot * 0.85) * (1 - this.morph);
     if (blushVal > 0.01) {
       x.save();
       x.clip(body);
@@ -850,6 +1093,8 @@ export class BotEngine {
     if (this.badge && this.badgeS > 0.01 && this.morph < 0.25) {
       this.drawBadge(x, this.badge, R, cx, cy);
     }
+    // Sweat and heat waves.
+    this.drawMoodExtras(x, R, ry, cx, cy);
     this.drawParticles(x, R, cx, cy);
   }
 
@@ -967,11 +1212,13 @@ export class BotEngine {
       const fx = lerp(Math.max(0.18, Math.cos(eyeYaw)), 1, this.morph * 0.7);
       const fy = lerp(Math.max(0.18, cp), 1, this.morph * 0.7);
       const eyeMult = this.isMini ? 1.9 : 1.0;
-      const ew = R * EYE_W * this.es * eyeMult;
-      const eh = R * EYE_H * this.es * eyeMult;
+      // Stressed: a little smaller, like pupils tightening with fear, and trembling.
+      const fear = this.isMini ? 0 : Math.min(1, this.moodBusy * 1.3);
+      const ew = R * EYE_W * this.es * eyeMult * (1 - 0.2 * fear);
+      const eh = R * EYE_H * this.es * eyeMult * (1 - 0.1 * fear);
 
       x.save();
-      x.translate(ex, ey);
+      x.translate(ex + this.stressTremble.x * R, ey + this.stressTremble.y * R);
       x.scale(fx, fy);
       this.drawEyeShape(x, shape, ew, eh, sd, ink);
       x.restore();

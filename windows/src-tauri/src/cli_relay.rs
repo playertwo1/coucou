@@ -693,7 +693,7 @@ fn chat_prompt(history: &[Value], first: bool, context: Option<&ChatContext>, qu
         }
         out.push_str("</conversation>\n\nThe user's new message:\n");
     }
-    match context.filter(|_| first) {
+    match chat::for_turn(first, context) {
         Some(ChatContext::File { name, path }) => match inline_text(Path::new(path)) {
             Some(body) => out.push_str(&format!("File: {name}\nFile contents:\n{body}\n\n")),
             None => out.push_str(&format!("File: {name} (its contents can't be read here)\n\n")),
@@ -732,6 +732,12 @@ pub fn set(settings: &mut Settings, provider: &str, on: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_window_dropped_mid_conversation_rides_with_that_turn() {
+        let win = ChatContext::Window { app_name: "Code".into(), title: "x".into(), url: None };
+        assert_eq!(chat_prompt(&[], false, Some(&win), "q"), "Context — App: Code, Window: x\n\nq");
+    }
 
     #[test]
     fn gemini_is_connected_only_with_a_google_sign_in_not_just_the_mode() {

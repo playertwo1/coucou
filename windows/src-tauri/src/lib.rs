@@ -47,7 +47,9 @@ mod voice;
 #[cfg(windows)]
 mod webview_drop;
 mod webview_memory;
+mod vitals;
 mod whatsapp;
+mod window_context;
 
 use std::process::Command;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -916,6 +918,7 @@ pub fn run() {
         .manage(recap::load())
         .invoke_handler(tauri::generate_handler![
             boot,
+            vitals::vitals_read,
             mail::mail_refresh,
             mail::mail_more,
             mail::mail_search,

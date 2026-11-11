@@ -8,6 +8,7 @@ import type { BotEmoteName } from "../core/layout";
 import { Sound } from "../core/sound";
 import { State } from "../core/state";
 import { desktopDances } from "../core/spotify";
+import { CALM, type MochiMood } from "../mochi/mood";
 import {
   DESKTOP_EVENTS, DesktopMochiController, alertActive, type DesktopSnapshot,
 } from "../mochi/desktop-logic";
@@ -24,7 +25,11 @@ export interface DesktopHost {
   wardrobeFromDesktop(): void;
   /** Three pokes on the desktop Mochi. */
   dizzyFromDesktop(): void;
+  /** Mochi dropped on another app's window: the chat, with that window as context. */
+  askAboutWindow(): void;
 }
+
+type WindowContext = NonNullable<typeof State.windowContext>;
 
 export class DesktopLink {
   mode: DesktopMode = "off";
@@ -38,6 +43,7 @@ export class DesktopLink {
   private pendingCarry: { x: number; y: number } | null = null;
   private carryFrame = false;
   private host: DesktopHost;
+  private moodTarget: MochiMood = CALM;
 
   constructor(host: DesktopHost) {
     this.host = host;
@@ -64,14 +70,26 @@ export class DesktopLink {
     return this.mode !== "off";
   }
 
+  setMoodTarget(mood: MochiMood) {
+    this.moodTarget = mood;
+    if (this.supported) this.push();
+  }
+
+  emote(emote: BotEmoteName, duration = 0.6) {
+    if (this.supported && State.mochiOnDesktop) {
+      void emitToWindow(WINDOW, DESKTOP_EVENTS.emote, { emote, duration });
+    }
+  }
+
   async init() {
     const info = await Bridge.desktopInfo();
     if (!info || info.mode === "off") return;
     this.mode = info.mode;
     this.controller.enabled = info.onDesktop;
 
-    await onEvent<{ from: "island" | "desktop"; home: boolean }>(DESKTOP_EVENTS.dropped, (e) =>
-      this.onDropped(e.from, e.home),
+    await onEvent<{ from: "island" | "desktop"; home: boolean; context: WindowContext | null }>(
+      DESKTOP_EVENTS.dropped,
+      (e) => this.onDropped(e.from, e.home, e.context),
     );
     await onEvent<null>(DESKTOP_EVENTS.home, () => void this.controller.flyHome());
     await onEvent<null>(DESKTOP_EVENTS.wardrobe, () => this.host.wardrobeFromDesktop());
@@ -141,8 +159,14 @@ export class DesktopLink {
     void Bridge.desktopCarryEnd(x, y);
   }
 
-  private onDropped(from: "island" | "desktop", home: boolean) {
-    if (from === "island") {
+  private onDropped(from: "island" | "desktop", home: boolean, context: WindowContext | null) {
+    if (context) {
+      // Rust flies him back to his spot; the window goes to the chat (DesktopMochi.swift).
+      State.windowContext = context;
+      Sound.play("approve");
+      void emitToWindow(WINDOW, DESKTOP_EVENTS.emote, { emote: "happy", duration: 0.6 });
+      this.host.askAboutWindow();
+    } else if (from === "island") {
       this.carrying = false;
       if (home) {
         // Dropped back on the island: he is simply there again.
@@ -170,6 +194,7 @@ export class DesktopLink {
       outfit: State.wardrobePreview ?? this.seasons.get(parseOutfit(State.settings.mochiOutfit)),
       soundEnabled: State.settings.soundEnabled,
       soundVolume: State.settings.soundVolume,
+      moodTarget: this.moodTarget,
       paused: State.paused,
       dancing: desktopDances(State.spotifyPlaying, State.effectiveState),
     };

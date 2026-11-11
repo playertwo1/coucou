@@ -92,6 +92,12 @@ windows = { version = "0.61", features = [
   "Win32_UI_WindowsAndMessaging",
   # Flow dictation's keyboard hook.
   "Win32_System_LibraryLoader",
+  # Mochi dropped on a window: skip cloaked windows, read a browser's address bar.
+  "Win32_Graphics_Dwm",
+  "Win32_UI_Accessibility",
+  # Mochi feels the PC (vitals.rs): battery, and HWiNFO's shared memory.
+  "Win32_System_Power",
+  "Win32_System_Memory",
 ] }
 # The clipboard for Flow dictation, kept out of the clipboard history. MIT/Apache-2.0.
 arboard = { version = "3.6", default-features = false }

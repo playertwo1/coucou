@@ -141,8 +141,8 @@ export function runGlobalShortcut(host: ShortcutHost, action: string, resume: ()
       host.flyOutOrHome();
       break;
 
-    // wardrobeToggle never comes this way (Rust sends `open-wardrobe`), and
-    // attachFrontWindow isn't in this version.
+    // wardrobeToggle and attachFrontWindow never come this way (Rust sends
+    // `open-wardrobe` and `window-context`).
     default:
       break;
   }
@@ -205,6 +205,20 @@ export function registerShortcutHandlers(host: ShortcutHost, resume: () => void)
   void onEvent<null>("open-wardrobe", () => {
     resume();
     host.wardrobeAnywhere();
+  });
+  // Ctrl+Alt+F: Rust read the window in front when the keys went down
+  // (IslandWindowController.performAttachFrontWindow on the Mac).
+  void onEvent<{ appName: string; title: string; url?: string | null } | null>("window-context", (context) => {
+    if (!context) {
+      host.emote("annoyed");
+      Sound.play("error");
+      return;
+    }
+    resume();
+    State.windowContext = { appName: context.appName, title: context.title, url: context.url };
+    Sound.play("approve");
+    host.emote("happy");
+    host.alert("prompt");
   });
 
   // Capture phase: the chat field stops its own key events from bubbling.

@@ -34,6 +34,15 @@ export interface BootInfo {
   cursorPoll: boolean;
 }
 
+export interface VitalsReading {
+  cpu: number | null;
+  memoryLoad: number | null;
+  battery: { percent: number; onPower: boolean } | null;
+  top: string[];
+  temperature: number | null;
+  idleSeconds: number | null;
+}
+
 /** The phone link (src-tauri/src/phone_link): how it is, never its secrets. */
 export interface PhoneLinkStatus {
   enabled: boolean;
@@ -205,6 +214,7 @@ export interface PhoneAnswersStatus {
 
 export const Bridge = {
   boot: () => call<BootInfo>("boot"),
+  vitalsRead: (top: boolean) => call<VitalsReading>("vitals_read", { top }),
   /** The system's languages as the webview sees them, for Rust's own texts (i18n.rs). */
   setSystemLanguages: (languages: string[]) => call<void>("set_system_languages", { languages }),
 

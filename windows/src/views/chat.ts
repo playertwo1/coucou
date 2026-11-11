@@ -308,11 +308,17 @@ export function buildPrompt(onHeightChange: () => void): ViewHost {
     onHeightChange();
 
     const file = State.droppedFile;
-    const context: ChatContext | null =
-      State.chatHistory.length === 1 && file ? { kind: "file", name: file.name, path: file.path } : null;
+    const win = State.windowContext;
+    const context: ChatContext | null = win
+      ? { kind: "window", ...win, url: win.url ?? undefined }
+      : State.chatHistory.length === 1 && file
+        ? { kind: "file", name: file.name, path: file.path }
+        : null;
 
     try {
       const reply = await Bridge.chatSend(query, context, MailChat.on && HOST_OS === "windows");
+      // Sent: the window rode along once. A newer drop during the answer stays.
+      if (State.windowContext === win) State.windowContext = null;
       State.chatHistory.push({ id: nextId++, role: "assistant", content: reply.text });
       State.stateOverride = null;
       Sound.play("finish");
@@ -354,8 +360,7 @@ export function buildPrompt(onHeightChange: () => void): ViewHost {
   return {
     el,
     sync() {
-      const file = State.droppedFile;
-      const wantChip = file?.name ?? "";
+      const wantChip = State.windowContext?.title ?? State.droppedFile?.name ?? "";
       if (chipRow.dataset.label !== wantChip) {
         chipRow.dataset.label = wantChip;
         clear(chipRow);

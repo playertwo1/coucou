@@ -2,7 +2,7 @@
 // Mirrors IslandRootView.swift + IslandWindowController.swift.
 
 import { Tracked, Spring, clamp } from "../core/anim";
-import { Bridge, IS_TAURI, onDragDrop, type DragDropPayload } from "../core/bridge";
+import { Bridge, IS_TAURI, onDragDrop, type DragDropPayload, type VitalsReading } from "../core/bridge";
 import {
   CLOSED_BOT_D, CLOSED_H, closedContent, closedIsland, closedWidth, type ClosedContent,
 } from "../core/closed";
@@ -17,6 +17,8 @@ import { Sound } from "../core/sound";
 import { State } from "../core/state";
 import { MUSIC_IDS, Spotify, islandDances } from "../core/spotify";
 import { BotEngine, hexToRGB } from "../mochi/engine";
+import { CALM, type MochiMood } from "../mochi/mood";
+import { describeVitals, isVitalsHover, moodFromVitals, pluggedInWhileLow, shouldReadVitals } from "../mochi/vitals";
 import { Greeting } from "../mochi/greeting";
 import { createMiniBot, pruneMiniBots, syncMiniBotStates, tickMiniBots } from "../mochi/minibots";
 import { SeasonCache, parseOutfit } from "../mochi/wardrobe";
@@ -88,6 +90,14 @@ export class Island {
   /** The size the window was last folded to, so a new one is only sent on a change. */
   private collapsedTo = { w: 0, h: 0 };
   private countdown!: HTMLElement;
+  private vitalsLine!: HTMLElement;
+  private vitalsDot!: HTMLElement;
+  private vitalsText!: HTMLElement;
+  private vitalsTimer: number | null = null;
+  private busySamples = 0;
+  private previousBattery: VitalsReading["battery"] = null;
+  private vitalsMood: MochiMood = CALM;
+  private vitalsSummary: string | null = null;
   private compactPlan!: HTMLElement;
   private compactPlanDot!: HTMLElement;
   private compactPlanLabel!: HTMLElement;
@@ -129,6 +139,7 @@ export class Island {
 
   // Bot hover → love (IslandWindowController.botHoverIn)
   private botHovering = false;
+  private vitalsHovering = false;
   private botHoverTimer: number | null = null;
   private lastLoveTime = 0;
   private botHoverStart = { x: 0, y: 0 };
@@ -161,6 +172,9 @@ export class Island {
       reveal: () => this.reveal(),
       wardrobeFromDesktop: () => this.wardrobeFromDesktop(),
       dizzyFromDesktop: () => this.handleDizzy(),
+      askAboutWindow: () => {
+        if (!State.paused) this.alert("prompt");
+      },
     });
     this.build();
     this.wireFsm();
@@ -173,7 +187,10 @@ export class Island {
     State.subscribe(() => {
       this.dirty = true;
       this.ensureRunning();
+      this.refreshVitalsSampling();
+      this.syncVitalsLine();
     });
+    this.refreshVitalsSampling();
   }
 
   /** The request has its answer: the card goes and the session carries on. */
@@ -336,6 +353,9 @@ export class Island {
     this.miniGrid = h("div", { id: "mini-grid" });
     this.clockEl = h("div", { id: "island-clock" });
     this.countdown = h("div", { id: "countdown" });
+    this.vitalsDot = h("span", { class: "dot" });
+    this.vitalsText = h("span", {});
+    this.vitalsLine = h("div", { id: "vitals-line" }, this.vitalsDot, this.vitalsText);
     this.compactPlanDot = h("i", { class: "compact-plan-dot" });
     this.compactPlanLabel = h("span", { class: "compact-plan-label" });
     this.compactPlan = h(
@@ -396,6 +416,7 @@ export class Island {
       this.clockEl,
       this.closedEl,
       this.countdown,
+      this.vitalsLine,
     );
 
     const dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -1204,6 +1225,8 @@ export class Island {
     if (overBot && !this.botHovering) this.botHoverIn(x, y);
     if (!overBot && this.botHovering) this.cancelBotHover();
     this.botHovering = overBot;
+    this.vitalsHovering = isVitalsHover(State.mode, inIsland, overBot);
+    this.syncVitalsLine();
     if (this.botHovering) {
       const d = Math.hypot(x - this.botHoverStart.x, y - this.botHoverStart.y);
       if (d > 40) {
@@ -1256,6 +1279,76 @@ export class Island {
     if (this.botHoverTimer != null) window.clearTimeout(this.botHoverTimer);
     this.botHoverTimer = null;
     this.engine.tgEs = 1;
+  }
+
+  private shouldSampleVitals() {
+    return State.os === "windows" && shouldReadVitals(
+      State.settings.mochiReactsToPc, State.mode, State.mochiOnDesktop,
+    );
+  }
+
+  private refreshVitalsSampling() {
+    if (!this.shouldSampleVitals()) {
+      if (this.vitalsTimer != null) window.clearTimeout(this.vitalsTimer);
+      this.vitalsTimer = null;
+      this.busySamples = 0;
+      this.previousBattery = null;
+      this.vitalsSummary = null;
+      this.setVitalsMood(CALM);
+      this.syncVitalsLine();
+      return;
+    }
+    if (this.vitalsTimer == null) {
+      this.vitalsTimer = window.setTimeout(() => void this.sampleVitals(), 3000);
+    }
+  }
+
+  private async sampleVitals() {
+    this.vitalsTimer = null;
+    if (!this.shouldSampleVitals()) return;
+    const reading = await Bridge.vitalsRead(this.busySamples > 0);
+    if (!this.shouldSampleVitals()) return;
+    if (!reading) {
+      this.busySamples = 0;
+      this.previousBattery = null;
+      this.vitalsSummary = null;
+      this.setVitalsMood(CALM);
+    } else {
+      if (pluggedInWhileLow(this.previousBattery, reading.battery)) {
+        if (State.mochiOnDesktop) this.desktop.emote("happy");
+        else this.engine.triggerEmote("happy", 0.6);
+        Sound.play("pop");
+      }
+      this.previousBattery = reading.battery;
+      const result = moodFromVitals(reading, this.busySamples);
+      this.busySamples = result.busySamples;
+      this.setVitalsMood(result.mood);
+      this.vitalsSummary = describeVitals(reading, result.mood);
+    }
+    this.syncVitalsLine();
+    if (this.shouldSampleVitals()) {
+      this.vitalsTimer = window.setTimeout(() => void this.sampleVitals(), 3000);
+    }
+  }
+
+  private setVitalsMood(mood: MochiMood) {
+    const old = this.vitalsMood;
+    if (old.busy === mood.busy && old.hot === mood.hot && old.full === mood.full &&
+        old.tired === mood.tired && old.asleep === mood.asleep) return;
+    this.vitalsMood = mood;
+    this.engine.moodTarget = mood;
+    this.desktop.setMoodTarget(mood);
+    this.ensureRunning();
+  }
+
+  private syncVitalsLine() {
+    const show = this.vitalsHovering && State.mode !== "hidden" && this.vitalsSummary != null;
+    const text = show ? this.vitalsSummary ?? "" : "";
+    if (this.vitalsText.textContent !== text) this.vitalsText.textContent = text;
+    this.vitalsLine.classList.toggle("on", show);
+    this.vitalsDot.style.backgroundColor = this.vitalsMood.hot > 0 ? "#FF6B4A"
+      : this.vitalsMood.busy > 0 ? "#3B9EFF"
+        : this.vitalsMood.full > 0 ? "#A78BFA" : "#F5A524";
   }
 
   /** Three slaps → dizzy + confused view for 3.3 s, then back. */

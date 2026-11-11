@@ -73,13 +73,13 @@ test("the descriptions the Wayland portal shows are the labels Settings shows", 
 });
 
 // testEnabledByDefault
-test("only the island toggle is off by default; the one not ported yet is reserved", () => {
+test("only the island toggle is off by default, and every action is ported", () => {
   for (const d of SHORTCUTS) {
     assert.equal(d.enabledByDefault, d.id !== "toggleIsland", d.id);
-    assert.equal(d.ported, d.id !== "attachFrontWindow", d.id);
+    assert.equal(d.ported, true, d.id);
   }
   assert.deepEqual(activeKeys({}).map(([id]) => id), [
-    "openChat", "goToAlert", "jumpToTerminal", "nextPill", "prevPill", "muteToggle", "desktopToggle",
+    "openChat", "goToAlert", "jumpToTerminal", "attachFrontWindow", "nextPill", "prevPill", "muteToggle", "desktopToggle",
     "wardrobeToggle", "newSession", "noteIdea",
   ]);
   // The Mac's ⌃⌥D, on the same letter.
@@ -315,6 +315,21 @@ beforeEach(() => {
 test("the wardrobe shortcut's own event opens the wardrobe", () => {
   emit("open-wardrobe", null);
   assert.deepEqual(did, ["resume", "wardrobe"]);
+});
+
+test("the front window from Ctrl+Alt+F rides with the next question, in the chat", () => {
+  State.windowContext = null;
+  const docs = { kind: "window", appName: "Edge", title: "Docs", url: "learn.microsoft.com/x" };
+  emit("window-context", docs);
+  assert.deepEqual(State.windowContext, { appName: "Edge", title: "Docs", url: "learn.microsoft.com/x" });
+  assert.deepEqual(did, ["resume", "emote:happy", "alert:prompt"]);
+});
+
+test("Ctrl+Alt+F with no window to attach changes nothing", () => {
+  State.windowContext = null;
+  emit("window-context", null);
+  assert.equal(State.windowContext, null);
+  assert.deepEqual(did, ["emote:annoyed"]);
 });
 
 test("a global shortcut arrives as an event and opens the chat", () => {

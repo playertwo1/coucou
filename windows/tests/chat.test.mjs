@@ -31,6 +31,7 @@ beforeEach(() => {
   State.stateOverride = null;
   State.view = "prompt";
   State.droppedFile = null;
+  State.windowContext = null;
   view = buildPrompt(() => {});
   view.sync();
 });
@@ -165,4 +166,38 @@ test("a failed answer leaves the chat for the note without taking the focus", as
   await flush();
   assert.equal(State.view, "note");
   assert.deepEqual(focused, []);
+});
+
+// Mochi dropped on another app's window (desktop.rs → island/desktop.ts).
+const docs = { appName: "Edge", title: "Docs", url: "learn.microsoft.com/x" };
+const ask = async (text) => {
+  $(".chat-input").value = text;
+  $(".send-btn").fire("click");
+  await flush();
+  await flush();
+};
+
+test("a window rides with the next question once, even mid-conversation, its title in the chip", async () => {
+  answers.chat_send = { text: "ok" };
+  State.chatHistory = [{ id: 900, role: "user", content: "earlier" }, { id: 901, role: "assistant", content: "yes" }];
+  State.windowContext = docs;
+  view.sync();
+  assert.equal($(".chip-row").textContent, "Docs");
+
+  await ask("what is this?");
+  assert.deepEqual(sent("chat_send")[0].context, { kind: "window", ...docs });
+  assert.equal(State.windowContext, null);
+  assert.equal(State.chatHistory.length, 4, "the earlier turns stay");
+  view.sync();
+  assert.equal($(".chip-row").textContent, "");
+
+  await ask("and then?");
+  assert.equal(sent("chat_send")[1].context, null);
+});
+
+test("a failed question keeps the window for the next try", async () => {
+  answers.chat_send = () => Promise.reject(new Error("offline"));
+  State.windowContext = docs;
+  await ask("what is this?");
+  assert.deepEqual(State.windowContext, docs);
 });

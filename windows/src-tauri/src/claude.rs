@@ -79,24 +79,21 @@ fn models_endpoint(messages: &Url) -> Url {
     url
 }
 
-/// The user's content blocks for one turn. File / window context rides along
-/// with the first message only, exactly like ClaudeService.chat().
+/// The user's content blocks for one turn, with the context `chat::for_turn` lets through.
 fn user_content(first: bool, context: Option<&ChatContext>, query: &str) -> Vec<Value> {
     let mut content: Vec<Value> = Vec::new();
-    if first {
-        match context {
-            Some(ChatContext::File { name, path }) => {
-                if let Some(block) = file_block(path) {
-                    content.push(block);
-                }
-                content.push(json!({ "type": "text", "text": format!("File: {name}") }));
+    match chat::for_turn(first, context) {
+        Some(ChatContext::File { name, path }) => {
+            if let Some(block) = file_block(path) {
+                content.push(block);
             }
-            Some(ChatContext::Window { app_name, title, url }) => {
-                let line = chat::window_line(app_name, title, url.as_deref());
-                content.push(json!({ "type": "text", "text": line }));
-            }
-            None => {}
+            content.push(json!({ "type": "text", "text": format!("File: {name}") }));
         }
+        Some(ChatContext::Window { app_name, title, url }) => {
+            let line = chat::window_line(app_name, title, url.as_deref());
+            content.push(json!({ "type": "text", "text": line }));
+        }
+        None => {}
     }
     content.push(json!({ "type": "text", "text": query }));
     content
@@ -429,12 +426,12 @@ mod tests {
     }
 
     #[test]
-    fn context_is_sent_with_the_first_turn_only() {
+    fn a_window_rides_with_any_turn_a_file_with_the_first() {
         let ctx = ChatContext::Window { app_name: "Edge".into(), title: "Docs".into(), url: Some("https://x.dev".into()) };
         let first = user_content(true, Some(&ctx), "q");
         assert_eq!(first.len(), 2);
         assert_eq!(first[0]["text"], "Context — App: Edge, Window: Docs, URL: https://x.dev");
-        assert_eq!(user_content(false, Some(&ctx), "q"), vec![json!({"type":"text","text":"q"})]);
+        assert_eq!(user_content(false, Some(&ctx), "q"), first);
         // A file that cannot be read still names itself.
         let ctx = ChatContext::File { name: "gone.pdf".into(), path: "/no/such/gone.pdf".into() };
         assert_eq!(user_content(true, Some(&ctx), "q")[0]["text"], "File: gone.pdf");

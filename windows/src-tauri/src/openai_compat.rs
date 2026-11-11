@@ -87,7 +87,7 @@ fn url(p: &Provider, tail: &str) -> Result<Url, String> {
 fn user_message(first: bool, context: Option<&ChatContext>, query: &str) -> Value {
     let mut prefix = String::new();
     let mut image = None;
-    match context.filter(|_| first) {
+    match chat::for_turn(first, context) {
         Some(ChatContext::File { name, path }) => match file_part(path) {
             Some(FilePart::Image(part)) => {
                 image = Some(part);
@@ -403,6 +403,7 @@ mod tests {
 
         let ctx = ChatContext::Window { app_name: "Code".into(), title: "x".into(), url: None };
         assert_eq!(user_message(true, Some(&ctx), "q")["content"], "Context — App: Code, Window: x\n\nq");
+        assert_eq!(user_message(false, Some(&ctx), "q")["content"], "Context — App: Code, Window: x\n\nq");
     }
 
     #[test]

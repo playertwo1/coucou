@@ -237,7 +237,7 @@ fn read_prefix(path: &str, limit: usize) -> Option<String> {
 }
 
 fn user_text(first: bool, context: Option<&ChatContext>, query: &str) -> String {
-    match context.filter(|_| first) {
+    match chat::for_turn(first, context) {
         Some(ChatContext::File { name, path }) => format!("{}\n\n{query}", file_note(name, path)),
         Some(ChatContext::Window { app_name, title, url }) => {
             format!("{}\n\n{query}", chat::window_line(app_name, title, url.as_deref()))
@@ -398,6 +398,14 @@ async fn stream(
 mod tests {
     use super::*;
     use crate::net::tests::serve_once;
+
+    #[test]
+    fn a_window_dropped_mid_conversation_rides_with_that_turn() {
+        let win = ChatContext::Window { app_name: "Code".into(), title: "x".into(), url: None };
+        assert_eq!(user_text(false, Some(&win), "q"), "Context — App: Code, Window: x\n\nq");
+        let file = ChatContext::File { name: "a.txt".into(), path: "/x/a.txt".into() };
+        assert_eq!(user_text(false, Some(&file), "q"), "q");
+    }
 
     fn block_on<T>(f: impl std::future::Future<Output = T>) -> T {
         tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap().block_on(f)
