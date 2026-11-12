@@ -5,7 +5,7 @@ Atualizado em 2026-11-12. Fonte canônica de estado: este índice e os arquivos 
 ## Estado e regras de leitura
 
 - Decisão do proprietário (2026-11-12): executar testes sintéticos em todas as etapas; ao concluir cada etapa, criar uma nova versão e publicá-la no GitHub para que o proprietário atualize e valide no uso real. Registrar separadamente o resultado sintético e o aceite real; simulação nunca fecha um checkpoint de runtime. Preservar os requisitos Git e as alterações locais.
-- O fork tem a versão `windows-v0.6.3` publicada; o atualizador consulta as releases de `playertwo1/coucou`.
+- O fork tem a versão `windows-v0.6.4` publicada; o atualizador consulta as releases de `playertwo1/coucou`.
 - O aplicativo e várias features já têm código e testes, mas ainda falta validação manual em runtime. Não marque uma feature como concluída só porque compila.
 - Esforço: P = pequeno, M = médio, G = grande. Estimativa serve para comparar itens; uma feature M/G deve ser subdividida antes da implementação.
 - [ ] Pendente.

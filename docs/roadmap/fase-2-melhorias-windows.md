@@ -55,7 +55,9 @@ Cada item segue a sequência: descoberta do código atual → mini-spec/aceite �
 - [x] Testar repositório limpo, arquivos modificados/criados, detached HEAD, sem upstream, contagens ahead/behind, diretório inválido e troca entre projetos de duas sessões.
 - [x] Implementar leitura somente local com argumentos fixos; não executar fetch, pull, checkout, commit ou push.
 - [x] Teste sintético da interface confirma que Details abre o cartão expandido, Refresh e View diff usam a pasta da sessão ativa e exibem o diff como texto; aplicação sintética mostrou `synthetic://Jardim`, 2 arquivos e ahead 1 / behind 0.
-- [x] Verificações em 2026-11-12: `npm test` (624/624), `cargo test --lib` (633 passaram, 7 ignorados), 4 testes Rust do Git, validador What's New em 14 línguas, `npm run build`, `npm run synthetic:build`, `git diff --check` e rustfmt do novo módulo.
+- [x] Verificações em 2026-11-12: `npm test` (624/624), `cargo test --lib` (633 passaram, 7 ignorados), 4 testes Rust do Git, validador What's New em 14 línguas, `node scripts/gen-strings.mjs --check`, `npm run build`, `npm run synthetic:build`, `git diff --check` e rustfmt do novo módulo.
+- [x] Publicada em 2026-11-12: [Windows 0.6.4](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.4); builds de preflight (`43316936877`) e do tag (`43320291969`) passaram, assim como a publicação de `windows-latest`.
+- [x] Os hashes dos assets finais diferiram do preflight; baixei os dois instaladores publicados, confirmei os digests SHA-256 contra o GitHub e examinei os arquivos exatos com Microsoft Defender, sem detecções. Setup: `7df3c421a07fbbeabe6b852211eb4ce5ac00545883091bc881880ee2d51c06e9`; MSI: `5d0e36a723bce1ab4baeb3f1e794eabf30eee673859d64a66afe0dd3934d9931`.
 - [ ] Validação real do proprietário: atualizar para Windows 0.6.4 e conferir projeto ativo, remoção do repositório e diff.
 - Limites conhecidos: conteúdo de arquivos não rastreados não aparece no `git diff`; ahead/behind usa refs locais e pode ficar desatualizado sem fetch.
 - Checkpoint sintético: PASS. Checkpoint real: aberto até a validação do proprietário; simulação não fecha o runtime.
