@@ -434,6 +434,7 @@ function buildOverview(actions: ViewActions): ViewHost {
         const info = State.integrations[task.id];
         const key = [
           language(), task.id, task.color, detailOpen, task.state, task.steps.join("|"),
+          State.lastWorkspaceSessionCwd,
           info?.loaded, info?.error, info?.configured,
           JSON.stringify(info?.data ?? {}),
         ].join("~");

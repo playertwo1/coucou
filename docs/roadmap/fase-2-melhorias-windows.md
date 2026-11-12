@@ -49,13 +49,16 @@ Cada item segue a sequência: descoberta do código atual → mini-spec/aceite �
 
 ### 2.4 — Pílula do Git (P)
 
-- [ ] Localizar como a sessão ativa fornece a pasta do projeto e confirmar que não existe ID de pílula Git já publicado.
-- [ ] Definir no mini-spec branch, arquivos alterados, ahead/behind, clique no diff e estados sem repositório/sem upstream.
-- [ ] Fixar um ID novo e estável antes de publicar; não reutilizar nem renomear ID existente.
-- [ ] Criar testes com repositório limpo, arquivos modificados/criados, detached HEAD, sem upstream e duas sessões em projetos distintos.
-- [ ] Implementar leitura somente local; não executar fetch, pull, checkout, commit ou push.
-- [ ] Clicar na pílula e conferir que abre o diff do projeto correto; testar repositório removido durante a sessão.
-- Checkpoint: status corresponde ao projeto da sessão ativa e nenhuma operação modifica o repositório.
+- [x] Localizar a pasta do projeto da última sessão de workspace em foco e confirmar que `integration_git` é um ID novo.
+- [x] Definir em [mini-spec](../superpowers/specs/2026-11-12-git-pill-design.md) branch, arquivos alterados, ahead/behind, diff e estados sem repositório/sem upstream.
+- [x] Fixar o ID estável `integration_git`, exclusivo do Windows.
+- [x] Testar repositório limpo, arquivos modificados/criados, detached HEAD, sem upstream, contagens ahead/behind, diretório inválido e troca entre projetos de duas sessões.
+- [x] Implementar leitura somente local com argumentos fixos; não executar fetch, pull, checkout, commit ou push.
+- [x] Teste sintético da interface confirma que Details abre o cartão expandido, Refresh e View diff usam a pasta da sessão ativa e exibem o diff como texto; aplicação sintética mostrou `synthetic://Jardim`, 2 arquivos e ahead 1 / behind 0.
+- [x] Verificações em 2026-11-12: `npm test` (624/624), `cargo test --lib` (633 passaram, 7 ignorados), 4 testes Rust do Git, validador What's New em 14 línguas, `npm run build`, `npm run synthetic:build`, `git diff --check` e rustfmt do novo módulo.
+- [ ] Validação real do proprietário: atualizar para Windows 0.6.4 e conferir projeto ativo, remoção do repositório e diff.
+- Limites conhecidos: conteúdo de arquivos não rastreados não aparece no `git diff`; ahead/behind usa refs locais e pode ficar desatualizado sem fetch.
+- Checkpoint sintético: PASS. Checkpoint real: aberto até a validação do proprietário; simulação não fecha o runtime.
 
 ### 2.5 — Focar a aba exata do Windows Terminal (M)
 

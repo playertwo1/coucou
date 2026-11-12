@@ -122,6 +122,8 @@ export const PILL_CATALOG: readonly PillDefinition[] = [
     subtitle: N_("Integration"), source: "n8n", support: "yes", connect: key("vercel-token") },
   { id: "integration_github", name: "GitHub", color: "#F4505E", category: "service",
     subtitle: N_("Integration"), source: "n8n", support: "yes", connect: key("github-token") },
+  { id: "integration_git", name: "Git", color: "#F05032", category: "service",
+    subtitle: N_("Integration"), source: "n8n", support: "windows", connect: none },
   { id: "integration_gitlab", name: "GitLab", color: "#FC6D26", category: "service",
     subtitle: N_("Integration"), source: "n8n", support: "yes", connect: key("gitlab-token") },
   { id: "integration_gitea", name: "Gitea", color: "#609926", category: "service",

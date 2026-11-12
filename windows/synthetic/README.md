@@ -21,6 +21,7 @@ Os assets estão incorporados nesse executável. Ele depende do WebView2 já ins
 ## Cenários disponíveis
 
 - **Testar permissão:** gera um pedido do projeto inventado Jardim, sessão `synthetic-session`, com IDs `synthetic-request-N`.
+- **Testar Git:** mostra um repositório fictício `synthetic/main` com dois arquivos inventados; o botão de diff exibe um exemplo fixo. Nenhum caminho real é lido e o Git não é iniciado.
 - **Permitir/Negar no card:** registra a decisão somente em memória e a mostra no rodapé; o texto `echo "synthetic only"` nunca é executado.
 - **Reiniciar dados de teste:** limpa o armazenamento da própria janela e recarrega os dados iniciais.
 - Sensores usam números fixos inventados. Clipboard é simulado em memória. Integrações não configuradas e comandos não simulados retornam `null`, sem backend alternativo.

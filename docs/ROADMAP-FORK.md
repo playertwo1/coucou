@@ -1,11 +1,11 @@
 # Roadmap do fork Windows Coucou — playertwo1/coucou
 
-Atualizado em 2026-11-11. Fonte canônica de estado: este índice e os arquivos de fase em `docs/roadmap/`.
+Atualizado em 2026-11-12. Fonte canônica de estado: este índice e os arquivos de fase em `docs/roadmap/`.
 
 ## Estado e regras de leitura
 
-- Decisão do proprietário (2026-11-12): continuar o desenvolvimento e os testes no ambiente exclusivamente sintético; reservar a validação real para o final, no uso diário. Manter separados os resultados simulados e os aceites nativos pendentes, sem fechar checkpoints reais por simulação. Preservar os requisitos Git e as alterações locais.
-- O fork está na `main`, com a versão `windows-v0.6.2` publicada; o atualizador consulta as releases de `playertwo1/coucou`.
+- Decisão do proprietário (2026-11-12): executar testes sintéticos em todas as etapas; ao concluir cada etapa, criar uma nova versão e publicá-la no GitHub para que o proprietário atualize e valide no uso real. Registrar separadamente o resultado sintético e o aceite real; simulação nunca fecha um checkpoint de runtime. Preservar os requisitos Git e as alterações locais.
+- O fork tem a versão `windows-v0.6.3` publicada; o atualizador consulta as releases de `playertwo1/coucou`.
 - O aplicativo e várias features já têm código e testes, mas ainda falta validação manual em runtime. Não marque uma feature como concluída só porque compila.
 - Esforço: P = pequeno, M = médio, G = grande. Estimativa serve para comparar itens; uma feature M/G deve ser subdividida antes da implementação.
 - [ ] Pendente.
@@ -19,8 +19,8 @@ Atualizado em 2026-11-11. Fonte canônica de estado: este índice e os arquivos 
 2. Antes de uma etapa de código: `git status` limpo; `git fetch upstream && git merge upstream/main`. Se houver conflito ou alteração local, parar e resolver isso antes de prosseguir.
 3. Antes de código com UX ou comportamento novo, escrever uma spec curta em `docs/superpowers/specs/` e um plano em `docs/superpowers/plans/`. Incluir arquivos, interfaces, testes, aceite e rollback de migração quando houver.
 4. Implementar a menor mudança que cumpre o aceite. Para Fase 2B, seguir TDD. Nas demais, acrescentar os testes proporcionais à lógica alterada.
-5. Fechar o checkpoint registrando versão do app, ambiente, resultado de cada cenário e falhas sem segredos, prompts ou caminhos pessoais. Fazer um commit por subfase concluída.
-6. Não criar tag nem publicar release sem pedido explícito do proprietário.
+5. Ao concluir uma etapa sintética, registrar versão, ambiente, cenários, resultados e limitações sem segredos, prompts ou caminhos pessoais; fazer um commit e publicar uma nova versão no GitHub, conforme a decisão do proprietário.
+6. Manter em aberto a validação real até o proprietário atualizar e testar o aplicativo; não fechar checkpoint nativo por simulação.
 
 ### Restrições do projeto para todas as etapas
 

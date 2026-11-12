@@ -293,6 +293,9 @@ class AppState {
 
   settings: Settings = { ...DEFAULT_SETTINGS };
 
+  /** Last project of a focused workspace session; never persisted. */
+  lastWorkspaceSessionCwd: string | null = null;
+
   /** Which pills this build offers depends on it (Claude Desktop is Windows only). */
   os: HostOs = HOST_OS;
 
@@ -331,6 +334,7 @@ class AppState {
     const t = this.tasks.find((x) => x.id === id);
     if (!t) return;
     this.focusId = id;
+    if (t.source !== "n8n" && t.sessionCwd) this.lastWorkspaceSessionCwd = t.sessionCwd;
     this.showingPlanDetail = false;
     t.pillBadge = null;
     this.notify();
@@ -525,7 +529,13 @@ class AppState {
       this.insertAfterMain(t);
     }
     t.name = name;
-    if (cwd) t.sessionCwd = cwd;
+    if (cwd) {
+      t.sessionCwd = cwd;
+      if (this.focusId === id && this.lastWorkspaceSessionCwd !== cwd) {
+        this.lastWorkspaceSessionCwd = cwd;
+        this.notify();
+      }
+    }
     return t;
   }
 

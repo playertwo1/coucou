@@ -8,10 +8,17 @@ const fixtures = createFixtures();
 const host = window as unknown as {
   __answers: Record<string, unknown>;
   __emit: (event: string, payload: unknown) => void;
-  __synthetic: { decisions: typeof fixtures.decisions; request: () => void };
+  __synthetic: {
+    decisions: typeof fixtures.decisions;
+    gitStatusReads: typeof fixtures.gitStatusReads;
+    gitDiffReads: typeof fixtures.gitDiffReads;
+    request: () => void;
+  };
 };
 host.__answers = {
   approval_decision: (args: { requestId: string; decision: string }) => fixtures.decide(args),
+  git_status: (args: { path: string }) => fixtures.gitStatus(args.path),
+  git_diff: (args: { path: string }) => fixtures.gitDiff(args.path),
   vitals_read: () => fixtures.vitals,
   fit_zoom: false, custom_sounds: [], agent_hooks_status: {},
   desktop_info: { mode: "off" },
@@ -24,7 +31,8 @@ const { registerHookHandlers } = await import("../src/island/hooks");
 const { setLanguage, t } = await import("../src/i18n/i18n");
 
 setLanguage("pt-BR");
-State.settings = { ...DEFAULT_SETTINGS, language: "pt-BR", activeIntegrations: [], soundEnabled: false, autostart: false, hooksInstalled: false };
+State.settings = { ...DEFAULT_SETTINGS, language: "pt-BR", activeIntegrations: ["integration_git"], soundEnabled: false, autostart: false, hooksInstalled: false };
+State.loadIntegrationTasks();
 Sound.enabled = false;
 const island = new Island(document.getElementById("root")!);
 island.applySettings();
@@ -52,7 +60,7 @@ function button(text: string, action: () => void) {
   button.addEventListener("click", action);
   return button;
 }
-controls.append(label, button(t("Test permission"), request), button(t("Reset test data"), () => {
+controls.append(label, button(t("Test permission"), request), button(t("Test Git pill"), () => State.setFocus("integration_git")), button(t("Reset test data"), () => {
   localStorage.clear();
   sessionStorage.clear();
   location.reload();
@@ -61,4 +69,4 @@ State.subscribe(() => {
   const last = fixtures.decisions.at(-1);
   status.textContent = last ? `${t("Synthetic data only")} · ${last.requestId} · ${last.decision === "allow" ? t("Allow") : t("Deny")}` : "";
 });
-host.__synthetic = { decisions: fixtures.decisions, request };
+host.__synthetic = { decisions: fixtures.decisions, gitStatusReads: fixtures.gitStatusReads, gitDiffReads: fixtures.gitDiffReads, request };

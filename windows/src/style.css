@@ -1845,6 +1845,53 @@ input[type="range"]::-webkit-slider-thumb {
   padding-top: 6px;
 }
 
+.git-root {
+  padding-top: 4px;
+  color: var(--dim-2);
+  font: 10px var(--mono);
+  overflow-wrap: anywhere;
+}
+
+.git-card {
+  height: 100%;
+  box-sizing: border-box;
+  padding-bottom: 10px;
+  overflow-y: auto;
+}
+
+.git-status-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.git-files {
+  max-height: 112px;
+  overflow-y: auto;
+}
+
+.git-file code {
+  flex: 0 0 auto;
+  color: var(--dim-2);
+  font: 10px var(--mono);
+}
+
+.git-file .int-name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.git-diff {
+  max-height: 180px;
+  overflow: auto;
+  margin: 6px 0 0;
+  padding: 7px;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, .22);
+  color: var(--ink);
+  font: 10px/1.45 var(--mono);
+  white-space: pre;
+}
+
 .int-rows {
   display: flex;
   flex-direction: column;

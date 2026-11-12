@@ -5,7 +5,7 @@ import { calendarDetail } from "./calendar";
 import { h, svg, clear, dot } from "./dom";
 import { ICONS } from "./icons";
 import { State, type AgentTask } from "../core/state";
-import { Bridge } from "../core/bridge";
+import { Bridge, type GitStatus } from "../core/bridge";
 import { isComingSoon, pillDefinition } from "../core/pills";
 import { refreshHookPills } from "../island/integrations";
 import { readActivity, readPulse, readStats } from "../core/github";
@@ -462,7 +462,148 @@ export function hasIntegrationData(id: string): boolean {
   }
 }
 
+function gitCard(task: AgentTask, hooks: IntegrationCardHooks): HTMLElement {
+  const detailOpen = hooks.detailOpen;
+  const path = State.lastWorkspaceSessionCwd;
+  const statusDot = dot("#737780", 5);
+  const statusText = h("span", { text: t("Loading…") });
+  const statusLine = h("div", { class: "int-status" }, statusDot, statusText);
+  const rootLine = h("code", { class: "git-root" });
+  const details = h("div", { class: "git-status-details" });
+  const files = h("div", { class: "int-rows tight git-files" });
+  const diff = h("pre", { class: "git-diff", hidden: true });
+  const diffNote = h("div", { class: "int-status", hidden: true });
+  let statusRequest = 0;
+  let diffRequest = 0;
+  let repository = false;
+  let showingDiff = false;
+
+  const refresh = h("button", {
+    class: "link-btn",
+    style: `color:${task.color}d9`,
+    text: t("Refresh"),
+    disabled: !path,
+    onclick: () => void loadStatus(),
+  });
+  const diffButton = h("button", {
+    class: "link-btn",
+    style: `color:${task.color}d9`,
+    text: t("View diff"),
+    disabled: true,
+    onclick: () => void toggleDiff(),
+  });
+
+  function setStatus(label: string, color = "#737780") {
+    statusDot.style.background = color;
+    statusText.textContent = label;
+  }
+
+  function showStatus(status: GitStatus) {
+    repository = status.repository;
+    rootLine.textContent = status.root ?? "";
+    clear(details);
+    clear(files);
+    diffButton.disabled = !repository;
+    if (!repository) {
+      setStatus(t("No Git repository found."), "#F4505E");
+      return;
+    }
+    setStatus(status.files.length ? t("{count} changed files", { count: status.files.length }) : t("No changes"), status.files.length ? "#F59E0B" : "#22C55E");
+    details.append(
+      h("div", { class: "int-status" }, h("span", { text: String(status.detached ? t("Detached HEAD") : status.branch ?? "") })),
+    );
+    if (!status.upstream) {
+      details.append(h("div", { class: "int-status", text: t("No upstream") }));
+    } else {
+      details.append(h("div", {
+        class: "int-status",
+        text: `${status.upstream} · ${t("Ahead {ahead} · Behind {behind}", { ahead: status.ahead ?? 0, behind: status.behind ?? 0 })}`,
+      }));
+    }
+    if (status.files.length) {
+      status.files.forEach((file) => files.append(
+        h("div", { class: "int-row git-file" },
+          h("code", { text: file.status }),
+          h("span", { class: "int-name", text: file.path }),
+        ),
+      ));
+    } else {
+      files.append(h("div", { class: "int-status", text: t("No changes") }));
+    }
+  }
+
+  async function loadStatus() {
+    const request = ++statusRequest;
+    ++diffRequest;
+    showingDiff = false;
+    diff.hidden = true;
+    diffNote.hidden = true;
+    diffButton.textContent = String(t("View diff"));
+    clear(details);
+    clear(files);
+    rootLine.textContent = "";
+    if (!path) {
+      repository = false;
+      diffButton.disabled = true;
+      setStatus(t("No project session selected."));
+      return;
+    }
+    setStatus(t("Loading…"));
+    const status = await Bridge.gitStatus(path);
+    if (request !== statusRequest) return;
+    if (!status) {
+      repository = false;
+      diffButton.disabled = true;
+      setStatus(t("Error"), "#F4505E");
+      return;
+    }
+    showStatus(status);
+  }
+
+  async function toggleDiff() {
+    if (!repository || !path) return;
+    showingDiff = !showingDiff;
+    diff.hidden = !showingDiff;
+    diffNote.hidden = true;
+    diffButton.textContent = String(showingDiff ? t("Hide diff") : t("View diff"));
+    if (!showingDiff) return;
+    const request = ++diffRequest;
+    diff.textContent = String(t("Loading…"));
+    const result = await Bridge.gitDiff(path);
+    if (request !== diffRequest || !showingDiff) return;
+    if (!result) {
+      diff.textContent = String(t("Error"));
+      return;
+    }
+    diff.textContent = result.text || String(t("No tracked changes to show."));
+    if (result.truncated) {
+      diffNote.textContent = String(t("Diff exceeds the 256 KB display limit."));
+      diffNote.hidden = false;
+    }
+  }
+
+  const card = h("div", { class: "int-card git-card" });
+  card.append(
+    header(
+      task.color,
+      task.name,
+      t("Local repository"),
+      detailOpen
+        ? h("button", { class: "int-back", "aria-label": t("Back"), onclick: hooks.closeDetail }, svg(ICONS.chevronLeft, 10, { stroke: 2.4 }))
+        : h("button", { class: "link-btn", style: `color:${task.color}d9`, text: t("Details"), onclick: hooks.openDetail }),
+    ),
+    statusLine,
+    rootLine,
+  );
+  if (detailOpen) {
+    card.append(details, files, h("div", { class: "int-actions" }, refresh, diffButton), diff, diffNote);
+  }
+  void loadStatus();
+  return card;
+}
+
 export function renderIntegrationCard(task: AgentTask, hooks: IntegrationCardHooks): HTMLElement {
+  if (task.id === "integration_git") return gitCard(task, hooks);
   if (task.id === "integration_n8n") {
     const hasActivity = task.steps.length > 0 && (task.state === "finished" || task.state === "error");
     return hooks.detailOpen && hasActivity

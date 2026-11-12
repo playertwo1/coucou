@@ -14,6 +14,7 @@ mod desktop;
 mod files;
 mod flow;
 mod github;
+mod git;
 mod herdr;
 mod hooks;
 mod i18n;
@@ -983,6 +984,8 @@ pub fn run() {
             launch::drop_into_session,
             open_claude_desktop,
             open_file_in_vscode,
+            git::git_status,
+            git::git_diff,
             quit_app,
             hooks_status,
             agent_hooks_status,

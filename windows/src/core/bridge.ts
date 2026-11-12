@@ -34,6 +34,27 @@ export interface BootInfo {
   cursorPoll: boolean;
 }
 
+export interface GitFile {
+  path: string;
+  status: string;
+}
+
+export interface GitStatus {
+  repository: boolean;
+  root: string | null;
+  branch: string | null;
+  detached: boolean;
+  upstream: string | null;
+  ahead: number | null;
+  behind: number | null;
+  files: GitFile[];
+}
+
+export interface GitDiff {
+  text: string;
+  truncated: boolean;
+}
+
 export interface VitalsReading {
   cpu: number | null;
   memoryLoad: number | null;
@@ -245,6 +266,9 @@ export const Bridge = {
 
   /** Displays the island can be pinned to: `key` is what `settings.screen` stores. */
   listMonitors: () => call<{ key: string; label: string }[]>("list_monitors"),
+
+  gitStatus: (path: string) => call<GitStatus>("git_status", { path }),
+  gitDiff: (path: string) => call<GitDiff>("git_diff", { path }),
 
   openUrl: (url: string) => call<void>("open_url", { url }),
   /** Opens a GitLab link only when it belongs to the configured instance. */

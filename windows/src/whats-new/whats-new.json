@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.4",
+      "items": [
+        {
+          "icon": "eye",
+          "title": {
+            "en": "Local Git status",
+            "zh-Hans": "本地 Git 状态",
+            "hi": "स्थानीय Git स्थिति",
+            "es": "Estado local de Git",
+            "ar": "حالة Git المحلية",
+            "fr": "État Git local",
+            "bn": "স্থানীয় Git অবস্থা",
+            "pt-BR": "Estado local do Git",
+            "ru": "Локальный статус Git",
+            "id": "Status Git lokal",
+            "de": "Lokaler Git-Status",
+            "tr": "Yerel Git durumu",
+            "ko": "로컬 Git 상태",
+            "ja": "ローカルのGit状態"
+          },
+          "detail": {
+            "en": "See the active project's branch, changed files and text diff. Coucou only reads your repository.",
+            "zh-Hans": "查看当前项目的分支、变更文件和文本差异；Coucou 只读取仓库。",
+            "hi": "सक्रिय प्रोजेक्ट की शाखा, बदली फ़ाइलें और टेक्स्ट diff देखें; Coucou रिपॉज़िटरी केवल पढ़ता है।",
+            "es": "Consulta la rama activa, archivos modificados y el diff. Coucou solo lee el repositorio.",
+            "ar": "اعرض الفرع النشط والملفات المتغيرة والفارق النصي؛ Coucou يقرأ المستودع فقط.",
+            "fr": "Branche active, fichiers modifiés et diff texte : Coucou lit seulement le dépôt.",
+            "bn": "সক্রিয় প্রকল্পের ব্রাঞ্চ, বদলানো ফাইল ও টেক্সট ডিফ দেখুন; Coucou শুধু রিপোজিটরি পড়ে।",
+            "pt-BR": "Veja a branch ativa, arquivos alterados e o diff em texto; Coucou só lê o repositório.",
+            "ru": "Ветка проекта, изменённые файлы и текстовый diff; Coucou только читает репозиторий.",
+            "id": "Lihat cabang proyek, file berubah, dan diff teks; Coucou hanya membaca repositori.",
+            "de": "Branch, Änderungen und Text-Diff des aktiven Projekts; Coucou liest das Repository nur.",
+            "tr": "Etkin projenin dalını, değişen dosyaları ve metin farkını görün; Coucou depoyu yalnızca okur.",
+            "ko": "현재 프로젝트의 브랜치, 변경 파일과 텍스트 diff를 확인하세요. Coucou는 저장소를 읽기만 합니다.",
+            "ja": "アクティブなプロジェクトのブランチ、変更ファイル、テキスト差分を表示。Coucouはリポジトリを読むだけです。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.3",
       "items": [
         {

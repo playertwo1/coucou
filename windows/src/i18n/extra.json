@@ -7812,6 +7812,42 @@
       "tr": "Yalnızca dikte ederken, bir görüşmeyi kaydederken veya mesaj gelince görünür. Dikte tuşu yine çalışır.",
       "ko": "받아쓰기하거나 통화를 녹음하거나 메시지가 올 때만 표시됩니다. 받아쓰기 키는 그대로 작동합니다.",
       "ja": "音声入力中、通話の録音中、メッセージが届いたときだけ表示されます。音声入力キーはそのまま使えます。"
+    },
+    "Test Git pill": {
+      "zh-Hans": "测试 Git 状态胶囊", "hi": "Git पिल का परीक्षण करें", "es": "Probar la píldora de Git", "ar": "اختبار كبسولة Git", "fr": "Tester la pastille Git", "bn": "Git পিল পরীক্ষা করুন", "pt-BR": "Testar pílula do Git", "ru": "Проверить плашку Git", "id": "Uji pil Git", "de": "Git-Pille testen", "tr": "Git hapını test et", "ko": "Git 알약 테스트", "ja": "Git ピルをテスト"
+    },
+    "Local repository": {
+      "zh-Hans": "本地仓库", "hi": "स्थानीय रिपॉज़िटरी", "es": "Repositorio local", "ar": "المستودع المحلي", "fr": "Dépôt local", "bn": "স্থানীয় রিপোজিটরি", "pt-BR": "Repositório local", "ru": "Локальный репозиторий", "id": "Repositori lokal", "de": "Lokales Repository", "tr": "Yerel depo", "ko": "로컬 저장소", "ja": "ローカルリポジトリ"
+    },
+    "No project session selected.": {
+      "zh-Hans": "未选择项目会话。", "hi": "कोई प्रोजेक्ट सत्र चुना नहीं गया है।", "es": "No hay ninguna sesión de proyecto seleccionada.", "ar": "لم يتم تحديد جلسة مشروع.", "fr": "Aucune session de projet sélectionnée.", "bn": "কোনো প্রকল্প সেশন নির্বাচন করা হয়নি।", "pt-BR": "Nenhuma sessão de projeto selecionada.", "ru": "Сеанс проекта не выбран.", "id": "Tidak ada sesi proyek yang dipilih.", "de": "Keine Projektsitzung ausgewählt.", "tr": "Bir proje oturumu seçilmedi.", "ko": "프로젝트 세션이 선택되지 않았습니다.", "ja": "プロジェクトセッションが選択されていません。"
+    },
+    "No Git repository found.": {
+      "zh-Hans": "未找到 Git 仓库。", "hi": "कोई Git रिपॉज़िटरी नहीं मिली।", "es": "No se encontró ningún repositorio de Git.", "ar": "لم يتم العثور على مستودع Git.", "fr": "Aucun dépôt Git trouvé.", "bn": "কোনো Git রিপোজিটরি পাওয়া যায়নি।", "pt-BR": "Nenhum repositório Git encontrado.", "ru": "Репозиторий Git не найден.", "id": "Repositori Git tidak ditemukan.", "de": "Kein Git-Repository gefunden.", "tr": "Git deposu bulunamadı.", "ko": "Git 저장소를 찾을 수 없습니다.", "ja": "Git リポジトリが見つかりません。"
+    },
+    "Detached HEAD": {
+      "zh-Hans": "分离头指针", "hi": "अलग HEAD", "es": "HEAD separado", "ar": "HEAD منفصل", "fr": "HEAD détachée", "bn": "বিচ্ছিন্ন HEAD", "pt-BR": "HEAD desanexado", "ru": "Отсоединённый HEAD", "id": "HEAD terlepas", "de": "Abgetrennter HEAD", "tr": "Ayrık HEAD", "ko": "분리된 HEAD", "ja": "HEAD が分離しています"
+    },
+    "No upstream": {
+      "zh-Hans": "未配置上游分支", "hi": "अपस्ट्रीम शाखा कॉन्फ़िगर नहीं है", "es": "No hay una rama upstream configurada", "ar": "لم يتم إعداد فرع upstream", "fr": "Aucune branche amont configurée", "bn": "আপস্ট্রিম শাখা কনফিগার করা নেই", "pt-BR": "Nenhuma branch upstream configurada", "ru": "Ветка upstream не настроена", "id": "Branch upstream belum dikonfigurasi", "de": "Kein Upstream-Branch konfiguriert", "tr": "Upstream dalı yapılandırılmadı", "ko": "업스트림 브랜치가 설정되지 않았습니다", "ja": "上流ブランチが設定されていません"
+    },
+    "Ahead {ahead} · Behind {behind}": {
+      "zh-Hans": "领先 {ahead} · 落后 {behind}", "hi": "आगे {ahead} · पीछे {behind}", "es": "Adelante {ahead} · detrás {behind}", "ar": "متقدم {ahead} · متأخر {behind}", "fr": "En avance de {ahead} · en retard de {behind}", "bn": "এগিয়ে {ahead} · পিছিয়ে {behind}", "pt-BR": "À frente {ahead} · atrás {behind}", "ru": "Впереди {ahead} · позади {behind}", "id": "Di depan {ahead} · tertinggal {behind}", "de": "Voraus {ahead} · zurück {behind}", "tr": "İleride {ahead} · geride {behind}", "ko": "앞섬 {ahead} · 뒤처짐 {behind}", "ja": "先行 {ahead} · 遅れ {behind}"
+    },
+    "{count} changed files": {
+      "zh-Hans": "已更改 {count} 个文件", "hi": "{count} फ़ाइलें बदलीं", "es": "{count} archivos modificados", "ar": "تم تغيير {count} ملفات", "fr": "{count} fichiers modifiés", "bn": "{count}টি ফাইল পরিবর্তিত", "pt-BR": "{count} arquivos alterados", "ru": "Изменено файлов: {count}", "id": "{count} file berubah", "de": "{count} geänderte Dateien", "tr": "{count} dosya değişti", "ko": "변경된 파일 {count}개", "ja": "変更されたファイル: {count}"
+    },
+    "View diff": {
+      "zh-Hans": "查看差异", "hi": "अंतर देखें", "es": "Ver diferencias", "ar": "عرض الفروقات", "fr": "Voir le diff", "bn": "পার্থক্য দেখুন", "pt-BR": "Ver diff", "ru": "Показать diff", "id": "Lihat diff", "de": "Diff anzeigen", "tr": "Diff'i görüntüle", "ko": "diff 보기", "ja": "差分を表示"
+    },
+    "Hide diff": {
+      "zh-Hans": "隐藏差异", "hi": "अंतर छिपाएँ", "es": "Ocultar diferencias", "ar": "إخفاء الفروقات", "fr": "Masquer le diff", "bn": "পার্থক্য লুকান", "pt-BR": "Ocultar diff", "ru": "Скрыть diff", "id": "Sembunyikan diff", "de": "Diff ausblenden", "tr": "Diff'i gizle", "ko": "diff 숨기기", "ja": "差分を隠す"
+    },
+    "No tracked changes to show.": {
+      "zh-Hans": "没有可显示的已跟踪文件更改。", "hi": "दिखाने के लिए ट्रैक की गई फ़ाइलों में बदलाव नहीं है।", "es": "No hay cambios en archivos rastreados para mostrar.", "ar": "لا توجد تغييرات في الملفات المتتبعة لعرضها.", "fr": "Aucune modification de fichier suivi à afficher.", "bn": "দেখানোর মতো ট্র্যাক করা ফাইলে কোনো পরিবর্তন নেই।", "pt-BR": "Não há alterações em arquivos rastreados para exibir.", "ru": "Нет изменений отслеживаемых файлов для показа.", "id": "Tidak ada perubahan file terlacak untuk ditampilkan.", "de": "Keine Änderungen an nachverfolgten Dateien zum Anzeigen.", "tr": "Gösterilecek izlenen dosya değişikliği yok.", "ko": "표시할 추적 중인 파일 변경 사항이 없습니다.", "ja": "表示する追跡済みファイルの変更はありません。"
+    },
+    "Diff exceeds the 256 KB display limit.": {
+      "zh-Hans": "差异内容超过 256 KB 显示上限。", "hi": "Diff, 256 KB की प्रदर्शन सीमा से बड़ा है।", "es": "El diff supera el límite de visualización de 256 KB.", "ar": "يتجاوز diff حد العرض البالغ 256 كيلوبايت.", "fr": "Le diff dépasse la limite d’affichage de 256 Ko.", "bn": "Diff 256 KB প্রদর্শন সীমা ছাড়িয়েছে।", "pt-BR": "O diff excede o limite de exibição de 256 KB.", "ru": "Diff превышает лимит отображения 256 КБ.", "id": "Diff melebihi batas tampilan 256 KB.", "de": "Der Diff überschreitet die Anzeigebegrenzung von 256 KB.", "tr": "Diff, 256 KB görüntüleme sınırını aşıyor.", "ko": "diff가 256KB 표시 제한을 초과했습니다.", "ja": "差分が 256 KB の表示上限を超えています。"
     }
   }
 }

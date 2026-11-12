@@ -60,6 +60,22 @@ test("synthetic requests consume only their own pending decision once", () => {
   assert.deepEqual(createFixtures().decisions, []);
 });
 
+test("synthetic Git status and diff read only the invented Jardim fixture", () => {
+  const fixture = createFixtures();
+  const status = fixture.gitStatus("synthetic://Jardim");
+  assert.equal(status.repository, true);
+  assert.equal(status.root, "synthetic://Jardim");
+  assert.deepEqual(status.files.map((file) => file.path), ["src/garden.ts", "notes/new-seed.txt"]);
+  assert.deepEqual(fixture.gitDiff("synthetic://Jardim"), {
+    text: "diff --git a/src/garden.ts b/src/garden.ts\n@@ -1 +1 @@\n-old garden\n+synthetic garden\n",
+    truncated: false,
+  });
+  assert.equal(fixture.gitStatus("C:/Users/owner/private").repository, false);
+  assert.equal(fixture.gitDiff("C:/Users/owner/private"), null);
+  assert.deepEqual(fixture.gitStatusReads, ["synthetic://Jardim", "C:/Users/owner/private"]);
+  assert.deepEqual(fixture.gitDiffReads, ["synthetic://Jardim", "C:/Users/owner/private"]);
+});
+
 test("synthetic host contains no native IPC or production backend", () => {
   const native = readFileSync(new URL("../synthetic/host/src/main.rs", import.meta.url), "utf8");
   const manifest = readFileSync(new URL("../synthetic/host/Cargo.toml", import.meta.url), "utf8");

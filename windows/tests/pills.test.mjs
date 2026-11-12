@@ -51,7 +51,7 @@ test("the catalog holds the Mac's pills with the Claude Code label for Windows a
     ["integration_coucoudoro", "Coucoudoro", "#0EA5E9", "service", "Integration"],
   ];
   assert.deepEqual(
-    PILL_CATALOG.filter((p) => !["integration_gitlab", "integration_gitea"].includes(p.id))
+    PILL_CATALOG.filter((p) => !["integration_git", "integration_gitlab", "integration_gitea"].includes(p.id))
       .map((p) => [p.id, p.name, p.color, p.category, p.subtitle]),
     mac,
   );
@@ -72,6 +72,13 @@ test("Gitea is an available service pill", () => {
     { id: "integration_gitea", name: "Gitea", color: "#609926", category: "service",
       subtitle: "Integration", source: "n8n", support: "yes", connect: { kind: "key", key: "gitea-token" } },
   );
+});
+
+test("the local Git pill has a stable Windows-only service ID", () => {
+  const def = pillDefinition("integration_git");
+  assert.deepEqual([def.name, def.category, def.support, def.source, def.connect.kind], ["Git", "service", "windows", "n8n", "none"]);
+  assert.ok(availablePills("windows").some((p) => p.id === "integration_git"));
+  assert.ok(!availablePills("linux").some((p) => p.id === "integration_git"));
 });
 
 test("the shipped pills keep their IDs, colours and sources with current display names", () => {
@@ -120,7 +127,7 @@ test("this build leaves out what only macOS has", () => {
   // Spotify: MPRIS on Linux, the system media controls on Windows.
   assert.ok(linux.includes("integration_spotify"));
   assert.ok(windows.includes("integration_spotify"));
-  assert.deepEqual(linux, windows.filter((id) => !["integration_mail", "integration_youtubemusic"].includes(id)));
+  assert.deepEqual(linux, windows.filter((id) => !["integration_git", "integration_mail", "integration_youtubemusic"].includes(id)));
 });
 
 test("Spotify: a service on both systems with nothing to set up", () => {
@@ -244,6 +251,7 @@ test("pills are ordered main first, then other agents, then the catalog's order"
 beforeEach(() => {
   State.tasks = [];
   State.focusId = null;
+  State.lastWorkspaceSessionCwd = null;
   State.os = "windows";
   State.settings = { ...DEFAULT_SETTINGS };
 });
@@ -314,6 +322,23 @@ test("a Claude Code session gets its pill even when it is not loaded", () => {
   assert.equal(t.name, "proj");
   assert.equal(t.sessionCwd, "/p");
   assert.equal(State.upsertWorkspacePill("not_a_pill", "x", ""), null);
+});
+
+test("the Git pill follows the last focused workspace project across service focus", () => {
+  State.settings.activeIntegrations = ["integration_git", "integration_github"];
+  State.loadIntegrationTasks();
+
+  State.upsertWorkspacePill("integration_claude", "project one", "C:/projects/one");
+  State.setFocus("integration_claude");
+  State.setFocus("integration_git");
+  assert.equal(State.lastWorkspaceSessionCwd, "C:/projects/one");
+
+  State.upsertWorkspacePill("agent_codex", "project two", "C:/projects/two");
+  State.setFocus("agent_codex");
+  State.setFocus("integration_github");
+  assert.equal(State.lastWorkspaceSessionCwd, "C:/projects/two");
+  State.setFocus("integration_git");
+  assert.equal(State.lastWorkspaceSessionCwd, "C:/projects/two");
 });
 
 test("toggling declares up to four pills and never the main one", () => {
