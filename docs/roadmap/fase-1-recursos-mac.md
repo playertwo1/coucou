@@ -88,9 +88,14 @@ Mac: `IslandWindowController.performAttachFrontWindow` (⌃⌥W). No Windows o a
 
 Mac: `ScreenCapture.swift`, `CaptureCardView.swift` (⌘⇧S). Recortar parte da tela; Mochi engole a imagem; a ilha oferece colar no prompt, copiar, anotar ou perguntar no Chat. Com Flow, segurar a tecla e falar envia imagem e fala juntas.
 - [x] Descoberta (2026-11-11): o recorte do sistema é `ms-screenclip:` (a imagem cai na área de transferência; Esc não cria arquivo). O Coucou gravaria o PNG em `%TEMP%\CoucouCaptures`, no máximo 20. O Chat de hoje só anexa o caminho do arquivo; nenhum provedor recebe a imagem. Proposta em `docs/superpowers/specs/2026-11-11-screen-capture-design.md`, sem aprovação e sem código.
-- [ ] Mini-spec com as ações do card, limite de tamanho, e o caso Flow; aprovar.
-- [ ] Subdividir antes de implementar (captura → card → Chat → Flow).
+- [x] Mini-spec aprovada (2026-11-11): `docs/superpowers/specs/2026-11-11-screen-capture-design.md`. Anotar e Flow ficam de fora.
+- [x] Implementar o recorte do sistema, o card (colar, copiar, perguntar, cancelar) e o chip sem enviar a imagem.
 - Checkpoint: a imagem só sai da máquina quando o usuário pergunta no Chat; cancelar não deixa arquivo para trás.
+
+**Status 1.6 (2026-11-11): código e provas automáticas —** `capture.rs` abre `ms-screenclip:`. Só grava PNG se a área de transferência mudou e o formato PNG está lá; Esc ou outro conteúdo não cria arquivo. A pasta é `%TEMP%\CoucouCaptures`, no máximo 20. Cancelar apaga só esse PNG. O card oferece colar, copiar, perguntar e cancelar. Perguntar mostra o chip e `questionContext` não manda o arquivo, então os bytes não vão ao provedor. O atalho `captureScreen` é Ctrl+Alt+P e nasce desligado.
+- *Testes:* `capture::tests` (3, inclusive ida e volta do PNG na área de transferência e a pasta com 20 arquivos) e `tests/capture.test.mjs` (2). `npx tsc --noEmit`, `npm test` (614) e `npm run build` passaram.
+- *Prova ao vivo:* `ms-screenclip:` abriu a sobreposição da Ferramenta de Captura. A sequência da área de transferência ficou em 1549 e `%TEMP%\CoucouCaptures` continuou com 0 arquivos. O Esc enviado à janela não fechou a sobreposição; o processo foi encerrado para não deixar a tela presa.
+- *Ainda sem prova no app:* o card, colar na janela da frente e um recorte concluído pelo usuário. Checkpoint aberto.
 
 ### 1.7 — Mochi sente o PC (M)
 

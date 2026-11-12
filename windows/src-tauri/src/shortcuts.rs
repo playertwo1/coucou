@@ -70,6 +70,8 @@ pub const ACTIONS: &[ActionDef] = &[
     action("wardrobeToggle", "Ctrl+Alt+G", true, true),
     action("newSession", "Ctrl+Alt+L", true, true),
     action("noteIdea", "Ctrl+Alt+I", true, true),
+    // Off until a person turns it on. P is not an AltGr character on the checked layouts.
+    action("captureScreen", "Ctrl+Alt+P", false, true),
 ];
 
 pub fn find(id: &str) -> Option<&'static ActionDef> {
@@ -95,6 +97,7 @@ pub fn description(id: &str) -> &'static str {
         "wardrobeToggle" => n_("Open the wardrobe"),
         "newSession" => n_("New Claude Code session"),
         "noteIdea" => n_("Note an idea"),
+        "captureScreen" => n_("Capture part of the screen"),
         _ => "Coucou",
     }
 }
@@ -697,9 +700,10 @@ mod wayland {
 mod tests {
     use super::*;
 
-    const MAC_IDS: [&str; 12] = [
+    const MAC_IDS: [&str; 13] = [
         "toggleIsland", "openChat", "goToAlert", "jumpToTerminal", "attachFrontWindow",
         "nextPill", "prevPill", "muteToggle", "desktopToggle", "wardrobeToggle", "newSession", "noteIdea",
+        "captureScreen",
     ];
 
     fn never(_: &Shortcut) -> Option<String> {
@@ -736,7 +740,7 @@ mod tests {
     #[test]
     fn only_the_island_toggle_is_off_by_default() {
         for def in ACTIONS {
-            assert_eq!(def.enabled_by_default, def.id != "toggleIsland", "{}", def.id);
+            assert_eq!(def.enabled_by_default, def.id != "toggleIsland" && def.id != "captureScreen", "{}", def.id);
         }
     }
 
@@ -747,7 +751,11 @@ mod tests {
             assert!(def.ported, "{}", def.id);
             match outcome {
                 Ok(_) => assert!(def.enabled_by_default, "{}", def.id),
-                Err(s) => assert_eq!((def.id, s.status), ("toggleIsland", Status::Off)),
+                Err(s) => assert!(
+                    (def.id == "toggleIsland" || def.id == "captureScreen") && s.status == Status::Off,
+                    "{}",
+                    def.id,
+                ),
             }
         }
     }
@@ -805,7 +813,7 @@ mod tests {
         // Same key, other modifiers: not a duplicate.
         stored.insert("jumpToTerminal".into(), Binding { keys: "Ctrl+Shift+A".into(), enabled: true });
         let plan = super::plan(&stored, never);
-        assert!(plan.iter().all(|(d, o)| o.is_ok() || !d.ported || d.id == "toggleIsland"));
+        assert!(plan.iter().all(|(d, o)| o.is_ok() || !d.ported || !d.enabled_by_default));
 
         // A disabled action doesn't hold its keys.
         stored.insert("goToAlert".into(), Binding { keys: "Ctrl+Alt+A".into(), enabled: false });

@@ -141,6 +141,12 @@ export function runGlobalShortcut(host: ShortcutHost, action: string, resume: ()
       host.flyOutOrHome();
       break;
 
+    case "captureScreen":
+      resume();
+      if (State.mode === "expanded") host.collapse();
+      void Bridge.captureBegin();
+      break;
+
     // wardrobeToggle and attachFrontWindow never come this way (Rust sends
     // `open-wardrobe` and `window-context`).
     default:
@@ -208,6 +214,17 @@ export function registerShortcutHandlers(host: ShortcutHost, resume: () => void)
   });
   // Ctrl+Alt+F: Rust read the window in front when the keys went down
   // (IslandWindowController.performAttachFrontWindow on the Mac).
+  void onEvent<{ path: string; name: string }>("capture-ready", (saved) => {
+    resume();
+    State.captureFile = saved;
+    Sound.play("gulp");
+    host.emote("surprised");
+    host.alert("capture");
+  });
+  void onEvent<null>("capture-empty", () => {
+    Sound.play("error");
+    host.emote("annoyed");
+  });
   void onEvent<{ appName: string; title: string; url?: string | null } | null>("window-context", (context) => {
     if (!context) {
       host.emote("annoyed");

@@ -11,6 +11,7 @@ import { dictateButton } from "./dictate";
 import { ICONS } from "./icons";
 import { renderMarkdown } from "./markdown";
 import { Bridge, onEvent, type ChatContext, type ModelInfo } from "../core/bridge";
+import { questionContext } from "../chat/question";
 import {
   activeModel, pickModel, providerDef, visibleProviders, withModel, type ProviderDef,
 } from "../core/providers";
@@ -307,13 +308,12 @@ export function buildPrompt(onHeightChange: () => void): ViewHost {
     State.notify();
     onHeightChange();
 
-    const file = State.droppedFile;
     const win = State.windowContext;
-    const context: ChatContext | null = win
-      ? { kind: "window", ...win, url: win.url ?? undefined }
-      : State.chatHistory.length === 1 && file
-        ? { kind: "file", name: file.name, path: file.path }
-        : null;
+    const context: ChatContext | null = questionContext(
+      State.chatHistory.length === 1,
+      State.droppedFile,
+      win,
+    );
 
     try {
       const reply = await Bridge.chatSend(query, context, MailChat.on && HOST_OS === "windows");

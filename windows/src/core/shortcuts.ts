@@ -31,6 +31,7 @@ export const SHORTCUT_TEXT = {
   wardrobeToggle: N_("Open the wardrobe"),
   newSession: N_("New Claude Code session"),
   noteIdea: N_("Note an idea"),
+  captureScreen: N_("Capture part of the screen"),
   island: {
     nextPrev: N_("Next or previous pill"),
     byNumber: N_("Go to pill 1 to 9"),
@@ -60,7 +61,8 @@ export type ShortcutId =
   | "desktopToggle"
   | "wardrobeToggle"
   | "newSession"
-  | "noteIdea";
+  | "noteIdea"
+  | "captureScreen";
 
 export interface ShortcutDef {
   id: ShortcutId;
@@ -89,6 +91,8 @@ export const SHORTCUTS: readonly ShortcutDef[] = [
   def("newSession", "Ctrl+Alt+L", true, true),
   // Not the Mac's: Notetaker for one voice, a fork addition (see docs/ROADMAP-FORK.md).
   def("noteIdea", "Ctrl+Alt+I", true, true),
+  // Off until a person turns it on. Ctrl+Alt+P is free of the AltGr letters above.
+  def("captureScreen", "Ctrl+Alt+P", false, true),
 ];
 
 export interface Binding {

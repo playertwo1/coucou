@@ -792,6 +792,68 @@ function buildConfused(): ViewHost {
 
 // ── Note ──────────────────────────────────────────────────────────────────────
 
+function buildCapture(actions: ViewActions): ViewHost {
+  const title = h("div", { class: "title" });
+  const sub = h("div", { class: "sub", text: tl("What do you want to do with it?") });
+  const file = () => State.captureFile;
+  const done = () => {
+    State.captureFile = null;
+    actions.setView("overview");
+  };
+  const paste = h("button", {
+    class: "btn primary",
+    text: tl("Paste"),
+    onclick: () => {
+      const current = file();
+      if (!current) return;
+      void Bridge.capturePaste(current.path);
+      done();
+    },
+  });
+  const copy = h("button", {
+    class: "btn secondary",
+    text: tl("Copy"),
+    onclick: () => {
+      const current = file();
+      if (!current) return;
+      void Bridge.captureCopy(current.path);
+      done();
+    },
+  });
+  const ask = h("button", {
+    class: "btn secondary",
+    text: tl("Ask a question"),
+    onclick: () => {
+      const current = file();
+      if (!current) return;
+      State.droppedFile = { name: current.name, path: current.path, capture: true };
+      State.droppedFileReady = true;
+      State.captureFile = null;
+      actions.setView("prompt");
+    },
+  });
+  const cancel = h("button", {
+    class: "btn secondary",
+    text: tl("Cancel"),
+    onclick: () => {
+      const current = file();
+      if (current) void Bridge.captureCancel(current.path);
+      done();
+    },
+  });
+  const el = h(
+    "div",
+    { class: "view" },
+    h("div", { class: "card" }, h("div", { class: "stack", style: "padding:0 18px 0 98px" }, title, sub, h("div", { class: "actions" }, paste, copy, ask, cancel))),
+  );
+  return {
+    el,
+    sync() {
+      title.textContent = State.captureFile?.name ?? "";
+    },
+  };
+}
+
 function buildNote(): ViewHost {
   const title = h("div", { class: "title" });
   const el = h("div", { class: "view" }, card(null, h("div", { class: "stack", style: "padding:0 18px 0 98px" }, title)));
@@ -894,6 +956,7 @@ export function buildViews(
   map.set("finished", buildFinished(actions));
   map.set("confused", buildConfused());
   map.set("note", buildNote());
+  map.set("capture", buildCapture(actions));
   map.set("settings", buildSettings(actions));
   map.set("prompt", buildPrompt(onChatHeightChange));
   map.set("upload", buildUpload());

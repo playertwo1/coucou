@@ -2,7 +2,7 @@
 
 Roadmap: Fase 1.6 (`docs/roadmap/fase-1-recursos-mac.md`). Aplicativo Windows em `windows/`.
 
-**Status:** proposta em 2026-11-11. Aguarda aprovação do proprietário. Sem código até lá.
+**Status:** aprovada pelo proprietário em 2026-11-11. O atalho `captureScreen` fica em Ctrl+Alt+P e desligado até alguém ligá-lo.
 
 ## O que o Mac faz
 

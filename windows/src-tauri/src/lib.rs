@@ -47,6 +47,7 @@ mod voice;
 #[cfg(windows)]
 mod webview_drop;
 mod webview_memory;
+mod capture;
 mod vitals;
 mod whatsapp;
 mod window_context;
@@ -550,6 +551,30 @@ fn approval_decline(app: AppHandle, request_id: String) {
 
 // ── Chat, files and secrets ───────────────────────────────────────────────────
 
+/// The system snip. The island hears the result; this returns at once.
+#[tauri::command]
+fn capture_begin(app: AppHandle) {
+    capture::begin(app);
+}
+
+/// Deletes the capture file when it is one of ours.
+#[tauri::command]
+fn capture_cancel(path: String) -> bool {
+    capture::cancel(&path)
+}
+
+/// Leaves that PNG on the clipboard.
+#[tauri::command]
+fn capture_copy(path: String) -> bool {
+    capture::copy_png(&path)
+}
+
+/// Pastes it into the window that was in front, then restores the old clipboard text.
+#[tauri::command]
+fn capture_paste(path: String) -> bool {
+    capture::paste_png(&path)
+}
+
 /// One chat turn with the provider picked in the chat view. API keys and any
 /// file bytes stay on the Rust side.
 #[tauri::command]
@@ -919,6 +944,10 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             boot,
             vitals::vitals_read,
+            capture_begin,
+            capture_cancel,
+            capture_copy,
+            capture_paste,
             mail::mail_refresh,
             mail::mail_more,
             mail::mail_search,

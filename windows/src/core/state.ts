@@ -246,7 +246,9 @@ class AppState {
   dropSessionTarget: string | null = null;
 
   promptContext: PromptContext | null = null;
-  droppedFile: { name: string; path: string } | null = null;
+  droppedFile: { name: string; path: string; capture?: boolean } | null = null;
+  /** The snip on the island, until paste, copy, ask, or cancel. */
+  captureFile: { name: string; path: string } | null = null;
   droppedFileReady = false;
   /** Mochi dropped on another app's window: sent with the next question, once. */
   windowContext: { appName: string; title: string; url?: string | null } | null = null;
