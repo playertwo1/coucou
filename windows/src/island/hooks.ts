@@ -16,6 +16,7 @@ import { parseClaudePlan, restorePlanUsage } from "../core/plan";
 import { setClaudePlanUsage, storedClaudePlanUsage } from "../views/usage";
 import { N_, t } from "../i18n/i18n";
 import { Launch } from "../core/launch";
+import { recordAgentWork } from "../mochi/work-streak";
 
 const CLAUDE_ID = "integration_claude";
 const CURSOR_ID = "agent_cursor";
@@ -370,6 +371,10 @@ function handleHook(island: Island, payload: HookPayload) {
     if (usage) setClaudePlanUsage(usage);
     return;
   }
+
+  // Hours with the agents count even while the island is paused. The pause
+  // still hides the event and still declines a waiting permission.
+  recordAgentWork(payload.hook_event_name ?? "");
 
   if (State.paused) {
     // Silence here used to cost Claude Code nearly two minutes: the relay waited

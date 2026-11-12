@@ -2,7 +2,7 @@
 
 Roadmap: Fase 1.7 (`docs/roadmap/fase-1-recursos-mac.md`). Aplicativo Windows em `windows/`.
 
-**Status:** aprovada pelo proprietário em 2026-11-11, com temperatura pelo HWiNFO (item 2 revisto).
+**Status:** aprovada pelo proprietário em 2026-11-11. Em 2026-11-11 a temperatura deixou de ser o HWiNFO e passou a ser a zona térmica do Windows (item 2 revisto de novo).
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ Portar do Mac (`MachineVitals.swift`, `VitalsHoverLine.swift`, `WorkStreak.swift
 ## Comportamento proposto
 
 1. **Leitura (Rust, só Windows):** CPU total por `GetSystemTimes`; memória por `GlobalMemoryStatusEx` (carga ≥ 90 % = curta, ≥ 97 % = cheia; o Windows não tem a pressão de memória do macOS); bateria por `GetSystemPowerStatus` (nada num desktop sem bateria); os dois processos que mais gastaram CPU desde a leitura anterior, por instantâneo de processos e `GetProcessTimes`, lidos só quando a CPU já está alta, como no Mac; ociosidade por `GetLastInputInfo`. Não há laço no Rust: a página da ilha chama o comando `vitals_read` a cada 3 s **só com o Mochi na tela**. Com a ilha escondida e o Mochi em casa, nenhuma leitura (0 % de CPU).
-2. **Temperatura pelo HWiNFO** (decisão do proprietário): o Windows não dá temperatura sem privilégio de administrador; o HWiNFO, aberto pelo usuário, a publica, e o Coucou só lê, sem privilégio extra. Primeiro o Gadget (`HKCU\Software\HWiNFO64\VSB`, sensores marcados com "Report value in Gadget"; segundo usuários do Rainmeter, sem o limite de 12 h da versão gratuita). Se não houver, a memória compartilhada (`Global\HWiNFO_SENS_SM2`; na versão gratuita o HWiNFO a desliga a cada 12 h). Leitor próprio, escrito a partir dos deslocamentos do formato, sem código de terceiros. Escolhe a temperatura da CPU (rótulo com "CPU", preferindo o pacote/Tctl/Tdie; °F convertido). ≥ 80 °C → morno (0,4), ≥ 90 °C → quente (0,8), ≥ 95 °C → 1. Sem HWiNFO aberto, sem rubor e a linha nunca diz "quente".
+2. **Temperatura pela zona térmica do Windows** (decisão do proprietário, 2026-11-11; o HWiNFO fica de fora): `Win32_PerfFormattedData_Counters_ThermalZoneInformation`, sem administrador. Graus da zona mais quente: `HighPrecisionTemperature / 10 - 273,15`. Com a CPU abaixo de 20 %, guarda-se a menor temperatura vista; 8 °C acima dela → morno (0,4). Quando o Windows limita uma zona (`PercentpassiveLimit` < 100 ou motivo térmico `0x1`) → quente (1). Sem zona, sem rubor. Os limiares 80/90/95 °C não se aplicam a este sensor.
 3. **Humores (TypeScript, motor):** portar o `MochiMood.swift` como está: CPU ≥ 80 % em duas leituras seguidas → suor e pulos de pânico, mais fortes perto de 90 %; memória curta/cheia → inchado; bateria abaixo de 20 % fora da tomada → olhos pesados e bocejos; abaixo de 10 % → dormindo com z's. Ligar na tomada enquanto ele está cansado → sorriso e som "pop". Vale para o Mochi da ilha e o do desktop.
 4. **Horas com os agentes:** porta direta do `WorkStreak` (2 h → sono; 3 h → muito sono; pausa de 20 min zera). Só horários em memória.
 5. **Linha sob a ilha:** com o ponteiro sobre o Mochi e algum humor ativo, uma linha curta com até duas partes: "CPU 94 % · node, Chrome", "Memória curta", "Bateria 14 %". Mesmo estilo do Mac; nenhuma tela existente muda.
@@ -43,7 +43,7 @@ Portar do Mac (`MachineVitals.swift`, `VitalsHoverLine.swift`, `WorkStreak.swift
 
 ## Fora do escopo
 
-- Temperatura sem o HWiNFO. Instalar ou configurar o HWiNFO pelo Coucou. Linux. Gráficos ou histórico de uso. Encerrar ou alterar processos.
+- Temperatura do pacote da CPU e HWiNFO. Linux. Gráficos ou histórico de uso. Encerrar ou alterar processos.
 
 ## Risco e rollback
 

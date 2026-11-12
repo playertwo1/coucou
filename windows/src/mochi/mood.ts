@@ -6,7 +6,7 @@
 export interface MochiMood {
   /** The processor is at full load: Mochi sweats and hops about. */
   busy: number;
-  /** The PC is warm (HWiNFO): Mochi flushes red, heat waves above his head. */
+  /** The PC is warm: Mochi flushes red, heat waves above his head. */
   hot: number;
   /** Memory is short: Mochi puffs up, like after a big meal. */
   full: number;

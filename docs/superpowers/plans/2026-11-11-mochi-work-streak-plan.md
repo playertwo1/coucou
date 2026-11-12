@@ -35,7 +35,7 @@ Spec aprovada: `docs/superpowers/specs/2026-11-11-mochi-feels-the-pc-design.md`.
 
 - Seams confirmados pelo proprietário em 2026-11-11: timestamps puros; `hooks.test.mjs` via `registerHookHandlers`; composição em `moodFromVitals`, com `asleep` exclusivo da bateria.
 - `State.paused` (decisão de 2026-11-11): os cinco eventos de trabalho contam mesmo com a ilha pausada. Registrar antes do `return` de `handleHook`, sem revelar a ilha, sem som e sem mudar a recusa de pedido pendente. `StatusLine` fica fora.
-- O checkpoint 1.7c continua aberto. Não escrever testes nem código da 1.7d enquanto ele não fechar. `upstream/main` já estava contido no `HEAD` em 2026-11-11 (`b1bc09d`, 0 commits só no upstream).
+- O proprietário pediu para avançar em 2026-11-11 com o checkpoint visual da 1.7c ainda aberto (ciclo de 3 s no app). `upstream/main` seguia contido no `HEAD` (`b1bc09d`).
 
 ## Rollback
 

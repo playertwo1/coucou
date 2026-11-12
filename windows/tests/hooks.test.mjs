@@ -6,6 +6,7 @@ import { afterEach, beforeEach, mock, test } from "node:test";
 import assert from "node:assert/strict";
 import { calls, emit, sent } from "./tauri.mjs";
 import { registerHookHandlers, restoreAlertFocus } from "../src/island/hooks.ts";
+import { resetWorkStreak, workStreakSnapshot } from "../src/mochi/work-streak.ts";
 import { DEFAULT_SETTINGS, State } from "../src/core/state.ts";
 import { Sound } from "../src/core/sound.ts";
 import { setLanguage } from "../src/i18n/i18n.ts";
@@ -42,6 +43,7 @@ beforeEach(() => {
   State.focusBeforeApproval = null;
   State.settings = { ...DEFAULT_SETTINGS };
   State.loadIntegrationTasks();
+  resetWorkStreak();
 });
 
 // hooks.ts keeps timer handles between events: the 110 s approval timeout, and
@@ -70,6 +72,25 @@ test("a paused island ignores every other event", () => {
   assert.equal(task().name, "Claude Code");
   assert.deepEqual(asked, []);
   assert.deepEqual(calls, []);
+  assert.deepEqual(workStreakSnapshot(), { start: null, last: null });
+});
+
+test("the five work events count while paused, and an unknown event does not", () => {
+  for (const name of ["UserPromptSubmit", "PreToolUse", "PostToolUse", "PostToolUseFailure", "Stop"]) {
+    resetWorkStreak();
+    State.paused = true;
+    asked = [];
+    hook({ hook_event_name: name });
+    assert.equal(workStreakSnapshot().start != null, true, name);
+    assert.deepEqual(asked, [], name);
+    assert.deepEqual(sent("approval_decline"), [], name);
+  }
+  resetWorkStreak();
+  State.paused = false;
+  hook({ hook_event_name: "SomethingNew", cwd: "/p" });
+  assert.deepEqual(workStreakSnapshot(), { start: null, last: null });
+  hook({ hook_event_name: "StatusLine", rate_limits: {} });
+  assert.deepEqual(workStreakSnapshot(), { start: null, last: null });
 });
 
 // ── Session and work events ───────────────────────────────────────────────────

@@ -19,6 +19,7 @@ import { MUSIC_IDS, Spotify, islandDances } from "../core/spotify";
 import { BotEngine, hexToRGB } from "../mochi/engine";
 import { CALM, type MochiMood } from "../mochi/mood";
 import { describeVitals, isVitalsHover, moodFromVitals, pluggedInWhileLow, shouldReadVitals } from "../mochi/vitals";
+import { currentWorkTired, rememberIdle } from "../mochi/work-streak";
 import { Greeting } from "../mochi/greeting";
 import { createMiniBot, pruneMiniBots, syncMiniBotStates, tickMiniBots } from "../mochi/minibots";
 import { SeasonCache, parseOutfit } from "../mochi/wardrobe";
@@ -95,6 +96,7 @@ export class Island {
   private vitalsText!: HTMLElement;
   private vitalsTimer: number | null = null;
   private busySamples = 0;
+  private heatBaseline: number | null = null;
   private previousBattery: VitalsReading["battery"] = null;
   private vitalsMood: MochiMood = CALM;
   private vitalsSummary: string | null = null;
@@ -1320,8 +1322,12 @@ export class Island {
         Sound.play("pop");
       }
       this.previousBattery = reading.battery;
-      const result = moodFromVitals(reading, this.busySamples);
+      rememberIdle(reading.idleSeconds);
+      const result = moodFromVitals(
+        reading, this.busySamples, this.heatBaseline, currentWorkTired(Date.now(), reading.idleSeconds),
+      );
       this.busySamples = result.busySamples;
+      this.heatBaseline = result.baseline;
       this.setVitalsMood(result.mood);
       this.vitalsSummary = describeVitals(reading, result.mood);
     }

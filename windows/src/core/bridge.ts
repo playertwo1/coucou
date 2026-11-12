@@ -39,7 +39,8 @@ export interface VitalsReading {
   memoryLoad: number | null;
   battery: { percent: number; onPower: boolean } | null;
   top: string[];
-  temperature: number | null;
+  /** ACPI thermal zones. The hottest one, against a cool baseline, is the heat signal. */
+  zones: { celsius: number; passiveLimit: number; throttleReasons: number }[];
   idleSeconds: number | null;
 }
 
