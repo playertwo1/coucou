@@ -55,6 +55,7 @@ Fixes:
 - **Approve OpenCode from the island** — OpenCode's permission requests get Allow and Deny on the island; with no click, OpenCode asks as usual (#442 by @ValentinoMartz)
 - **A card answered in the terminal goes away** — allow or deny in the terminal (or Claude's app) and the island's card closes by itself (#740 by @arnavaggarwal-dev)
 - **Flow: one press starts hands-free** (#1063 by @Brezinben)
+- **Flow: hide the pill until you dictate** *(optional, off by default)* — Flow → Settings → **Hide the pill until I dictate**: the pill shows only while you dictate, record a call or get a message, and the dictation key still works (by @Rhytam23)
 - **« OK Coucou » with a Brazilian or a Spanish accent** (#828 by @afpruivo, #791 by @alexisrja)
 - **Cal.com bookings in detail** — month, day, then the booking (#1006 by @lazarevtill); **notes exported where you choose** *(Windows)* (#1007 by @lazarevtill)
 - **WhatsApp's ↗ opens WhatsApp Desktop** at the open chat, else WhatsApp Web (#1070 by @Joshuabarradas234)
@@ -69,6 +70,16 @@ Fixes:
 - **Settings → General follows changes made from the island**, and a failed drop's note no longer reopens a folded island (#695, #696 by @mahach666)
 - **Instant page switches in Settings** *(Linux)* (#906 by @RomainBrocheton)
 - **The finished card goes away when a new prompt comes** (#587) and **the GitHub week strip is graded against its own week** (#611), by @rollecode
+
+## Android 0.5.0 — Unreleased
+
+- **Coucou for Android 0.5.0**, by @Rhytam23 (versionCode 5)
+  - **A steadier link through your own relay** — the connection no longer drops after a quiet moment (from #554 by @rollecode), and the phone reconnects at once when the computer comes back instead of waiting on a dead connection (from #1041 by @lazarevtill)
+  - **Swipe the island up to put it away** — it goes back into the camera hole and stays there while the same thing goes on (the same agent working, the same request); anything new brings it back down. TalkBack has a *Dismiss the island* action for it
+  - **Nothing is lost with the swipe** — a finish, an error, a usage limit or a question becomes a quiet notification, and a permission request keeps its own notification with Deny and Allow
+  - **Hide the island in Do Not Disturb** *(optional, off by default)* — Settings → **Hide the island in Do Not Disturb**: while the phone is in Do Not Disturb, nothing drops from the top of the screen; requests still arrive as notifications, which Android handles by its own Do Not Disturb rules
+  - **The island fits again** when the phone is rotated or the screen resolution or font size changes while it is open
+  - **Six more languages** — German, Japanese, Korean, Traditional Chinese and Thai (from #1043 to #1047 by @Ohualtex) and Italian (from #974 by @roccordx); the app now has 16 translations
 
 ## Android 0.4.0 — Unreleased
 
