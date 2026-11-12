@@ -4,6 +4,7 @@ Atualizado em 2026-11-11. Fonte canônica de estado: este índice e os arquivos 
 
 ## Estado e regras de leitura
 
+- Decisão do proprietário (2026-11-12): continuar o desenvolvimento e os testes no ambiente exclusivamente sintético; reservar a validação real para o final, no uso diário. Manter separados os resultados simulados e os aceites nativos pendentes, sem fechar checkpoints reais por simulação. Preservar os requisitos Git e as alterações locais.
 - O fork está na `main`, com a versão `windows-v0.6.2` publicada; o atualizador consulta as releases de `playertwo1/coucou`.
 - O aplicativo e várias features já têm código e testes, mas ainda falta validação manual em runtime. Não marque uma feature como concluída só porque compila.
 - Esforço: P = pequeno, M = médio, G = grande. Estimativa serve para comparar itens; uma feature M/G deve ser subdividida antes da implementação.

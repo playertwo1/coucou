@@ -79,7 +79,7 @@ fn run(app: &tauri::AppHandle) {
     let before = clipboard_sequence();
     let _ = std::process::Command::new("explorer.exe").arg("ms-screenclip:").spawn();
     let changed = wait_for_snip(before);
-    let png = if changed { clipboard_png() } else { None };
+    let png = if changed { await_png(clipboard_png) } else { None };
     if snip_kept(changed, png.as_deref()) {
         if let Some(bytes) = png {
             if let Ok(path) = store(&captures_dir(), &bytes) {
@@ -116,6 +116,18 @@ fn wait_for_snip(before: u32) -> bool {
 
 pub fn cancel(path: &str) -> bool {
     delete_one(&captures_dir(), Path::new(path))
+}
+
+fn await_png(mut read: impl FnMut() -> Option<Vec<u8>>) -> Option<Vec<u8>> {
+    // The snipper changes the sequence before publishing PNG and can still hold the clipboard.
+    // shortcut: retry for two seconds; extend only if real snips exceed this window.
+    for _ in 0..40 {
+        if let Some(png) = read() {
+            return Some(png);
+        }
+        std::thread::sleep(std::time::Duration::from_millis(50));
+    }
+    None
 }
 
 /// Leaves the PNG on the clipboard. The capture file stays.
@@ -340,6 +352,23 @@ mod tests {
         assert!(!snip_kept(true, None));
         assert!(!snip_kept(true, Some(b"not a png")));
         assert!(snip_kept(true, Some(&png())));
+    }
+
+    #[test]
+    fn clipboard_change_can_precede_the_png() {
+        let mut reads = 0;
+        let result = await_png(|| {
+            reads += 1;
+            (reads >= 3).then(png)
+        });
+        assert_eq!(result, Some(png()));
+    }
+
+    #[test]
+    fn clipboard_without_a_png_stops_retrying() {
+        let mut reads = 0;
+        assert_eq!(await_png(|| { reads += 1; None }), None);
+        assert_eq!(reads, 40);
     }
 
     #[test]
