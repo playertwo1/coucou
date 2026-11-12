@@ -1,6 +1,7 @@
 // A stand-in for Tauri in a plain browser, for the dev previews: every command
 // answers from `answers` (or null), events can be fired with window.__emit.
 // Not shipped in the app.
+export {};
 const listeners = new Map<string, (e: unknown) => void>();
 const answers: Record<string, unknown> = (window as any).__answers ?? {};
 let cb = 0;

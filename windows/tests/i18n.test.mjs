@@ -415,13 +415,17 @@ const unquote = (s) => JSON.parse(`"${s}"`);
 function usedKeys() {
   const keys = new Map();
   const add = (key, path) => keys.set(key, relative(WINDOWS, path));
-  for (const path of files(join(WINDOWS, "src"), ".ts")) {
+  for (const path of [...files(join(WINDOWS, "src"), ".ts"), ...files(join(WINDOWS, "synthetic"), ".ts")]) {
     const text = code(path);
     for (const m of text.matchAll(new RegExp(String.raw`\b(?:t|tl|N_)\(\s*` + STR, "g"))) add(unquote(m[1]), path);
     // tn(one, other, n): the English plural is the key.
     for (const m of text.matchAll(new RegExp(String.raw`\btn\(\s*` + STR + String.raw`\s*,\s*` + STR, "g"))) add(unquote(m[2]), path);
   }
-  for (const path of files(join(WINDOWS, "src-tauri/src"), ".rs")) {
+  const rustSources = [
+    ...files(join(WINDOWS, "src-tauri/src"), ".rs"),
+    ...files(join(WINDOWS, "probes/permission-toast/src"), ".rs"),
+  ];
+  for (const path of rustSources) {
     const text = code(path);
     for (const m of text.matchAll(new RegExp(String.raw`\b(?:t|tf|n_)\(\s*` + STR, "g"))) add(unquote(m[1]), path);
     for (const m of text.matchAll(new RegExp(String.raw`\btn\(\s*` + STR + String.raw`\s*,\s*` + STR, "g"))) add(unquote(m[2]), path);

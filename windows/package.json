@@ -4,6 +4,8 @@
   "version": "0.6.3",
   "type": "module",
   "scripts": {
+    "synthetic:build": "tsc --noEmit -p synthetic/tsconfig.json && vite build --config vite.synthetic.config.ts",
+    "synthetic": "npm run synthetic:build && cargo run --offline --manifest-path synthetic/host/Cargo.toml --target-dir target/synthetic-host",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",

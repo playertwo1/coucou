@@ -1,0 +1,11 @@
+[package]
+name = "coucou-synthetic"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+tao = "=0.37.1"
+wry = "=0.57.0"
