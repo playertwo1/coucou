@@ -87,7 +87,7 @@ Mac: `IslandWindowController.performAttachFrontWindow` (⌃⌥W). No Windows o a
 ### 1.6 — Captura de área da tela e perguntar sobre ela (G)
 
 Mac: `ScreenCapture.swift`, `CaptureCardView.swift` (⌘⇧S). Recortar parte da tela; Mochi engole a imagem; a ilha oferece colar no prompt, copiar, anotar ou perguntar no Chat. Com Flow, segurar a tecla e falar envia imagem e fala juntas.
-- [ ] Descoberta: API de recorte do Windows (ferramenta do sistema ou captura própria), onde a imagem fica (pasta local do Coucou, limpeza), quais provedores do Chat aceitam imagem.
+- [x] Descoberta (2026-11-11): o recorte do sistema é `ms-screenclip:` (a imagem cai na área de transferência; Esc não cria arquivo). O Coucou gravaria o PNG em `%TEMP%\CoucouCaptures`, no máximo 20. O Chat de hoje só anexa o caminho do arquivo; nenhum provedor recebe a imagem. Proposta em `docs/superpowers/specs/2026-11-11-screen-capture-design.md`, sem aprovação e sem código.
 - [ ] Mini-spec com as ações do card, limite de tamanho, e o caso Flow; aprovar.
 - [ ] Subdividir antes de implementar (captura → card → Chat → Flow).
 - Checkpoint: a imagem só sai da máquina quando o usuário pergunta no Chat; cancelar não deixa arquivo para trás.
