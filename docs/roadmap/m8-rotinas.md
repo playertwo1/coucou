@@ -10,7 +10,8 @@ Depende de: Checkpoint M2. Rotinas podem incluir ferramentas de M3, M5 e M6 quan
 
 - [ ] Uma rotina é uma lista ordenada de chamadas de ferramenta com argumentos fixos, guardada nos dados do app.
 - [ ] Validar cada passo contra o schema da ferramenta ao salvar e ao executar.
-- [ ] Testar: ferramenta inexistente, argumento inválido e arquivo corrompido são recusados.
+- [ ] (Understudy) Além dos argumentos fixos, um passo pode usar parâmetros declarados na rotina (nome, tipo e valor padrão), como a pasta do projeto em "modo programar". O valor recebido é validado contra o schema da ferramenta antes de executar.
+- [ ] Testar: ferramenta inexistente, argumento inválido, parâmetro fora do schema e arquivo corrompido são recusados.
 - Checkpoint M8.1: rotina inválida não é salva nem executada.
 
 ### M8.2 — Criar e aprovar
@@ -18,6 +19,7 @@ Depende de: Checkpoint M2. Rotinas podem incluir ferramentas de M3, M5 e M6 quan
 - [ ] O proprietário vê a lista completa de passos antes de salvar.
 - [ ] Qualquer alteração na rotina exige nova aprovação.
 - [ ] O modelo pode propor uma rotina, mas não pode salvá-la sem o clique.
+- [ ] (Understudy) Depois de uma tarefa de várias etapas concluída com sucesso, oferecer "salvar como rotina" a partir das chamadas da sessão em memória (não do registro em disco). Passa pela mesma tela de aprovação; nada é analisado em segundo plano.
 - Checkpoint M8.2: não existe rotina salva que o proprietário não tenha visto.
 
 ### M8.3 — Executar

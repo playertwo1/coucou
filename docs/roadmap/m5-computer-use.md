@@ -33,12 +33,15 @@ Regras desta fase:
 
 - [ ] Clique e digitação em elemento identificado, somente em aplicativo autorizado.
 - [ ] Ler a tela de novo depois da ação e confirmar o efeito.
+- [ ] (Understudy) O resultado distingue "ação enviada", "efeito confirmado", "elemento não encontrado" e "timeout"; só "efeito confirmado" conta como sucesso.
 - Checkpoint M5.4: digitar um texto no Bloco de Notas e confirmar que ele está lá.
 
 ### M5.5 — Robustez
 
 - [ ] Reler a janela antes de cada ação; identificador que mudou não é reutilizado.
 - [ ] Tratar perda de foco, janela minimizada, interface lenta e timeout.
+- [ ] (Understudy) Esperar por uma condição na tela exige duas leituras seguidas iguais antes de declarar "apareceu" ou "não apareceu".
+- [ ] (Understudy) Duas falhas seguidas na mesma via (acessibilidade ou web): parar de repetir a mesma chamada e avisar o cérebro para trocar de via ou relatar a falha. Um sucesso zera a contagem.
 - [ ] Controle sem acessibilidade: responder "não consigo ver este controle", sem adivinhar posição.
 - Checkpoint M5.5: cada um desses casos termina em sucesso verificado ou em erro claro.
 
@@ -47,6 +50,7 @@ Regras desta fase:
 - [ ] Executar uma sequência de passos, observando o estado depois de cada um.
 - [ ] Botão de parar interrompe entre passos; a ilha mostra o passo atual.
 - [ ] Um passo que falha encerra a sequência.
+- [ ] (Understudy) Só uma sequência por vez controla mouse e teclado; um segundo pedido (chat, voz ou celular) é recusado com explicação enquanto a primeira roda.
 - Checkpoint M5.6: sequência de 4 passos concluída, e outra interrompida no meio sem passo extra.
 
 ### M5.7 — Bloqueios de segurança

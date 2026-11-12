@@ -12,6 +12,7 @@ Antes de M1.1: escrever spec e plano em `docs/superpowers/`, fixando nomes de m�
 
 - [ ] Definir o contrato de ferramenta descrito em "Regras das fases M" do índice.
 - [ ] Criar o registro: lista de ferramentas habilitadas; o que não está na lista não existe para o modelo.
+- [ ] (Understudy) Ferramenta cujo pré-requisito falta (adaptador ausente, permissão negada, fase desligada) não é listada ao modelo, em vez de falhar só na execução. Testar com uma ferramenta de teste marcada como indisponível.
 - [ ] Criar a ferramenta de teste `ping`, que só devolve um texto fixo (risco baixo).
 - [ ] Testar: ferramenta desconhecida recusada; argumento fora do schema recusado; timeout encerra a chamada.
 - Checkpoint M1.1: testes passam; nenhuma ferramenta executa texto como comando.
@@ -50,6 +51,7 @@ Antes de M1.1: escrever spec e plano em `docs/superpowers/`, fixando nomes de m�
 ### M1.6 — Ligação com o chat e pausa rápida
 
 - [ ] Um pedido no chat da ilha chega ao cérebro com as ferramentas disponíveis e a resposta volta ao chat.
+- [ ] (Understudy) Texto externo embutido no pedido ao cérebro (título de janela, nome de arquivo, nome de app) tem caracteres de controle, invisíveis e quebras de linha removidos antes. Testar com um título que contém quebra de linha e uma instrução falsa.
 - [ ] Mostrar na ilha o estado: pensando, aguardando clique, executando, feito, falhou.
 - [ ] Implementar a pausa rápida do índice e um botão de cancelar a execução em curso.
 - [ ] Testar: cérebro indisponível vira erro visível; pausa bloqueia `ping`; cancelar interrompe.

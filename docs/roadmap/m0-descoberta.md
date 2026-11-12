@@ -14,6 +14,7 @@ Resultado de cada subfase: registrar em `docs/superpowers/specs/AAAA-MM-DD-mochi
 - [ ] Classificar cada um: reuso direto, adaptador (processo separado), só inspiração ou rejeitar.
 - [ ] Decidir se cada um é instalado à parte pelo usuário ou embutido no instalador; registrar o motivo.
 - [ ] Repositórios de referência do pacote (Greninja, CatchAI, MoHan, Calabrass, PowerToys): só leitura para ideias. Antes de copiar qualquer trecho, registrar a licença dele.
+- [ ] `understudy-ai/understudy` (MIT, conferido em 2026-11-11): só inspiração. É Node/TypeScript com helper Swift e a GUI só funciona no macOS; nenhum código serve ao app Tauri/Rust. As ideias aproveitadas estão marcadas "(Understudy)" em M1, M5 e M8; as rejeitadas, com motivo, em [parqueado.md](parqueado.md).
 - Checkpoint M0.1: tabela com licença, última release, classificação e forma de instalação para os dois repositórios-base.
 
 ### M0.2 — Cérebro por provedor
