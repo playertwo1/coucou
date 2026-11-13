@@ -134,12 +134,16 @@ O Windows Terminal sintético apresentou duas abas `Synthetic Duplicate` com o m
 
 ### 2.7 — Lançador rápido (P; depende da Etapa 2B.6)
 
-- [ ] Reutilizar Nova sessão e o seletor de agente/projeto da Etapa 2B.6; não manter um lançador paralelo só para Claude.
-- [ ] Definir no mini-spec o atalho, o primeiro campo focado, seleção de projeto/agente, ditado e ação explícita de iniciar.
-- [ ] Testar prompt com aspas, `;`, `&`, Unicode e quebras de linha; o texto nunca é interpolado no comando do shell.
-- [ ] Testar CLI ausente, projeto removido, cancelar e voltar sem iniciar sessão.
-- [ ] Implementar para Claude, Codex, Antigravity e Hermes; o agente selecionado deve permanecer visível na confirmação.
-- Checkpoint: só inicia após ação explícita; prompt chega intacto pelo canal seguro; permissão continua independente.
+- [x] Reutilizar Nova sessão e o seletor compartilhado de agente/projeto da Etapa 2B.6; não criar um lançador separado.
+- [x] Registrar no [mini-spec](../superpowers/specs/2026-11-13-windows-quick-launcher-design.md) `Ctrl+Alt+L`, foco inicial, projeto/agente, ditado e início explícito.
+- [x] Testar aspas, `;`, `&`, Unicode e quebra de linha; o prompt chega intacto como argumento, sem interpolação de shell.
+- [x] Testar CLI ausente/removida, pasta/projeto removido, cancelamento e retorno sem iniciar uma sessão.
+- [x] Cobrir os quatro agentes e confirmar que a escolha fica visível no cartão.
+- Checkpoint sintético: PASS; envio somente após ação explícita; permissão permanece independente.
+
+**Verificação sintética (2026-11-13):** a suíte `npm test` passou com 649 testes após incluir cobertura do atalho, envio fictício, agentes, prompt e pasta removida. `npx tsc --noEmit`, `node scripts/gen-strings.mjs --check`, `npm run build`, `npm run synthetic:build`, build do host sintético, `python scripts/test-whats-new.py` e `git diff --check` passaram. O Agent Desktop abriu o cartão via evento sintético `newSession`, mostrou Codex e o projeto `Coucou`, aceitou `synthetic "quote"; & á你好` e acionou o botão de fixture. A interface mostrou “Modo sintético: nenhum processo de agente será iniciado”; a lista de processos não mostrou CLI filho.
+
+**Limites:** o teste de teclado nativo `Ctrl+Alt+L` não foi enviado pela automação porque o Agent Desktop headless não confirmou foco da janela; o teste automatizado verifica o mapeamento e o roteamento do atalho, e o harness abriu o mesmo cartão. Ditado e CLIs instaladas não foram exercitados com dispositivos/contas reais. Aceite real do proprietário permanece pendente.
 
 ### 2.8 — Vigia de testes/builds (M)
 

@@ -338,6 +338,13 @@ test("a global shortcut arrives as an event and opens the chat", () => {
   assert.deepEqual(did, ["resume", "alert:prompt"]);
 });
 
+test("Ctrl+Alt+L opens the shared new-session launcher without starting a process", () => {
+  assert.equal(SHORTCUTS.find((shortcut) => shortcut.id === "newSession")?.defaultKeys, "Ctrl+Alt+L");
+  emit("shortcut", "newSession");
+  assert.deepEqual(did, ["resume", "alert:launch"]);
+  assert.deepEqual(sent("launch_session"), []);
+});
+
 test("island keys are read before the chat field sees them, and only while open", () => {
   const keydown = listeners.find((l) => l.type === "keydown");
   assert.equal(keydown.capture, true);

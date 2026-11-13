@@ -28,10 +28,16 @@ host.__answers = {
   desktop_info: { mode: "off" },
 };
 await import("../dev/tauri-mock");
+host.__answers.launch_agents = ["claude", "codex", "antigravity", "hermes"].map((agent) => ({ agent, available: true }));
+host.__answers.launch_session = () => ({ ok: false, error: "synthetic" });
+const { Launch } = await import("../src/core/launch");
+Launch.projects = ["C:\\Synthetic\\Coucou"];
+Launch.folder = Launch.projects[0];
 const { State, DEFAULT_SETTINGS } = await import("../src/core/state");
 const { Island } = await import("../src/island/island");
 const { Sound } = await import("../src/core/sound");
 const { registerHookHandlers } = await import("../src/island/hooks");
+const { registerShortcutHandlers } = await import("../src/island/shortcuts");
 const { setLanguage, t } = await import("../src/i18n/i18n");
 const { agentUsageCard } = await import("../src/hub/pages/insights");
 const { syntheticAgentUsage } = await import("../src/core/agent-usage");
@@ -46,6 +52,7 @@ island.applySettings();
 State.upsertWorkspacePill("integration_claude", "Jardim", "synthetic://Jardim");
 State.setFocus("integration_claude");
 registerHookHandlers(island);
+registerShortcutHandlers(island, () => { State.paused = false; });
 island.followPageCursor();
 island.fsm.pinned = true;
 island.fsm.forceHome();
@@ -84,7 +91,7 @@ const syncFullscreen = () => {
   fullscreenButton.setAttribute("aria-pressed", String(fullscreenScenario));
   fullscreenStatus.textContent = visible ? fullscreenInactiveText : fullscreenActiveText;
 };
-controls.append(label, button(t("Test permission"), request), button(t("Test Git pill"), () => State.setFocus("integration_git")), fullscreenButton, button(t("Reset test data"), () => {
+controls.append(label, button(t("New agent session"), () => host.__emit("shortcut", "newSession")), button("Enviar só no teste", () => document.querySelector<HTMLButtonElement>(".launch-send")?.click()), button(t("Test permission"), request), button(t("Test Git pill"), () => State.setFocus("integration_git")), fullscreenButton, button(t("Reset test data"), () => {
   localStorage.clear();
   sessionStorage.clear();
   location.reload();

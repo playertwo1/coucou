@@ -270,6 +270,36 @@ test("the agent menu shows installed fixtures and sends the exact prompt with th
   assert.equal(did.launched, 1);
 });
 
+test("every agent remains visible and a synthetic launch never starts a process", async () => {
+  Launch.folder = "C:\\Synthetic\\Coucou";
+  const prompt = `synthetic "quote"; & á你好\nsecond line`;
+  const agents = [
+    ["claude", "Claude Code"],
+    ["codex", "Codex"],
+    ["antigravity", "Antigravity"],
+    ["hermes", "Hermes"],
+  ];
+
+  for (const [agent, label] of agents) {
+    answers.launch_session = { ok: false, error: "synthetic" };
+    const { view, did, $ } = await card();
+    assert.equal($(".launch-send").getAttribute("aria-label"), "Send");
+    $(".launch-agent").fire("click");
+    const option = view.el.find(".picker-model").find((row) => row.textContent === label);
+    assert.ok(option, `${label} is available in the menu`);
+    option.fire("click");
+    assert.equal($(".launch-agent-name").textContent, label);
+    $(".chat-input").value = prompt;
+    $(".launch-send").fire("click");
+    await flush();
+
+    assert.deepEqual(sent("launch_session").at(-1), { folder: Launch.folder, prompt, agent });
+    assert.equal(did.launched, 0);
+    assert.equal($(".chat-input").value, prompt);
+    assert.equal($(".launch-hint").textContent, "Synthetic mode: no agent process will run.");
+  }
+});
+
 test("an absent CLI disables starting a session", async () => {
   Launch.folder = "/srv/site";
   answers.launch_agents = [];
@@ -310,6 +340,20 @@ test("a CLI removed after listing shows an error and keeps the prompt", async ()
   assert.deepEqual(sent("launch_session"), [{ folder: "/srv/site", prompt: "synthetic request", agent: "claude" }]);
   view.focus();
   assert.notEqual($(".launch-hint").textContent, "This agent CLI is no longer available.");
+});
+
+test("a removed project fails closed and keeps the prompt", async () => {
+  Launch.folder = "/srv/removed-project";
+  answers.launch_session = { ok: false, error: "invalidFolder" };
+  const { did, $ } = await card();
+  $(".chat-input").value = "synthetic request";
+  $(".launch-send").fire("click");
+  await flush();
+
+  assert.deepEqual(sent("launch_session"), [{ folder: "/srv/removed-project", prompt: "synthetic request", agent: "claude" }]);
+  assert.equal(did.launched, 0);
+  assert.equal($(".chat-input").value, "synthetic request");
+  assert.ok($(".launch-hint").classList.contains("is-failed"));
 });
 
 // ── Drop on a session ─────────────────────────────────────────────────────────

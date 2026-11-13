@@ -41,7 +41,7 @@ export function buildLaunch(actions: ViewActions): ViewHost {
     placeholder: t("What should the agent do?"),
     spellcheck: "false",
   }) as HTMLInputElement;
-  const send = h("button", { class: "send-btn launch-send" }, svg(ICONS.arrowUp, 11)) as HTMLButtonElement;
+  const send = h("button", { class: "send-btn launch-send", "aria-label": t("Send") }, svg(ICONS.arrowUp, 11)) as HTMLButtonElement;
   const bar = h("div", { class: "chat-bar launch-bar" }, input, dictateButton(input), send);
   const hint = h("div", { class: "launch-hint" });
   const menu = h("div", { class: "launch-menu picker-list", role: "listbox" });

@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.11",
+      "items": [
+        {
+          "icon": "terminal",
+          "title": {
+            "en": "Quick launcher",
+            "zh-Hans": "快速启动器",
+            "hi": "त्वरित लॉन्चर",
+            "es": "Lanzador rápido",
+            "ar": "مشغّل سريع",
+            "fr": "Lanceur rapide",
+            "bn": "দ্রুত লঞ্চার",
+            "pt-BR": "Lançador rápido",
+            "ru": "Быстрый запуск",
+            "id": "Peluncur cepat",
+            "de": "Schnellstart",
+            "tr": "Hızlı başlatıcı",
+            "ko": "빠른 실행기",
+            "ja": "クイックランチャー"
+          },
+          "detail": {
+            "en": "Open a new agent session with your chosen project and prompt.",
+            "zh-Hans": "用选定的项目和提示词开启新的代理会话。",
+            "hi": "चुने गए प्रोजेक्ट और प्रॉम्प्ट के साथ नया एजेंट सत्र शुरू करें।",
+            "es": "Inicia una nueva sesión con el proyecto y el prompt elegidos.",
+            "ar": "ابدأ جلسة وكيل جديدة بالمشروع والموجّه اللذين اخترتهما.",
+            "fr": "Démarrez une session d’agent avec le projet et l’instruction choisis.",
+            "bn": "পছন্দের প্রকল্প ও প্রম্পট দিয়ে নতুন এজেন্ট সেশন শুরু করুন।",
+            "pt-BR": "Inicie uma nova sessão com o projeto e o prompt escolhidos.",
+            "ru": "Запустите сеанс агента с выбранным проектом и запросом.",
+            "id": "Mulai sesi agen baru dengan proyek dan prompt pilihan.",
+            "de": "Starte eine neue Agentensitzung mit dem gewählten Projekt und Prompt.",
+            "tr": "Seçtiğiniz proje ve istemle yeni bir ajan oturumu başlatın.",
+            "ko": "선택한 프로젝트와 프롬프트로 새 에이전트 세션을 시작하세요.",
+            "ja": "選択したプロジェクトとプロンプトで新しいエージェントセッションを開始します。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.10",
       "items": [
         {
