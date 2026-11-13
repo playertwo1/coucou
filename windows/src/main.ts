@@ -160,6 +160,15 @@ async function main() {
   });
 
   registerHookHandlers(island);
+  let lastFullscreenPending: boolean | undefined;
+  const syncFullscreenPending = () => {
+    const pending = State.pendingApproval != null;
+    if (pending === lastFullscreenPending) return;
+    lastFullscreenPending = pending;
+    void Bridge.setFullscreenPending(pending);
+  };
+  State.subscribe(syncFullscreenPending);
+  syncFullscreenPending();
   registerPhoneLink(island);
   registerIntegrationHandlers(island);
   registerShortcutHandlers(island, () => setPaused(false));

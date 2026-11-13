@@ -1,21 +1,21 @@
 # 2.2 — Modo jogo/tela cheia com dados sintéticos
 
-Status: proposta de escopo; implementação não iniciada. O proprietário determinou deixar a validação de uso real para o final e avançar somente com dados sintéticos. Isso não fecha os checkpoints nativos pendentes da 2.1.
+Status: aprovada para implementação e avaliação sintética em 2026-11-13. A decisão do proprietário é implementar cada etapa, comprová-la com dados sintéticos, publicar uma versão e deixar o aceite de uso real para ele.
 
 ## Escopo proposto
 
-- Reutilizar o aplicativo `windows/synthetic`, sem configurações, processos, janelas ou monitores reais como fonte de dados. Manter o host sem IPC e sem backend de produção.
-- Criar fixtures de janela e monitor inventados. Considerar tela cheia quando uma janela de app válida, não minimizada, cobre o retângulo inteiro do monitor correspondente; excluir área de trabalho, barra de tarefas e o próprio Coucou. Rejeitar retângulos inválidos. Não declarar detecção de jogo exclusivo provada por geometria sintética.
-- Durante tela cheia simulada, esconder a ilha. Eventos comuns de trabalho/conclusão não a reabrem. Pedido de permissão ou pergunta pendente aparece no card existente e continua dependendo de clique; ao encerrar o pedido, a ilha volta a ficar escondida enquanto a tela cheia persistir.
-- Ao voltar ao modo normal, restaurar o modo anterior da ilha, respeitando pedido ainda pendente. Não salvar posição, monitor, idioma ou preferências como efeito dessas transições.
-- Acrescentar somente um controle de cenário de tela cheia no rodapé de teste, com indicação do estado simulado. Preservar os cards e os IDs de pílulas. Textos novos no catálogo extra nas 13 línguas.
-- Isolar a decisão de visibilidade em lógica pura testável e usá-la na variante sintética. Não conectar um detector nativo nem ativar o recurso no app normal nesta etapa.
+- Usar fixtures inventadas nos testes e no aplicativo sintético; testes não consultam configurações, processos, janelas ou monitores reais.
+- No app Windows, considerar tela cheia quando a janela de primeiro plano, visível e não minimizada cobre o monitor onde a ilha está posicionada; excluir janelas do Coucou, área de trabalho e barra de tarefas. Rejeitar retângulos inválidos. A detecção é geométrica e não afirma detectar o modo exclusivo de DirectX.
+- Esconder a janela nativa da ilha durante tela cheia. Uma permissão ou pergunta pendente mostra a ilha existente; ao encerrar o pedido, escondê-la novamente se tela cheia continuar ativa.
+- Ao voltar ao modo normal, mostrar de novo a mesma janela, preservando modo, posição e configurações salvas. Não alterar configurações como efeito da transição.
+- Acrescentar um controle sintético de tela cheia no rodapé da variante de teste. Preservar os cards e IDs de pílulas. Não adicionar texto à interface normal.
+- O algoritmo puro de retângulo e política recebe fixtures nos testes Rust; a variante `windows/synthetic` testa as transições de interface e pedidos pendentes. A versão publicada inclui o detector Windows para avaliação real pelo proprietário.
 
 ## Verificação
 
-Testes para normal → tela cheia → normal; retângulos inválidos, origens negativas e escalas já convertidas ao mesmo sistema de coordenadas; janela menor/minimizada/excluída; permissão durante tela cheia, decisão, cancelamento sem decisão e dois pedidos; nenhuma configuração salva. Inspecionar o aplicativo sintético e executar typecheck/build, testes pertinentes e i18n.
+Testes para normal → tela cheia → normal; retângulos inválidos, origens negativas, janela menor/minimizada/excluída, monitor da ilha versus outro monitor, permissão durante tela cheia e decisão; confirmar que nenhuma configuração salva muda. Inspecionar o aplicativo sintético e executar typecheck/build, testes pertinentes e i18n.
 
-Essas provas validam política e fluxo de interface com fixtures. Jogo/vídeo real, Alt+Tab, detecção exclusiva, troca de monitor e encerramento de processo ficam na validação final e não serão marcados concluídos.
+Essas provas validam o algoritmo e fluxo de interface com fixtures. Jogo/vídeo real, Alt+Tab, detecção exclusiva, troca física de monitor e encerramento de processo ficam na validação do proprietário e não serão marcados concluídos por testes sintéticos.
 
 ## Preparação Git necessária
 

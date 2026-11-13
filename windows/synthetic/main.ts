@@ -1,4 +1,5 @@
 import { createFixtures } from "./fixtures";
+import { syncSyntheticFullscreenVisibility } from "./fullscreen";
 import { installIsolation } from "./isolation";
 import "../src/style.css";
 import "./style.css";
@@ -34,7 +35,8 @@ setLanguage("pt-BR");
 State.settings = { ...DEFAULT_SETTINGS, language: "pt-BR", activeIntegrations: ["integration_git"], soundEnabled: false, autostart: false, hooksInstalled: false };
 State.loadIntegrationTasks();
 Sound.enabled = false;
-const island = new Island(document.getElementById("root")!);
+const root = document.getElementById("root")!;
+const island = new Island(root);
 island.applySettings();
 State.upsertWorkspacePill("integration_claude", "Jardim", "synthetic://Jardim");
 State.setFocus("integration_claude");
@@ -49,6 +51,8 @@ const label = document.createElement("strong");
 label.textContent = t("Synthetic data only");
 const status = document.createElement("output");
 status.setAttribute("aria-live", "polite");
+const fullscreenStatus = document.createElement("output");
+fullscreenStatus.setAttribute("aria-live", "polite");
 const request = () => {
   host.__emit("hook", fixtures.permission());
   status.textContent = "";
@@ -60,13 +64,30 @@ function button(text: string, action: () => void) {
   button.addEventListener("click", action);
   return button;
 }
-controls.append(label, button(t("Test permission"), request), button(t("Test Git pill"), () => State.setFocus("integration_git")), button(t("Reset test data"), () => {
+let fullscreenScenario = false;
+const enterFullscreenText = t("Enter synthetic fullscreen");
+const exitFullscreenText = t("Exit synthetic fullscreen");
+const fullscreenActiveText = t("Synthetic fullscreen is active");
+const fullscreenInactiveText = t("Synthetic fullscreen is inactive");
+const fullscreenButton = button(enterFullscreenText, () => {
+  fullscreenScenario = !fullscreenScenario;
+  syncFullscreen();
+});
+const syncFullscreen = () => {
+  const visible = syncSyntheticFullscreenVisibility(root, fullscreenScenario, fixtures.fullscreen.window, [fixtures.fullscreen.monitor], State.pendingApproval != null);
+  fullscreenButton.textContent = fullscreenScenario ? exitFullscreenText : enterFullscreenText;
+  fullscreenButton.setAttribute("aria-pressed", String(fullscreenScenario));
+  fullscreenStatus.textContent = visible ? fullscreenInactiveText : fullscreenActiveText;
+};
+controls.append(label, button(t("Test permission"), request), button(t("Test Git pill"), () => State.setFocus("integration_git")), fullscreenButton, button(t("Reset test data"), () => {
   localStorage.clear();
   sessionStorage.clear();
   location.reload();
-}), status);
+}), status, fullscreenStatus);
 State.subscribe(() => {
+  syncFullscreen();
   const last = fixtures.decisions.at(-1);
   status.textContent = last ? `${t("Synthetic data only")} · ${last.requestId} · ${last.decision === "allow" ? t("Allow") : t("Deny")}` : "";
 });
+syncFullscreen();
 host.__synthetic = { decisions: fixtures.decisions, gitStatusReads: fixtures.gitStatusReads, gitDiffReads: fixtures.gitDiffReads, request };

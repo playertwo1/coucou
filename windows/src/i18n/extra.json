@@ -10,6 +10,18 @@
     "Reset test data": {
       "zh-Hans": "重置测试数据", "hi": "परीक्षण डेटा रीसेट करें", "es": "Restablecer datos de prueba", "ar": "إعادة تعيين بيانات الاختبار", "fr": "Réinitialiser les données de test", "bn": "পরীক্ষার তথ্য রিসেট করুন", "pt-BR": "Reiniciar dados de teste", "ru": "Сбросить тестовые данные", "id": "Atur ulang data uji", "de": "Testdaten zurücksetzen", "tr": "Test verilerini sıfırla", "ko": "테스트 데이터 초기화", "ja": "テストデータをリセット"
     },
+    "Enter synthetic fullscreen": {
+      "zh-Hans": "进入模拟全屏", "hi": "सिंथेटिक फ़ुलस्क्रीन शुरू करें", "es": "Entrar en pantalla completa simulada", "ar": "الدخول إلى ملء الشاشة التجريبي", "fr": "Activer le plein écran simulé", "bn": "সিন্থেটিক পূর্ণপর্দা চালু করুন", "pt-BR": "Entrar em tela cheia simulada", "ru": "Включить синтетический полноэкранный режим", "id": "Masuk layar penuh sintetis", "de": "Synthetischen Vollbildmodus aktivieren", "tr": "Sentetik tam ekranı aç", "ko": "시뮬레이션 전체 화면 시작", "ja": "合成フルスクリーンを開始"
+    },
+    "Exit synthetic fullscreen": {
+      "zh-Hans": "退出模拟全屏", "hi": "सिंथेटिक फ़ुलस्क्रीन से बाहर निकलें", "es": "Salir de la pantalla completa simulada", "ar": "الخروج من ملء الشاشة التجريبي", "fr": "Quitter le plein écran simulé", "bn": "সিন্থেটিক পূর্ণপর্দা বন্ধ করুন", "pt-BR": "Sair da tela cheia simulada", "ru": "Выйти из синтетического полноэкранного режима", "id": "Keluar dari layar penuh sintetis", "de": "Synthetischen Vollbildmodus beenden", "tr": "Sentetik tam ekrandan çık", "ko": "시뮬레이션 전체 화면 종료", "ja": "合成フルスクリーンを終了"
+    },
+    "Synthetic fullscreen is active": {
+      "zh-Hans": "模拟全屏已启用", "hi": "सिंथेटिक फ़ुलस्क्रीन सक्रिय है", "es": "La pantalla completa simulada está activa", "ar": "ملء الشاشة التجريبي نشط", "fr": "Le plein écran simulé est actif", "bn": "সিন্থেটিক পূর্ণপর্দা চালু আছে", "pt-BR": "A tela cheia simulada está ativa", "ru": "Синтетический полноэкранный режим включен", "id": "Layar penuh sintetis aktif", "de": "Synthetischer Vollbildmodus ist aktiv", "tr": "Sentetik tam ekran etkin", "ko": "시뮬레이션 전체 화면 활성화됨", "ja": "合成フルスクリーンが有効です"
+    },
+    "Synthetic fullscreen is inactive": {
+      "zh-Hans": "模拟全屏已停用", "hi": "सिंथेटिक फ़ुलस्क्रीन निष्क्रिय है", "es": "La pantalla completa simulada está inactiva", "ar": "ملء الشاشة التجريبي غير نشط", "fr": "Le plein écran simulé est inactif", "bn": "সিন্থেটিক পূর্ণপর্দা বন্ধ আছে", "pt-BR": "A tela cheia simulada está inativa", "ru": "Синтетический полноэкранный режим выключен", "id": "Layar penuh sintetis tidak aktif", "de": "Synthetischer Vollbildmodus ist inaktiv", "tr": "Sentetik tam ekran devre dışı", "ko": "시뮬레이션 전체 화면 비활성화됨", "ja": "合成フルスクリーンは無効です"
+    },
     "Notification test": {
       "zh-Hans": "通知测试",
       "hi": "सूचना परीक्षण",

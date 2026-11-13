@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.6",
+      "items": [
+        {
+          "icon": "eye",
+          "title": {
+            "en": "Fullscreen mode",
+            "zh-Hans": "全屏模式",
+            "hi": "पूर्णस्क्रीन मोड",
+            "es": "Modo de pantalla completa",
+            "ar": "وضع ملء الشاشة",
+            "fr": "Mode plein écran",
+            "bn": "পূর্ণ-স্ক্রিন মোড",
+            "pt-BR": "Modo tela cheia",
+            "ru": "Полноэкранный режим",
+            "id": "Mode layar penuh",
+            "de": "Vollbildmodus",
+            "tr": "Tam ekran modu",
+            "ko": "전체 화면 모드",
+            "ja": "全画面モード"
+          },
+          "detail": {
+            "en": "The island hides when an app covers its monitor, and returns for pending permissions or questions.",
+            "zh-Hans": "当前台应用覆盖所在显示器时，岛屿会隐藏；有待处理的权限或问题时重新显示。",
+            "hi": "मॉनिटर ढकने वाला ऐप हो तो आइलैंड छिपता है; लंबित अनुमति या प्रश्न पर लौटता है।",
+            "es": "La isla se oculta si la app cubre el monitor y vuelve ante permisos o preguntas pendientes.",
+            "ar": "تختفي الجزيرة عندما يغطي تطبيق في المقدمة الشاشة، وتظهر مجددًا عند وجود إذن أو سؤال معلّق.",
+            "fr": "L’île se masque devant une app plein écran et revient pour une autorisation ou une question en attente.",
+            "bn": "সামনের অ্যাপ মনিটর ঢেকে রাখলে আইল্যান্ড লুকায়, আর অনুমতি বা প্রশ্ন অপেক্ষায় থাকলে আবার দেখা যায়।",
+            "pt-BR": "A ilha se oculta quando um app cobre o monitor e reaparece para permissões ou perguntas pendentes.",
+            "ru": "Остров скрывается, когда приложение закрывает монитор, и появляется при ожидающем разрешении или вопросе.",
+            "id": "Pulau tersembunyi saat aplikasi menutupi monitor, dan muncul kembali untuk izin atau pertanyaan tertunda.",
+            "de": "Die Insel verschwindet bei Vollbild und erscheint bei offenen Berechtigungen oder Fragen wieder.",
+            "tr": "Öndeki bir uygulama monitörü kapladığında ada gizlenir; bekleyen izin veya soru olduğunda yeniden görünür.",
+            "ko": "앞쪽 앱이 모니터를 덮으면 아일랜드가 숨고, 대기 중인 권한이나 질문이 있으면 다시 표시돼요.",
+            "ja": "前面のアプリがモニター全体を覆うとアイランドが非表示になり、保留中の許可や質問があると再表示されます。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.5",
       "items": [
         {

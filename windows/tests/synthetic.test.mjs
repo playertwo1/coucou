@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createFixtures } from "../synthetic/fixtures.ts";
+import { applySyntheticFullscreenVisibility, coveringSyntheticMonitors, shouldShowSyntheticIsland, syncSyntheticFullscreenVisibility } from "../synthetic/fullscreen.ts";
 import { installIsolation } from "../synthetic/isolation.ts";
 
 test("clipboard and file drops stay in synthetic memory", async () => {
@@ -162,4 +163,99 @@ test("synthetic host contains no native IPC or production backend", () => {
   assert.doesNotMatch(manifest, /coucou_lib|keyring|reqwest|tauri-plugin/);
   assert.match(native, /connect-src 'none'/);
   assert.match(native, /WebContext::new\(Some\(profile\)\)/);
+});
+
+test("synthetic fullscreen recognizes a window that covers monitor bounds, including negative origins", () => {
+  const monitors = [
+    { id: "left", bounds: { x: -1920, y: 0, width: 1920, height: 1080 } },
+    { id: "right", bounds: { x: 0, y: -200, width: 2560, height: 1440 } },
+  ];
+  const spansBoth = {
+    id: "fixture-game", kind: "application", visible: true, minimized: false,
+    bounds: { x: -1920, y: -200, width: 4480, height: 1440 },
+  };
+  assert.deepEqual(coveringSyntheticMonitors(spansBoth, monitors), ["left", "right"]);
+  assert.deepEqual(coveringSyntheticMonitors({ ...spansBoth, bounds: { x: -1919, y: 0, width: 1919, height: 1080 } }, monitors), []);
+});
+
+test("synthetic fullscreen ignores desktop, taskbar, Coucou, hidden, and minimized windows", () => {
+  const monitor = { id: "display", bounds: { x: 0, y: 0, width: 1920, height: 1080 } };
+  const base = { visible: true, minimized: false, bounds: monitor.bounds };
+  for (const kind of ["desktop", "taskbar", "coucou"]) {
+    assert.deepEqual(coveringSyntheticMonitors({ ...base, id: kind, kind }, [monitor]), []);
+  }
+  assert.deepEqual(coveringSyntheticMonitors({ ...base, id: "hidden", kind: "application", visible: false }, [monitor]), []);
+  assert.deepEqual(coveringSyntheticMonitors({ ...base, id: "minimized", kind: "application", minimized: true }, [monitor]), []);
+  assert.deepEqual(coveringSyntheticMonitors({ ...base, id: "small", kind: "application", bounds: { x: 0, y: 0, width: 1919, height: 1080 } }, [monitor]), []);
+});
+
+test("synthetic fullscreen rejects invalid and overflowing rectangles", () => {
+  const monitor = { id: "display", bounds: { x: 0, y: 0, width: 1920, height: 1080 } };
+  const base = { id: "fixture-app", kind: "application", visible: true, minimized: false };
+  for (const bounds of [
+    { x: 0, y: 0, width: 0, height: 1080 },
+    { x: 0, y: 0, width: 1920, height: -1 },
+    { x: Number.NaN, y: 0, width: 1920, height: 1080 },
+    { x: Number.MAX_VALUE, y: 0, width: Number.MAX_VALUE, height: 1080 },
+  ]) {
+    assert.deepEqual(coveringSyntheticMonitors({ ...base, bounds }, [monitor]), []);
+  }
+  assert.deepEqual(coveringSyntheticMonitors({ ...base, bounds: monitor.bounds }, [{ id: "bad", bounds: { x: 0, y: 0, width: Infinity, height: 1080 } }]), []);
+});
+
+test("synthetic fullscreen hides ordinary island events but keeps a pending card visible", () => {
+  const sequence = [
+    { fullscreen: false, pending: false, visible: true },
+    { fullscreen: true, pending: false, visible: false },
+    { fullscreen: true, pending: true, visible: true },
+    { fullscreen: true, pending: false, visible: false },
+    { fullscreen: false, pending: false, visible: true },
+  ];
+  for (const state of sequence) {
+    assert.equal(shouldShowSyntheticIsland(state.fullscreen, state.pending), state.visible);
+  }
+});
+
+test("a synthetic permission fixture keeps its card visible during fullscreen only while pending", () => {
+  const fixture = createFixtures();
+  const request = fixture.permission("synthetic-fullscreen-session", 1_000);
+  const classes = new Set();
+  const root = {
+    classList: { toggle(name, on) { if (on) classes.add(name); else classes.delete(name); } },
+    setAttribute() {},
+    inert: false,
+  };
+
+  assert.equal(fixture.hasPending(request.request_id), true);
+  assert.equal(syncSyntheticFullscreenVisibility(root, true, fixture.fullscreen.window, [fixture.fullscreen.monitor], fixture.hasPending(request.request_id)), true);
+  assert.equal(classes.has("synthetic-fullscreen-hidden"), false);
+
+  assert.equal(fixture.decide({ requestId: request.request_id, decision: "deny", now: 1_001 }), true);
+  assert.equal(fixture.hasPending(request.request_id), false);
+  assert.equal(syncSyntheticFullscreenVisibility(root, true, fixture.fullscreen.window, [fixture.fullscreen.monitor], fixture.hasPending(request.request_id)), false);
+  assert.equal(classes.has("synthetic-fullscreen-hidden"), true);
+  assert.deepEqual(fixture.decisions, [{ requestId: request.request_id, decision: "deny" }]);
+});
+
+test("synthetic fullscreen visibility is accessible and does not change saved settings", () => {
+  const classes = new Set();
+  const attributes = new Map();
+  const root = {
+    classList: { toggle(name, on) { if (on) classes.add(name); else classes.delete(name); } },
+    setAttribute(name, value) { attributes.set(name, value); },
+    inert: false,
+  };
+  const settings = { screen: "primary", islandCorner: "top", language: "pt-BR" };
+  const before = structuredClone(settings);
+
+  assert.equal(applySyntheticFullscreenVisibility(root, true, false), false);
+  assert.equal(classes.has("synthetic-fullscreen-hidden"), true);
+  assert.equal(attributes.get("aria-hidden"), "true");
+  assert.equal(root.inert, true);
+
+  assert.equal(applySyntheticFullscreenVisibility(root, true, true), true);
+  assert.equal(classes.has("synthetic-fullscreen-hidden"), false);
+  assert.equal(attributes.get("aria-hidden"), "false");
+  assert.equal(root.inert, false);
+  assert.deepEqual(settings, before);
 });

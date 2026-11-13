@@ -29,6 +29,16 @@ export function createFixtures(instanceId = crypto.randomUUID()) {
     openedFromToast,
     gitStatusReads,
     gitDiffReads,
+    fullscreen: {
+      monitor: { id: "synthetic-monitor-main", bounds: { x: 0, y: 0, width: 1920, height: 1080 } },
+      window: {
+        id: "synthetic-game-window", kind: "application" as const, visible: true, minimized: false,
+        bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+      },
+    },
+    hasPending(requestId: string) {
+      return pending.has(requestId);
+    },
     permission(sessionId = "synthetic-session", now = Date.now(), timeoutMs = 108_000) {
       const requestId = `synthetic-request-${++next}`;
       pending.set(requestId, now + timeoutMs);

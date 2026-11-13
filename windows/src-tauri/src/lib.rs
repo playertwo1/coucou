@@ -12,6 +12,8 @@ mod codex_plan;
 mod config_file;
 mod desktop;
 mod files;
+#[cfg(windows)]
+mod fullscreen;
 mod flow;
 mod github;
 mod git;
@@ -196,6 +198,18 @@ fn set_collapsed(app: AppHandle, shared: State<Shared>, collapsed: bool, width: 
     island::refresh_click_through(&app, &shared.gate);
     shared.gate.set_active(!collapsed);
     platform::set_pointer_watch(!collapsed);
+}
+
+#[cfg(windows)]
+#[tauri::command]
+fn fullscreen_set_pending(state: State<fullscreen::FullscreenControl>, pending: bool) {
+    state.set_pending(pending);
+}
+
+#[cfg(not(windows))]
+#[tauri::command]
+fn fullscreen_set_pending(pending: bool) {
+    let _ = pending;
 }
 
 /// The front end pushes the island shape; Rust decides click-through from it.
@@ -1005,6 +1019,7 @@ pub fn run() {
             save_settings,
             set_system_languages,
             set_collapsed,
+            fullscreen_set_pending,
             set_island_rect,
             focus_window,
             reposition,
@@ -1184,6 +1199,8 @@ pub fn run() {
             let handle = app.handle().clone();
             #[cfg(windows)]
             app.manage(permission_notifications::start(handle.clone()));
+            #[cfg(windows)]
+            app.manage(fullscreen::FullscreenControl::default());
             secrets::warm_up();
             app.manage(phone_link::PhoneLink::new(handle.clone()));
             tray::build(&handle)?;
@@ -1207,6 +1224,8 @@ pub fn run() {
                 webview_drop::install(&handle);
                 island::apply_geometry(&handle, &loaded.screen, None);
                 let _ = win.show();
+                #[cfg(windows)]
+                fullscreen::start(handle.clone(), handle.state::<fullscreen::FullscreenControl>().inner().clone());
             }
             gate.collapsed.store(false, Ordering::Relaxed);
             // Nothing drawn yet, so nothing takes the mouse until the page

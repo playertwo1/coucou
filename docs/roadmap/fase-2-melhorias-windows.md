@@ -38,7 +38,7 @@ Cada item segue a sequência: descoberta do código atual → mini-spec/aceite �
 - [x] Integração de avaliação: toast só para permissão aceita com a ilha oculta; Allow abre o cartão para revisão, Deny responde pelo pipe, identidade/atalho em NSIS/MSI.
 - [x] Checkpoint sintético 2.1b aprovado pelo proprietário para avaliação.
 - [ ] Validação real do proprietário: toast visível, Allow abrindo o cartão certo, Deny negando só o pedido certo, fechamento/expiração sem decisão, pedidos simultâneos e atualização NSIS/MSI.
-- Checkpoint real 2.1: em avaliação; callback da Shell ainda não comprovado. Próximo desenvolvimento: 2.2, com o aceite real de 2.1 sujeito ao retorno do proprietário.
+- Checkpoint real 2.1: em avaliação; callback da Shell ainda não comprovado. A 2.2 segue com prova sintética e avaliação Windows separada.
 
 **Versão de avaliação 0.6.5 (2026-11-12):** publicada em [Windows 0.6.5](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.5). A tag `windows-v0.6.5` aponta para `bb6d48f907e73be91ed26c2844ab808ceb827604`. O preflight do branch (`43346487966`) passou; o workflow manual no tag (`43348587966`) concluiu com sucesso e publicou a release e os dois instaladores. O push da tag não iniciou o workflow automaticamente, então ele foi executado manualmente no próprio tag.
 
@@ -50,13 +50,16 @@ O callback de clique da Shell e o comportamento real da notificação continuam 
 
 ### 2.2 — Modo jogo/tela cheia (P)
 
-
-- [ ] Mapear detecção de monitor/janela em `windows/src-tauri/src/platform/windows.rs` e a geometria/visibilidade da ilha.
-- [ ] Definir em mini-spec o que conta como tela cheia (jogo exclusivo, janela sem borda e vídeo) e quais avisos podem trazer Mochi de volta.
-- [ ] Escrever testes de transição normal → tela cheia → normal e pedido de permissão durante tela cheia.
-- [ ] Implementar ocultação/reaparecimento sem alterar as configurações salvas de posição.
+- [x] Mapear geometria de janelas e monitores e o ciclo de visibilidade da ilha. Não havia detector de tela cheia no app.
+- [x] Definir em [mini-spec](../superpowers/specs/2026-11-12-synthetic-fullscreen-design.md) a detecção geométrica do primeiro plano no monitor da ilha, o tratamento de permissão/pergunta pendente e os limites para modo exclusivo.
+- [x] Escrever testes com monitores/janelas fictícios para retângulos inválidos, origem negativa, janela excluída/minimizada, pedido pendente e restauração.
+- [x] Implementar detecção Windows e ocultação/reaparecimento da janela nativa sem alterar posição ou preferências salvas.
 - [ ] Testar jogo ou vídeo real, Alt+Tab, trocar monitor e encerrar processo em tela cheia.
-- Checkpoint: ilha some apenas no estado definido; pedido de permissão continua visível e exige clique.
+- Checkpoint sintético: PASS; aceite de runtime pelo proprietário pendente. A detecção considera janela em primeiro plano cobrindo por completo o monitor da ilha; modo exclusivo não é inferido.
+
+**Verificação sintética (2026-11-13):** três testes Rust de geometria/política, 16 testes da variante sintética, `npm test` (638/638), `cargo test --offline --locked --lib` (640 passaram, 7 ignorados), `npm run build`, `npm run synthetic:build`, `npx tsc --noEmit`, `node scripts/gen-strings.mjs --check` e `git diff --check` passaram. O app esconde a janela nativa e a mostra enquanto há permissão/pergunta pendente; os testes usaram apenas fixtures. Não houve teste manual de jogo, vídeo, Alt+Tab nem hardware multi-monitor.
+
+**Avaliação real:** publicar Windows 0.6.6 conforme decisão do proprietário; a confirmação do comportamento em jogos/vídeos e em monitor físico fica para o proprietário após atualizar.
 
 ### 2.3 — Custo e tokens por sessão (M; depende da paridade de agentes)
 

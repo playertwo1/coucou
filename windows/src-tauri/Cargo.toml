@@ -72,6 +72,7 @@ windows = { version = "0.61", features = [
   "Media_Control",
   "Storage_Streams",
   "Win32_Foundation",
+  "Win32_Graphics_Gdi",
   "Win32_Storage_FileSystem",
   "Win32_Storage_EnhancedStorage",
   # The Spotify pill's volume: Spotify's session in the Windows mixer.

@@ -252,6 +252,7 @@ export const Bridge = {
   /** Folds the window to `width`×`height` (the closed island) or grows it back to the panel. */
   setCollapsed: (collapsed: boolean, width?: number, height?: number) =>
     call<void>("set_collapsed", { collapsed, width: width ?? null, height: height ?? null }),
+  setFullscreenPending: (pending: boolean) => call<void>("fullscreen_set_pending", { pending }),
 
   /**
    * Pushes the island shape in window coordinates. Rust flips click-through from
