@@ -39,8 +39,11 @@ const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 beforeEach(() => {
   calls.length = 0;
-  answers = {};
+  answers = {
+    launch_agents: ["claude", "codex", "antigravity", "hermes"].map((agent) => ({ agent, available: true })),
+  };
   storage.clear();
+  Launch.agent = "claude";
 });
 
 // ── Projects ──────────────────────────────────────────────────────────────────
@@ -143,9 +146,19 @@ test("storage that refuses leaves an empty launcher, not an error", () => {
   }
 });
 
+test("the last selected agent is remembered separately and invalid choices are ignored", () => {
+  const first = new Launcher(false);
+  assert.equal(first.agent, "claude");
+  assert.equal(first.chooseAgent("hermes"), true);
+  assert.equal(first.chooseAgent("shell"), false);
+  const second = new Launcher(false);
+  assert.equal(second.agent, "hermes");
+  assert.equal(second.folder, first.folder);
+});
+
 // ── Launch card ───────────────────────────────────────────────────────────────
 
-function card() {
+async function card() {
   const did = { launched: 0, hold: [], keyboard: [] };
   const actions = {
     blip() {},
@@ -156,6 +169,7 @@ function card() {
   State.view = "launch";
   const view = buildLaunch(actions);
   view.el.querySelector(".chat-input").value = ""; // a real field starts empty
+  await flush();
   view.sync();
   return { view, did, $: (cls) => view.el.querySelector(cls) };
 }
@@ -163,8 +177,8 @@ function card() {
 test("Enter starts Claude Code in the chosen folder with what was typed, then the island folds", async () => {
   Launch.projects = ["/srv/site", "/srv/api"];
   Launch.folder = "/srv/site";
-  answers.launch_session = true;
-  const { view, did, $ } = card();
+  answers.launch_session = { ok: true, error: null };
+  const { view, did, $ } = await card();
   assert.equal($(".launch-project-name").textContent, "site");
   const input = $(".chat-input");
   input.value = `fix the "login" bug; rm -rf /`;
@@ -174,7 +188,7 @@ test("Enter starts Claude Code in the chosen folder with what was typed, then th
   const ev = { key: "Enter", preventDefault() {}, stopPropagation() {} };
   for (const fn of input.listeners.get("keydown")) fn(ev);
   await flush();
-  assert.deepEqual(sent("launch_session"), [{ folder: "/srv/site", prompt: `fix the "login" bug; rm -rf /` }]);
+  assert.deepEqual(sent("launch_session"), [{ folder: "/srv/site", prompt: `fix the "login" bug; rm -rf /`, agent: "claude" }]);
   assert.equal(did.launched, 1);
   assert.equal(input.value, "");
   view.sync();
@@ -183,8 +197,8 @@ test("Enter starts Claude Code in the chosen folder with what was typed, then th
 
 test("a terminal that couldn't open says so and keeps the words", async () => {
   Launch.folder = "/srv/site";
-  answers.launch_session = false;
-  const { view, did, $ } = card();
+  answers.launch_session = { ok: false, error: "terminalStartFailed" };
+  const { view, did, $ } = await card();
   $(".chat-input").value = "add tests";
   $(".launch-send").fire("click");
   await flush();
@@ -201,7 +215,7 @@ test("without a project, sending asks for a folder first", async () => {
   Launch.projects = [];
   Launch.folder = null;
   answers.pick_folder = "/home/me/new-app";
-  const { $ } = card();
+  const { $ } = await card();
   assert.equal($(".launch-project-name").textContent, "Choose a project");
   assert.ok($(".launch-send").disabled);
   const ev = { key: "Enter", preventDefault() {}, stopPropagation() {} };
@@ -216,8 +230,8 @@ test("without a project, sending asks for a folder first", async () => {
 test("the project menu lists the projects, then Choose a folder…", async () => {
   Launch.projects = ["/srv/site", "/srv/api"];
   Launch.folder = "/srv/site";
-  const { view, $ } = card();
-  $(".launch-project").fire("click");
+  const { view, $ } = await card();
+  view.el.find(".launch-project")[1].fire("click");
   assert.ok($(".launch-body").classList.contains("choosing"));
   const rows = view.el.find(".picker-model");
   assert.deepEqual(rows.map((r) => r.textContent), ["site", "api", "Choose a folder…"]);
@@ -228,11 +242,74 @@ test("the project menu lists the projects, then Choose a folder…", async () =>
   assert.equal($(".launch-project-name").textContent, "api");
 
   answers.pick_folder = null; // cancelled
-  $(".launch-project").fire("click");
+  view.el.find(".launch-project")[1].fire("click");
   view.el.find(".picker-model").at(-1).fire("click");
   await flush();
   assert.deepEqual(sent("pick_folder"), [{ start: "/srv/api" }]);
   assert.equal(Launch.folder, "/srv/api");
+});
+
+test("the agent menu shows installed fixtures and sends the exact prompt with the chosen CLI", async () => {
+  Launch.folder = "/srv/site";
+  answers.launch_agents = [
+    { agent: "claude", available: true },
+    { agent: "codex", available: true },
+    { agent: "antigravity", available: false },
+    { agent: "hermes", available: true },
+  ];
+  answers.launch_session = { ok: true, error: null };
+  const { view, did, $ } = await card();
+  $(".launch-agent").fire("click");
+  assert.deepEqual(view.el.find(".picker-model").map((row) => row.textContent), ["Claude Code", "Codex", "Hermes"]);
+  view.el.find(".picker-model")[1].fire("click");
+  assert.equal(Launch.agent, "codex");
+  $(".chat-input").value = `first line: "quote"; & safe\nsecond: á你好`;
+  $(".launch-send").fire("click");
+  await flush();
+  assert.deepEqual(sent("launch_session"), [{ folder: "/srv/site", prompt: `first line: "quote"; & safe\nsecond: á你好`, agent: "codex" }]);
+  assert.equal(did.launched, 1);
+});
+
+test("an absent CLI disables starting a session", async () => {
+  Launch.folder = "/srv/site";
+  answers.launch_agents = [];
+  const { view, did, $ } = await card();
+  assert.equal($(".launch-agent").disabled, true);
+  assert.equal($(".launch-send").disabled, true);
+  assert.equal($(".launch-hint").textContent, "No supported agent CLI is installed.");
+  $(".launch-send").fire("click");
+  await flush();
+  assert.deepEqual(sent("launch_session"), []);
+  assert.equal(did.launched, 0);
+  assert.ok(!$(".launch-body").classList.contains("choosing"));
+  void view;
+});
+
+test("cancelling the agent menu closes it without launching", async () => {
+  Launch.folder = "/srv/site";
+  const { view, $ } = await card();
+  $(".launch-agent").fire("click");
+  const ev = { key: "Escape", preventDefault() {}, stopPropagation() {} };
+  for (const fn of $(".chat-input").listeners.get("keydown")) fn(ev);
+  assert.ok(!$(".launch-body").classList.contains("choosing"));
+  assert.equal($(".launch-agent").getAttribute("aria-expanded"), "false");
+  assert.deepEqual(sent("launch_session"), []);
+  void view;
+});
+
+test("a CLI removed after listing shows an error and keeps the prompt", async () => {
+  Launch.folder = "/srv/site";
+  answers.launch_session = { ok: false, error: "agentUnavailable" };
+  const { view, did, $ } = await card();
+  $(".chat-input").value = "synthetic request";
+  $(".launch-send").fire("click");
+  await flush();
+  assert.equal(did.launched, 0);
+  assert.equal($(".chat-input").value, "synthetic request");
+  assert.equal($(".launch-hint").textContent, "This agent CLI is no longer available.");
+  assert.deepEqual(sent("launch_session"), [{ folder: "/srv/site", prompt: "synthetic request", agent: "claude" }]);
+  view.focus();
+  assert.notEqual($(".launch-hint").textContent, "This agent CLI is no longer available.");
 });
 
 // ── Drop on a session ─────────────────────────────────────────────────────────

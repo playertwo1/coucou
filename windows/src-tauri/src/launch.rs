@@ -1,16 +1,13 @@
 // A new Claude Code session from the island, and a file dropped on a session —
 // ports of LaunchScript.swift, SessionLauncher.swift and SessionDrop.swift.
 //
-// Launch: the user's terminal opens in the project with `claude` and the
-// prompt. The prompt is never spliced into a command line:
+// Launch: the user's terminal opens in the project with the selected CLI and
+// prompt. The prompt is never part of a shell script:
 // - Linux: it travels in COUCOU_PROMPT, set on the terminal's process, and the
 //   user's login shell runs `claude "$COUCOU_PROMPT"` (as the Mac's script).
-// - Windows: Windows Terminal starts its tabs with a fresh environment, not
-//   wt.exe's (microsoft/terminal#11094), so an environment variable set on
-//   wt.exe never reaches the tab. The prompt goes into a file of ours in the
-//   temp folder instead; PowerShell reads it into $env:COUCOU_PROMPT, deletes
-//   it, and runs claude with that variable. Only the file's path, which we
-//   made, is in the command line.
+// - Windows: the native executable starts in a fresh console with argv built by Rust.
+//   Npm `.cmd` shims resolve to their JS entry point and node.exe, so neither
+//   cmd.exe nor a shell handles the prompt.
 // The session then shows in the island like any other, through the hooks.
 //
 // Drop: the session's window comes forward (the same lookup as "Open
@@ -20,7 +17,7 @@
 // The command lines are built by the pure functions below, tested here; the
 // spawning and the OS calls are the few lines after them.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Duration;
 
@@ -35,9 +32,136 @@ pub struct Spawn {
     pub dir: String,
 }
 
-/// The prompt as it is handed over: trimmed, on one line.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LaunchAgent {
+    Claude,
+    Codex,
+    Antigravity,
+    Hermes,
+}
+
+impl LaunchAgent {
+    fn binary(self) -> &'static str {
+        match self {
+            Self::Claude => "claude",
+            Self::Codex => "codex",
+            Self::Antigravity => "agy",
+            Self::Hermes => "hermes",
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Claude => "Claude Code",
+            Self::Codex => "Codex",
+            Self::Antigravity => "Antigravity",
+            Self::Hermes => "Hermes",
+        }
+    }
+
+    fn prompt_flags(self) -> &'static [&'static str] {
+        match self {
+            Self::Claude | Self::Codex => &[],
+            Self::Antigravity => &["-i"],
+            Self::Hermes => &["chat", "-q"],
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LaunchProgram {
+    executable: PathBuf,
+    prefix_args: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LaunchAgentStatus {
+    pub agent: LaunchAgent,
+    pub available: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum LaunchError {
+    InvalidFolder,
+    InvalidPrompt,
+    AgentUnavailable,
+    TerminalStartFailed,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LaunchResult {
+    pub ok: bool,
+    pub error: Option<LaunchError>,
+}
+
+fn launch_args(agent: LaunchAgent, prompt: Option<&str>) -> Vec<String> {
+    let Some(prompt) = prompt else { return Vec::new() };
+    agent.prompt_flags().iter().map(|arg| (*arg).to_string()).chain([prompt.to_string()]).collect()
+}
+
+#[cfg(windows)]
+fn npm_entrypoint(shim: &Path) -> Option<PathBuf> {
+    let body = std::fs::read_to_string(shim).ok()?;
+    let parent = shim.parent()?;
+    for line in body.lines().filter(|line| line.contains("%_prog%")) {
+        let Some((_, suffix)) = ["%dp0%", "%~dp0"].into_iter().find_map(|marker| line.find(marker).map(|at| (marker, &line[at + marker.len()..]))) else {
+            continue;
+        };
+        let relative = suffix.split('"').next()?.trim_start_matches('\\').trim_start_matches('/');
+        if !relative.to_ascii_lowercase().starts_with("node_modules\\") || relative.split(|c| c == '\\' || c == '/').any(|part| part == "..") {
+            continue;
+        }
+        let extension = Path::new(relative).extension()?.to_str()?;
+        if !["js", "cjs", "mjs"].iter().any(|allowed| extension.eq_ignore_ascii_case(allowed)) {
+            continue;
+        }
+        let relative = relative.replace('\\', std::path::MAIN_SEPARATOR_STR);
+        let entrypoint = parent.join(relative);
+        if entrypoint.is_file() {
+            return Some(entrypoint);
+        }
+    }
+    None
+}
+
+fn launch_program(agent: LaunchAgent) -> Option<LaunchProgram> {
+    let candidates = platform::cli_candidates(agent.binary());
+    #[cfg(not(windows))]
+    {
+        return Some(LaunchProgram { executable: candidates.into_iter().next()?, prefix_args: Vec::new() });
+    }
+    #[cfg(windows)]
+    {
+    if let Some(executable) = candidates.iter().find(|path| path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("exe"))) {
+        return Some(LaunchProgram { executable: executable.clone(), prefix_args: Vec::new() });
+    }
+    if let (Some(shim), Some(node)) = (
+        candidates.iter().find(|path| path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("cmd"))),
+        platform::cli_candidates("node").into_iter().find(|path| path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("exe"))),
+    ) {
+        if let Some(entrypoint) = npm_entrypoint(shim) {
+            return Some(LaunchProgram { executable: node, prefix_args: vec![entrypoint.to_string_lossy().into_owned()] });
+        }
+    }
+    None
+    }
+}
+
+#[tauri::command]
+pub fn launch_agents() -> Vec<LaunchAgentStatus> {
+    [LaunchAgent::Claude, LaunchAgent::Codex, LaunchAgent::Antigravity, LaunchAgent::Hermes]
+        .into_iter()
+        .map(|agent| LaunchAgentStatus { agent, available: launch_program(agent).is_some() })
+        .collect()
+}
+
+/// Keep prompt text literal; line breaks and surrounding whitespace are data.
 pub fn clean_prompt(prompt: &str) -> String {
-    prompt.split(['\r', '\n']).map(str::trim).filter(|s| !s.is_empty()).collect::<Vec<_>>().join(" ")
+    prompt.to_string()
 }
 
 /// A folder a session may start in: an existing folder given by its full path.
@@ -66,6 +190,24 @@ pub fn sh_quote(s: &str) -> String {
 pub fn shell_command(shell: &str, has_prompt: bool) -> Vec<String> {
     let run = if has_prompt { r#"claude "$COUCOU_PROMPT""# } else { "claude" };
     vec![shell.to_string(), "-lic".to_string(), format!("{run}; exec {} -l", sh_quote(shell))]
+}
+
+#[cfg_attr(windows, allow(dead_code))]
+fn agent_shell_command(shell: &str, agent: LaunchAgent, program: &LaunchProgram, has_prompt: bool) -> Vec<String> {
+    let executable = sh_quote(&program.executable.to_string_lossy());
+    let prefix_args = program.prefix_args.iter().map(|arg| sh_quote(arg)).collect::<Vec<_>>().join(" ");
+    let executable = if prefix_args.is_empty() { executable } else { format!("{executable} {prefix_args}") };
+    let args = if has_prompt {
+        let prefix = agent.prompt_flags().join(" ");
+        if prefix.is_empty() {
+            format!("{executable} \"$COUCOU_PROMPT\"")
+        } else {
+            format!("{executable} {prefix} \"$COUCOU_PROMPT\"")
+        }
+    } else {
+        executable
+    };
+    vec![shell.to_string(), "-lic".to_string(), format!("{args}; exec {} -l", sh_quote(shell))]
 }
 
 /// The terminals we know how to hand a command and a folder to, best first
@@ -116,77 +258,31 @@ pub fn linux_terminal_args(terminal: &str, dir: &str, command: &[String]) -> Vec
 #[cfg_attr(windows, allow(dead_code))]
 pub fn linux_spawn(terminal: &str, shell: &str, folder: &str, prompt: &str) -> Spawn {
     let prompt = clean_prompt(prompt);
-    let command = shell_command(shell, !prompt.is_empty());
-    let env = if prompt.is_empty() { Vec::new() } else { vec![("COUCOU_PROMPT".to_string(), prompt)] };
+    let has_prompt = !prompt.trim().is_empty();
+    let command = shell_command(shell, has_prompt);
+    let env = if has_prompt { vec![("COUCOU_PROMPT".to_string(), prompt)] } else { Vec::new() };
+    Spawn { program: terminal.to_string(), args: linux_terminal_args(terminal, folder, &command), env, dir: folder.to_string() }
+}
+
+#[cfg_attr(windows, allow(dead_code))]
+fn linux_agent_spawn(terminal: &str, shell: &str, folder: &str, prompt: &str, agent: LaunchAgent, program: &LaunchProgram) -> Spawn {
+    let prompt = clean_prompt(prompt);
+    let has_prompt = !prompt.trim().is_empty();
+    let command = agent_shell_command(shell, agent, program, has_prompt);
+    let env = if has_prompt { vec![("COUCOU_PROMPT".to_string(), prompt)] } else { Vec::new() };
     Spawn { program: terminal.to_string(), args: linux_terminal_args(terminal, folder, &command), env, dir: folder.to_string() }
 }
 
 // ── Windows ───────────────────────────────────────────────────────────────────
 
-/// PowerShell's single quotes: 'it''s' for it's.
-#[cfg_attr(not(windows), allow(dead_code))]
-pub fn ps_quote(s: &str) -> String {
-    format!("'{}'", s.replace('\'', "''"))
-}
-
-/// The prompt as it is written to the file on Windows. `claude` there is
-/// often npm's claude.cmd, and cmd.exe reads its command line again: a double
-/// quote in the prompt would end the quoted argument and let the rest run as
-/// commands. It becomes a single quote, which reads the same to Claude.
-#[cfg_attr(not(windows), allow(dead_code))]
-pub fn windows_prompt(prompt: &str) -> String {
-    clean_prompt(prompt).replace('"', "'")
-}
-
-/// What PowerShell runs. With a prompt: read the file into COUCOU_PROMPT,
-/// delete it, start Claude Code with it. `Get-Command -CommandType
-/// Application` takes claude.exe or claude.cmd, never npm's claude.ps1, which
-/// the default execution policy refuses to run. No double quote and nothing
-/// but the file's path, which is ours, is spelled out.
-#[cfg_attr(not(windows), allow(dead_code))]
-pub fn powershell_script(prompt_file: Option<&str>) -> String {
-    let claude = "& (Get-Command claude -CommandType Application -TotalCount 1)";
-    match prompt_file {
-        None => claude.to_string(),
-        Some(file) => {
-            let f = ps_quote(file);
-            format!(
-                "$env:COUCOU_PROMPT = Get-Content -LiteralPath {f} -Raw -Encoding UTF8; \
-                 Remove-Item -LiteralPath {f}; {claude} $env:COUCOU_PROMPT"
-            )
-        }
-    }
-}
-
-/// wt.exe splits its command line into several commands at each `;`: in the
-/// command it hands the shell, they are written `\;`.
-#[cfg_attr(not(windows), allow(dead_code))]
-pub fn wt_escape(s: &str) -> String {
-    s.replace(';', r"\;")
-}
-
-/// The whole launch on Windows: in Windows Terminal (`wt`, its path) when it
-/// is installed, else PowerShell in a console of its own (the caller gives it
-/// one). `shell` is pwsh.exe or powershell.exe.
-#[cfg_attr(not(windows), allow(dead_code))]
-pub fn windows_spawn(wt: Option<&str>, shell: &str, folder: &str, prompt_file: Option<&str>) -> Spawn {
-    let script = powershell_script(prompt_file);
-    match wt {
-        Some(wt) => Spawn {
-            program: wt.to_string(),
-            args: vec![
-                "-d".into(), folder.into(), shell.into(),
-                "-NoExit".into(), "-NoLogo".into(), "-Command".into(), wt_escape(&script),
-            ],
-            env: Vec::new(),
-            dir: folder.to_string(),
-        },
-        None => Spawn {
-            program: shell.to_string(),
-            args: vec!["-NoExit".into(), "-NoLogo".into(), "-Command".into(), script],
-            env: Vec::new(),
-            dir: folder.to_string(),
-        },
+fn windows_agent_spawn(folder: &str, agent: LaunchAgent, program: &LaunchProgram, prompt: &str) -> Spawn {
+    Spawn {
+        program: program.executable.to_string_lossy().into_owned(),
+        args: program.prefix_args.iter().cloned()
+            .chain(launch_args(agent, (!prompt.trim().is_empty()).then_some(prompt)))
+            .collect(),
+        env: Vec::new(),
+        dir: folder.to_string(),
     }
 }
 
@@ -247,7 +343,8 @@ fn start(spawn: &Spawn, new_console: bool) -> std::io::Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn launch_here(folder: &str, prompt: &str) -> Result<String, String> {
+fn launch_here(folder: &str, prompt: &str, agent: LaunchAgent) -> Result<String, LaunchError> {
+    let program = launch_program(agent).ok_or(LaunchError::AgentUnavailable)?;
     let shell = std::env::var("SHELL").ok().filter(|s| Path::new(s).is_absolute()).unwrap_or_else(|| "/bin/bash".into());
     let env_terminal = std::env::var("TERMINAL").ok();
     for candidate in linux_candidates(env_terminal.as_deref()) {
@@ -258,65 +355,44 @@ fn launch_here(folder: &str, prompt: &str) -> Result<String, String> {
         }) else {
             continue;
         };
-        let spawn = linux_spawn(&path.to_string_lossy(), &shell, folder, prompt);
+        let spawn = linux_agent_spawn(&path.to_string_lossy(), &shell, folder, prompt, agent, &program);
         match start(&spawn, false) {
             Ok(()) => return Ok(candidate),
             Err(err) => crate::log::line(format!("launch: {candidate} didn't start: {err}")),
         }
     }
-    Err("no terminal found".into())
+    Err(LaunchError::TerminalStartFailed)
 }
 
 #[cfg(windows)]
-fn launch_here(folder: &str, prompt: &str) -> Result<String, String> {
-    let prompt = windows_prompt(prompt);
-    let file = if prompt.is_empty() {
-        None
-    } else {
-        let mut bytes = [0u8; 8];
-        ring::rand::SecureRandom::fill(&ring::rand::SystemRandom::new(), &mut bytes).map_err(|_| "no randomness")?;
-        let name = format!("coucou-prompt-{}.txt", bytes.iter().map(|b| format!("{b:02x}")).collect::<String>());
-        let path = std::env::temp_dir().join(name);
-        std::fs::write(&path, prompt.as_bytes()).map_err(|e| e.to_string())?;
-        // PowerShell deletes it once read; this catches a terminal that never started.
-        let stale = path.clone();
-        std::thread::spawn(move || {
-            std::thread::sleep(Duration::from_secs(120));
-            let _ = std::fs::remove_file(stale);
-        });
-        Some(path.to_string_lossy().to_string())
-    };
-    // By name, found on %PATH% by the terminal: a full path would carry the
-    // spaces of "Program Files" through wt.exe's re-joined command line.
-    let shell = if platform::find_on_path("pwsh").is_some() { "pwsh.exe" } else { "powershell.exe" };
-    if let Some(wt) = platform::windows_terminal() {
-        let spawn = windows_spawn(Some(&wt.to_string_lossy()), shell, folder, file.as_deref());
-        match start(&spawn, false) {
-            Ok(()) => return Ok("Windows Terminal".into()),
-            Err(err) => crate::log::line(format!("launch: Windows Terminal didn't start: {err}")),
-        }
-    }
-    let spawn = windows_spawn(None, shell, folder, file.as_deref());
-    start(&spawn, true).map(|()| "PowerShell".into()).map_err(|e| e.to_string())
+fn launch_here(folder: &str, prompt: &str, agent: LaunchAgent) -> Result<String, LaunchError> {
+    let program = launch_program(agent).ok_or(LaunchError::AgentUnavailable)?;
+    let spawn = windows_agent_spawn(folder, agent, &program, prompt);
+    start(&spawn, true).map(|_| "console".into()).map_err(|err| {
+        crate::log::line(format!("launch: couldn't start {}: {err}", agent.label()));
+        LaunchError::TerminalStartFailed
+    })
 }
 
-/// Opens the user's terminal in `folder` with Claude Code and the prompt.
-/// False when the folder isn't one or no terminal could be started.
+/// Opens the user's terminal in `folder` with the selected agent and prompt.
 #[tauri::command]
-pub fn launch_session(folder: String, prompt: String) -> bool {
+pub fn launch_session(folder: String, prompt: String, agent: LaunchAgent) -> LaunchResult {
     if !valid_folder(&folder) {
         crate::log::line(format!("launch: {} is not an existing folder", session_window::folder_name(&folder)));
-        return false;
+        return LaunchResult { ok: false, error: Some(LaunchError::InvalidFolder) };
+    }
+    if prompt.contains('\0') {
+        return LaunchResult { ok: false, error: Some(LaunchError::InvalidPrompt) };
     }
     let name = session_window::folder_name(&folder).to_string();
-    match launch_here(&folder, &prompt) {
+    match launch_here(&folder, &prompt, agent) {
         Ok(terminal) => {
-            crate::log::line(format!("launch: Claude Code in {name} with {terminal}"));
-            true
+            crate::log::line(format!("launch: {} in {name} with {terminal}", agent.label()));
+            LaunchResult { ok: true, error: None }
         }
         Err(err) => {
-            crate::log::line(format!("launch: couldn't open a terminal in {name}: {err}"));
-            false
+            crate::log::line(format!("launch: couldn't start {} in {name}: {err:?}", agent.label()));
+            LaunchResult { ok: false, error: Some(err) }
         }
     }
 }
@@ -377,9 +453,105 @@ mod tests {
     }
 
     #[test]
-    fn the_prompt_is_trimmed_onto_one_line() {
-        assert_eq!(clean_prompt("  fix the bug \n\r\n and test it  "), "fix the bug and test it");
-        assert_eq!(clean_prompt("   "), "");
+    fn prompt_text_keeps_line_breaks_and_surrounding_whitespace() {
+        assert_eq!(clean_prompt("  fix the bug \n\r\n and test it  "), "  fix the bug \n\r\n and test it  ");
+        assert_eq!(clean_prompt("   "), "   ");
+    }
+
+    #[test]
+    fn each_cli_gets_its_initial_prompt_as_a_separate_literal_argument() {
+        let prompt = "first: \"quote\"; & safe\r\nsecond: á你好";
+        assert_eq!(launch_args(LaunchAgent::Claude, Some(prompt)), vec![prompt]);
+        assert_eq!(launch_args(LaunchAgent::Codex, Some(prompt)), vec![prompt]);
+        assert_eq!(launch_args(LaunchAgent::Antigravity, Some(prompt)), s(&["-i", prompt]));
+        assert_eq!(launch_args(LaunchAgent::Hermes, Some(prompt)), s(&["chat", "-q", prompt]));
+        for agent in [LaunchAgent::Claude, LaunchAgent::Codex, LaunchAgent::Antigravity, LaunchAgent::Hermes] {
+            assert!(launch_args(agent, None).is_empty());
+        }
+    }
+
+    #[test]
+    fn launch_agent_names_are_stable_for_the_bridge() {
+        assert_eq!(serde_json::to_string(&LaunchAgent::Claude).unwrap(), "\"claude\"");
+        assert_eq!(serde_json::to_string(&LaunchAgent::Codex).unwrap(), "\"codex\"");
+        assert_eq!(serde_json::to_string(&LaunchAgent::Antigravity).unwrap(), "\"antigravity\"");
+        assert_eq!(serde_json::to_string(&LaunchAgent::Hermes).unwrap(), "\"hermes\"");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn npm_cmd_fixture_resolves_its_javascript_entry_without_running_the_shim() {
+        let dir = std::env::temp_dir().join(format!("coucou-launch-shim-{}", std::process::id()));
+        let module_dir = dir.join("node_modules").join("@synthetic").join("agent");
+        std::fs::create_dir_all(&module_dir).unwrap();
+        let shim = dir.join("agent.cmd");
+        let entry = module_dir.join("cli.js");
+        std::fs::write(&entry, "// synthetic entrypoint").unwrap();
+        std::fs::write(
+            &shim,
+            "@echo off\r\nSET \"dp0=%~dp0\"\r\n\"%_prog%\" \"%dp0%\\node_modules\\@synthetic\\agent\\cli.js\" %*\r\n",
+        )
+        .unwrap();
+
+        let resolved = npm_entrypoint(&shim);
+        let matched = resolved.as_deref() == Some(entry.as_path());
+        let _ = std::fs::remove_file(&entry);
+        let _ = std::fs::remove_file(&shim);
+        let _ = std::fs::remove_dir(&module_dir);
+        let _ = std::fs::remove_dir(module_dir.parent().unwrap());
+        let _ = std::fs::remove_dir(module_dir.parent().unwrap().parent().unwrap());
+        let _ = std::fs::remove_dir(dir.join("node_modules"));
+        let _ = std::fs::remove_dir(&dir);
+        assert!(matched, "synthetic npm shim entrypoint was not resolved");
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn native_spawn_preserves_prompt_as_one_argument_for_every_agent() {
+        let dir = std::env::temp_dir().join(format!("coucou-launch-{}-{}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        std::fs::create_dir(&dir).unwrap();
+        let capture = dir.join("capture.js");
+        let output = dir.join("argv.json");
+        let fixture = "quote: \"double\"; shell: ; & | ^ %PATH% $HOME ` $(synthetic)\nunicode: áé你好";
+        std::fs::write(
+            &capture,
+            "require('node:fs').writeFileSync(process.env.COUCOU_LAUNCH_ARGV, JSON.stringify(process.argv.slice(2)), 'utf8');",
+        )
+        .unwrap();
+        let node = platform::find_on_path("node").expect("synthetic Windows build provides node.exe");
+        let program = LaunchProgram { executable: node, prefix_args: vec![capture.to_string_lossy().into_owned()] };
+        let expected_args = [
+            (LaunchAgent::Claude, vec![fixture.to_string()]),
+            (LaunchAgent::Codex, vec![fixture.to_string()]),
+            (LaunchAgent::Antigravity, vec!["-i".to_string(), fixture.to_string()]),
+            (LaunchAgent::Hermes, vec!["chat".to_string(), "-q".to_string(), fixture.to_string()]),
+        ];
+        for (agent, expected) in expected_args {
+            let spawn = windows_agent_spawn(&dir.to_string_lossy(), agent, &program, fixture);
+            let result = Command::new(&spawn.program)
+                .args(&spawn.args)
+                .current_dir(&spawn.dir)
+                .env("COUCOU_LAUNCH_ARGV", &output)
+                .output()
+                .unwrap();
+            let actual = std::fs::read(&output).ok().and_then(|bytes| serde_json::from_slice::<Vec<String>>(&bytes).ok());
+            let matched = actual.as_ref().is_some_and(|args| args == &expected);
+            let _ = std::fs::remove_file(&output);
+            assert!(result.status.success(), "synthetic native launch failed for {}", agent.label());
+            assert!(matched, "native argv did not preserve the synthetic prompt for {}", agent.label());
+        }
+        let _ = std::fs::remove_file(&capture);
+        let _ = std::fs::remove_dir(&dir);
+    }
+
+    #[test]
+    fn invalid_synthetic_input_is_rejected_before_any_process_is_started() {
+        let result = launch_session("relative/not-a-folder".into(), "request".into(), LaunchAgent::Claude);
+        assert_eq!(result, LaunchResult { ok: false, error: Some(LaunchError::InvalidFolder) });
+
+        let folder = std::env::temp_dir().to_string_lossy().into_owned();
+        let result = launch_session(folder, "bad\0prompt".into(), LaunchAgent::Claude);
+        assert_eq!(result, LaunchResult { ok: false, error: Some(LaunchError::InvalidPrompt) });
     }
 
     #[test]
@@ -456,45 +628,6 @@ mod tests {
         let empty = linux_spawn("kitty", "/bin/zsh", "/home/me/p", "  \n ");
         assert!(empty.env.is_empty());
         assert_eq!(empty.args.last().unwrap(), "claude; exec /bin/zsh -l");
-    }
-
-    #[test]
-    fn powershell_quotes_and_the_windows_prompt() {
-        assert_eq!(ps_quote(r"C:\Users\O'Brien\AppData\Local\Temp\p.txt"), r"'C:\Users\O''Brien\AppData\Local\Temp\p.txt'");
-        assert_eq!(windows_prompt(r#"fix the "login" bug & exit"#), "fix the 'login' bug & exit");
-        assert_eq!(wt_escape("a; b; c"), r"a\; b\; c");
-    }
-
-    #[test]
-    fn powershell_reads_the_prompt_from_our_file() {
-        assert_eq!(powershell_script(None), "& (Get-Command claude -CommandType Application -TotalCount 1)");
-        let script = powershell_script(Some(r"C:\Temp\coucou-prompt-ab.txt"));
-        assert_eq!(
-            script,
-            "$env:COUCOU_PROMPT = Get-Content -LiteralPath 'C:\\Temp\\coucou-prompt-ab.txt' -Raw -Encoding UTF8; \
-             Remove-Item -LiteralPath 'C:\\Temp\\coucou-prompt-ab.txt'; \
-             & (Get-Command claude -CommandType Application -TotalCount 1) $env:COUCOU_PROMPT"
-        );
-        // wt.exe re-joins its arguments in quotes: none may be inside.
-        assert!(!script.contains('"'));
-    }
-
-    #[test]
-    fn windows_terminal_or_a_powershell_console() {
-        let file = Some(r"C:\Temp\p.txt");
-        let wt = windows_spawn(Some(r"C:\Users\me\AppData\Local\Microsoft\WindowsApps\wt.exe"), "pwsh.exe", r"C:\code\my app", file);
-        assert_eq!(wt.args[..3], s(&["-d", r"C:\code\my app", "pwsh.exe"]));
-        assert_eq!(wt.args[3..6], s(&["-NoExit", "-NoLogo", "-Command"]));
-        let script = &wt.args[6];
-        assert!(script.contains(r"\;") && !script.replace(r"\;", "").contains(';'), "every semicolon escaped for wt: {script}");
-        assert_eq!(script.replace(r"\;", ";"), powershell_script(file));
-        assert_eq!(wt.dir, r"C:\code\my app");
-        assert!(wt.env.is_empty());
-
-        let console = windows_spawn(None, "powershell.exe", r"C:\code", None);
-        assert_eq!(console.program, "powershell.exe");
-        assert_eq!(console.args, s(&["-NoExit", "-NoLogo", "-Command", &powershell_script(None)]));
-        assert_eq!(console.dir, r"C:\code");
     }
 
     #[test]

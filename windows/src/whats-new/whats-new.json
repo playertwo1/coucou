@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.7",
+      "items": [
+        {
+          "icon": "terminal",
+          "title": {
+            "en": "Choose your agent",
+            "zh-Hans": "选择代理",
+            "hi": "एजेंट चुनें",
+            "es": "Elige tu agente",
+            "ar": "اختر وكيلك",
+            "fr": "Choisissez votre agent",
+            "bn": "এজেন্ট বেছে নিন",
+            "pt-BR": "Escolha seu agente",
+            "ru": "Выберите агента",
+            "id": "Pilih agen",
+            "de": "Agent auswählen",
+            "tr": "Ajanınızı seçin",
+            "ko": "에이전트 선택",
+            "ja": "エージェントを選択"
+          },
+          "detail": {
+            "en": "Start Claude Code, Codex, Antigravity or Hermes in your chosen project.",
+            "zh-Hans": "在所选项目中启动 Claude Code、Codex、Antigravity 或 Hermes。",
+            "hi": "अपने चुने हुए प्रोजेक्ट में Claude Code, Codex, Antigravity या Hermes शुरू करें।",
+            "es": "Inicia Claude Code, Codex, Antigravity o Hermes en el proyecto que elijas.",
+            "ar": "ابدأ Claude Code أو Codex أو Antigravity أو Hermes في المشروع الذي تختاره.",
+            "fr": "Lancez Claude Code, Codex, Antigravity ou Hermes dans le projet choisi.",
+            "bn": "আপনার বেছে নেওয়া প্রজেক্টে Claude Code, Codex, Antigravity বা Hermes চালু করুন।",
+            "pt-BR": "Inicie Claude Code, Codex, Antigravity ou Hermes no projeto escolhido.",
+            "ru": "Запустите Claude Code, Codex, Antigravity или Hermes в выбранном проекте.",
+            "id": "Jalankan Claude Code, Codex, Antigravity, atau Hermes di proyek pilihan Anda.",
+            "de": "Starten Sie Claude Code, Codex, Antigravity oder Hermes im gewählten Projekt.",
+            "tr": "Claude Code, Codex, Antigravity veya Hermes'i seçtiğiniz projede başlatın.",
+            "ko": "선택한 프로젝트에서 Claude Code, Codex, Antigravity 또는 Hermes를 시작하세요.",
+            "ja": "選んだプロジェクトで Claude Code、Codex、Antigravity、Hermes を起動できます。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.6",
       "items": [
         {

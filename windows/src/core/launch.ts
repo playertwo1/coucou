@@ -15,6 +15,22 @@ export const MAX_PROJECTS = 10;
 
 const PROJECTS_KEY = "coucou.launch.projects";
 const FOLDER_KEY = "coucou.launch.folder";
+const AGENT_KEY = "coucou.launch.agent";
+
+export const LAUNCH_AGENTS = ["claude", "codex", "antigravity", "hermes"] as const;
+export type LaunchAgent = (typeof LAUNCH_AGENTS)[number];
+
+export interface LaunchAgentStatus {
+  agent: LaunchAgent;
+  available: boolean;
+}
+
+export type LaunchError = "invalidFolder" | "invalidPrompt" | "agentUnavailable" | "terminalStartFailed" | "synthetic";
+
+export interface LaunchResult {
+  ok: boolean;
+  error: LaunchError | null;
+}
 
 /** The folder without its trailing separators ("C:\" and "/" stay as they are). */
 export function normalizeFolder(path: string): string {
@@ -93,12 +109,15 @@ function readProjects(): string[] {
 export class Launcher {
   projects: string[];
   folder: string | null;
+  agent: LaunchAgent;
   private readonly windows: boolean;
 
   constructor(windows: boolean) {
     this.windows = windows;
     this.projects = readProjects();
     this.folder = read(FOLDER_KEY) || this.projects[0] || null;
+    const savedAgent = read(AGENT_KEY);
+    this.agent = LAUNCH_AGENTS.includes(savedAgent as LaunchAgent) ? (savedAgent as LaunchAgent) : "claude";
   }
 
   /** Each Claude Code session teaches it a project. */
@@ -116,6 +135,13 @@ export class Launcher {
     this.remember(folder);
     this.folder = normalizeFolder(folder);
     write(FOLDER_KEY, this.folder);
+  }
+
+  chooseAgent(agent: unknown): boolean {
+    if (!LAUNCH_AGENTS.includes(agent as LaunchAgent)) return false;
+    this.agent = agent as LaunchAgent;
+    write(AGENT_KEY, this.agent);
+    return true;
   }
 }
 

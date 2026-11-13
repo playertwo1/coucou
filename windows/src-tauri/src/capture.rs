@@ -393,8 +393,9 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
     }
 
-    /// The clipboard is put back to whatever text it held.
+    /// This consumes and can clear the interactive clipboard even when PNG publication fails.
     #[cfg(windows)]
+    #[ignore = "uses and replaces the interactive Windows clipboard; run only as a manual check"]
     #[test]
     fn a_png_round_trips_through_the_clipboard() {
         let previous = super::clipboard_text();

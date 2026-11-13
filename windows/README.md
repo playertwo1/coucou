@@ -61,7 +61,7 @@ You can also [build it yourself](#build-it-yourself).
 | On the desktop: click / right-click / double-click Mochi | Poke him / the wardrobe / he flies home. Drag him to move him |
 | Drag a file onto the island | Mochi turns into a box, swallows it, then offers to answer questions about it |
 | Drag a file onto the island and let go on one of the sessions listed on the right ("Or into a session") | That session's terminal or editor comes forward and the file's path is pasted into Claude Code's prompt, as a drag onto the terminal would write it. When its window can't be found, the path is copied instead |
-| The terminal tab in the island's header | **New Claude Code session**: pick a project (the folders your sessions ran in, or **Choose a folder…**), type what Claude should do, and your terminal opens there running `claude` with it |
+| The terminal tab in the island's header | **New session**: choose Claude Code, Codex, Antigravity or Hermes, pick a project (the folders your sessions ran in, or **Choose a folder…**), type a prompt, and a console opens there with that agent |
 | Click a file in the session ticker | Its diff opens in the island; ↗ opens the file in VS Code, ‹ or `Esc` goes back |
 | `Esc` | Closes the island |
 | Put a file named like one of Mochi's sounds (`finish.wav`, `approval.mp3`, `greet.m4a`…) in the sounds folder | It replaces that sound after **Settings → General → Reload sounds**. **Open sounds folder** shows the folder: `~/.config/coucou/sounds` on Linux, `%APPDATA%\Coucou\sounds` on Windows |

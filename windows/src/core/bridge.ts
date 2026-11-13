@@ -10,9 +10,11 @@ import type { RecapHistory, RecapPrefs } from "../recap/summary";
 import type { SpotifyState } from "./spotify";
 import type { UpdateStatus } from "./update";
 import type { WaIslandView, WaSettingsView, WaTestResult } from "./whatsapp";
+import type { LaunchAgent, LaunchAgentStatus, LaunchResult } from "./launch";
 
 export const IS_TAURI =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
+const IS_SYNTHETIC = typeof window !== "undefined" && window.location?.protocol === "coucou-synthetic:";
 
 async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T | null> {
   if (!IS_TAURI) return null;
@@ -302,11 +304,17 @@ export const Bridge = {
   /** The Claude desktop app, for the Claude Desktop pill (Windows only). */
   openClaudeDesktop: () => call<boolean>("open_claude_desktop"),
 
-  /**
-   * A new Claude Code session: the user's terminal in `folder`, running
-   * Claude Code with the prompt (src-tauri/src/launch.rs). False when it couldn't.
-   */
-  launchSession: (folder: string, prompt: string) => call<boolean>("launch_session", { folder, prompt }),
+  /** The local agents which can start a terminal session. */
+  launchAgents: async (): Promise<LaunchAgentStatus[]> => {
+    if (IS_SYNTHETIC) return (["claude", "codex", "antigravity", "hermes"] as const).map((agent) => ({ agent, available: true }));
+    return (await call<LaunchAgentStatus[]>("launch_agents")) ?? [];
+  },
+
+  /** Starts the chosen local CLI; the synthetic app records no process launch. */
+  launchSession: async (folder: string, prompt: string, agent: LaunchAgent): Promise<LaunchResult> => {
+    if (IS_SYNTHETIC) return { ok: false, error: "synthetic" };
+    return (await call<LaunchResult>("launch_session", { folder, prompt, agent })) ?? { ok: false, error: "terminalStartFailed" };
+  },
 
   /** The system's folder picker, `start` open in it; null when cancelled. */
   pickFolder: (start: string | null) => call<string | null>("pick_folder", { start }),

@@ -1032,6 +1032,7 @@ pub fn run() {
             open_gitea_url,
             open_in_vscode,
             open_session,
+            launch::launch_agents,
             launch::launch_session,
             launch::pick_folder,
             launch::drop_into_session,

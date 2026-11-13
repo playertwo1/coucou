@@ -7890,6 +7890,27 @@
     },
     "Diff exceeds the 256 KB display limit.": {
       "zh-Hans": "差异内容超过 256 KB 显示上限。", "hi": "Diff, 256 KB की प्रदर्शन सीमा से बड़ा है।", "es": "El diff supera el límite de visualización de 256 KB.", "ar": "يتجاوز diff حد العرض البالغ 256 كيلوبايت.", "fr": "Le diff dépasse la limite d’affichage de 256 Ko.", "bn": "Diff 256 KB প্রদর্শন সীমা ছাড়িয়েছে।", "pt-BR": "O diff excede o limite de exibição de 256 KB.", "ru": "Diff превышает лимит отображения 256 КБ.", "id": "Diff melebihi batas tampilan 256 KB.", "de": "Der Diff überschreitet die Anzeigebegrenzung von 256 KB.", "tr": "Diff, 256 KB görüntüleme sınırını aşıyor.", "ko": "diff가 256KB 표시 제한을 초과했습니다.", "ja": "差分が 256 KB の表示上限を超えています。"
+    },
+    "New agent session": {
+      "zh-Hans": "新建代理会话", "hi": "नया एजेंट सत्र", "es": "Nueva sesión de agente", "ar": "جلسة وكيل جديدة", "fr": "Nouvelle session d’agent", "bn": "নতুন এজেন্ট সেশন", "pt-BR": "Nova sessão de agente", "ru": "Новый сеанс агента", "id": "Sesi agen baru", "de": "Neue Agentensitzung", "tr": "Yeni ajan oturumu", "ko": "새 에이전트 세션", "ja": "新しいエージェントセッション"
+    },
+    "Select an agent": {
+      "zh-Hans": "选择代理", "hi": "एजेंट चुनें", "es": "Elegir un agente", "ar": "اختر وكيلاً", "fr": "Choisir un agent", "bn": "এজেন্ট বেছে নিন", "pt-BR": "Escolher um agente", "ru": "Выберите агента", "id": "Pilih agen", "de": "Agent auswählen", "tr": "Bir ajan seçin", "ko": "에이전트 선택", "ja": "エージェントを選択"
+    },
+    "What should the agent do?": {
+      "zh-Hans": "要让代理做什么？", "hi": "एजेंट को क्या करना चाहिए?", "es": "¿Qué debe hacer el agente?", "ar": "ما الذي ينبغي أن يفعله الوكيل؟", "fr": "Que doit faire l’agent ?", "bn": "এজেন্টকে কী করতে হবে?", "pt-BR": "O que o agente deve fazer?", "ru": "Что должен сделать агент?", "id": "Apa yang harus dilakukan agen?", "de": "Was soll der Agent tun?", "tr": "Ajan ne yapmalı?", "ko": "에이전트가 무엇을 해야 하나요?", "ja": "エージェントに何をさせますか？"
+    },
+    "No supported agent CLI is installed.": {
+      "zh-Hans": "未安装受支持的代理命令行工具。", "hi": "कोई समर्थित एजेंट CLI इंस्टॉल नहीं है।", "es": "No hay instalada ninguna CLI de agente compatible.", "ar": "لم يتم تثبيت أداة سطر أوامر لوكيل مدعوم.", "fr": "Aucune CLI d’agent prise en charge n’est installée.", "bn": "সমর্থিত কোনো এজেন্ট CLI ইনস্টল করা নেই।", "pt-BR": "Nenhuma CLI de agente compatível está instalada.", "ru": "Совместимый интерфейс командной строки агента не установлен.", "id": "CLI agen yang didukung belum terpasang.", "de": "Es ist keine unterstützte Agent-CLI installiert.", "tr": "Desteklenen bir ajan CLI'sı yüklü değil.", "ko": "지원되는 에이전트 CLI가 설치되어 있지 않습니다.", "ja": "対応するエージェントCLIがインストールされていません。"
+    },
+    "This agent CLI is no longer available.": {
+      "zh-Hans": "此代理命令行工具已不可用。", "hi": "यह एजेंट CLI अब उपलब्ध नहीं है।", "es": "Esta CLI de agente ya no está disponible.", "ar": "لم تعد أداة سطر الأوامر لهذا الوكيل متاحة.", "fr": "Cette CLI d’agent n’est plus disponible.", "bn": "এই এজেন্ট CLI আর উপলভ্য নেই।", "pt-BR": "Esta CLI de agente não está mais disponível.", "ru": "Эта CLI агента больше недоступна.", "id": "CLI agen ini sudah tidak tersedia.", "de": "Diese Agent-CLI ist nicht mehr verfügbar.", "tr": "Bu ajan CLI'sı artık kullanılamıyor.", "ko": "이 에이전트 CLI를 더 이상 사용할 수 없습니다.", "ja": "このエージェントCLIは利用できなくなりました。"
+    },
+    "Synthetic mode: no agent process will run.": {
+      "zh-Hans": "合成模式：不会启动代理进程。", "hi": "सिंथेटिक मोड: एजेंट प्रक्रिया नहीं चलेगी।", "es": "Modo sintético: no se iniciará ningún proceso de agente.", "ar": "الوضع الاصطناعي: لن تبدأ أي عملية للوكيل.", "fr": "Mode synthétique : aucun processus d’agent ne sera lancé.", "bn": "সিন্থেটিক মোড: কোনো এজেন্ট প্রসেস চালু হবে না।", "pt-BR": "Modo sintético: nenhum processo de agente será iniciado.", "ru": "Синтетический режим: процесс агента не будет запущен.", "id": "Mode sintetis: proses agen tidak akan dijalankan.", "de": "Synthetischer Modus: Es wird kein Agent-Prozess gestartet.", "tr": "Sentetik mod: hiçbir ajan işlemi başlatılmaz.", "ko": "합성 모드: 에이전트 프로세스가 실행되지 않습니다.", "ja": "合成モード：エージェントプロセスは起動しません。"
+    },
+    "Opens your terminal in the project with the selected agent.": {
+      "zh-Hans": "在项目目录中打开终端并启动所选代理。", "hi": "चुने गए एजेंट के साथ प्रोजेक्ट फ़ोल्डर में टर्मिनल खोलें।", "es": "Abre el terminal en el proyecto con el agente seleccionado.", "ar": "يفتح الطرفية داخل المشروع باستخدام الوكيل المحدد.", "fr": "Ouvre le terminal dans le projet avec l’agent sélectionné.", "bn": "নির্বাচিত এজেন্টসহ প্রকল্পে টার্মিনাল খোলে।", "pt-BR": "Abre o terminal no projeto com o agente selecionado.", "ru": "Открывает терминал в проекте с выбранным агентом.", "id": "Membuka terminal di proyek dengan agen yang dipilih.", "de": "Öffnet das Terminal im Projekt mit dem ausgewählten Agenten.", "tr": "Seçilen ajanla terminali proje klasöründe açar.", "ko": "선택한 에이전트와 함께 프로젝트에서 터미널을 엽니다.", "ja": "選択したエージェントでプロジェクト内のターミナルを開きます。"
     }
   }
 }

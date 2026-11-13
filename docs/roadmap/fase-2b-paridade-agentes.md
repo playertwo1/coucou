@@ -113,7 +113,7 @@ Objetivo: substituir cada `?` por uma capacidade observada, impossível com evid
     - Codex CLI: executável `codex`, detecção por `installed("openai")` (`cli_relay.rs:66`, `:131`). Relay: `codex exec --json ... -` com diretório `relay`; prompt por stdin sempre (`cli_relay.rs:445`). Uso do plano: `codex app-server` por stdin/stdout (`codex_plan.rs:59-61`). Nova sessão: não existe para Codex (etapa 2B.6).
     - Antigravity CLI: executável `agy` (`cli_relay.rs:64`), detecção por `installed("google")`, que prefere o Antigravity ao Gemini. Relay: `agy -p <prompt> --output-format json --mode plan --disable-slash-commands`, diretório `relay`, prompt pelos argumentos (`cli_relay.rs:387`, `:446`). Esse canal ainda não tem prova com quebra de linha (INCONCLUSIVO acima). Nova sessão: não existe.
     - Hermes: o app não chama a CLI do Hermes hoje; só instala o plugin de hooks (`agents.rs:130`). O teste de transporte (`hermes chat -Q --query-file -`) foi feito fora do app. Executável, detecção e diretório dependem da etapa 2B.6.
-  - Pendente: teste de Antigravity (cota esgotada) com quebra de linha, e a comparação byte a byte dos quatro agentes.
+  - Atualização sintética (2026-11-13, 2B.6): Nova sessão usa argv nativo direto, com Claude/Codex `<prompt>`, Antigravity `-i <prompt>` e Hermes `chat -q <prompt>`; shims `.cmd` npm resolvem para `node.exe` + entrada JS. Fixture executável recebeu o prompt literal para os quatro contratos. Isso valida o transporte do Windows/Rust e a construção do argv, não o comportamento das versões reais dos CLIs; aceite do proprietário segue pendente.
 
 #### 2B.0.5 — herdr
 
@@ -215,28 +215,31 @@ Checkpoint 2B.2: 2B.2A–2B.2C concluídas; nenhuma alteração de arquivo pode 
 
 #### 2B.6A — Backend e transporte seguro
 
-- [ ] Implementar `LaunchAgent { Claude, Codex, Antigravity, Hermes }` e passar o agente em `launch_session(folder, prompt, agent)`.
-- [ ] Reutilizar o localizador de executáveis em `cli_relay.rs`; agente ausente retorna erro tipado sem abrir terminal inválido.
-- [ ] Definir por agente o canal de prompt seguro descoberto na 2B.0.4; nunca concatenar prompt no shell.
-- [ ] Adicionar testes para argumentos, diretório de trabalho, prompt com aspas, `;`, `&` e novas linhas; verificar que cancelamento/erro não inicia processo.
+- [x] Implementar `LaunchAgent { Claude, Codex, Antigravity, Hermes }` e passar o agente em `launch_session(folder, prompt, agent)`.
+- [x] Reutilizar `platform::cli_candidates`; agente ausente retorna erro tipado antes de abrir console.
+- [x] Iniciar diretamente com `std::process::Command` e `CREATE_NEW_CONSOLE`; shims `.cmd` são resolvidos para entrada JavaScript e `node.exe`, sem executar `cmd.exe` ou interpolar prompt em shell.
+- [x] Testar argumentos, diretório de trabalho, prompt com aspas, `;`, `&`, Unicode e novas linhas; entrada inválida não inicia processo.
 - Checkpoint 2B.6A: comandos construídos sem shell injection e prompt recebido intacto em fixtures para todo agente suportado.
 
 #### 2B.6B — Ponte e seletor em Nova sessão
 
-- [ ] Atualizar a ponte TypeScript/Tauri e o seletor de agente na Nova sessão.
-- [ ] Listar somente agentes instalados ou declarados disponíveis; CLI ausente mostra erro localizado e opção de voltar.
-- [ ] Lembrar a última escolha sem alterar configurações do agente; cancelar fecha o seletor e não inicia processo.
-- [ ] Adicionar todas as frases novas em `windows/src/i18n/extra.json`, nas 13 línguas; preservar IDs de pílula e layout existente.
+- [x] Atualizar a ponte TypeScript/Tauri e o seletor de agente na Nova sessão.
+- [x] Listar somente agentes encontrados; CLI ausente mostra erro localizado e opção de voltar.
+- [x] Lembrar a última escolha sem alterar configurações do agente; cancelar fecha o seletor e não inicia processo.
+- [x] Adicionar todas as frases novas em `windows/src/i18n/extra.json`, nas 13 línguas; preservar IDs de pílula e layout existente.
 - Checkpoint 2B.6B: seleção, ausência de agente e cancelamento têm comportamento explícito; interface compilada nas 13 línguas.
 
-#### 2B.6C — Integração e validação manual
+#### 2B.6C — Integração sintética e validação real
 
-- [ ] Exercitar Nova sessão com Claude, Codex, Antigravity e Hermes, sempre na pasta escolhida e com prompt de fixture.
-- [ ] Confirmar que erro de agente ausente/falha de CLI é visível e não deixa processo ou terminal órfão.
-- [ ] Rodar `npm test`, `npx tsc --noEmit` e `cargo test --lib`; executar um lançamento manual por agente suportado.
+- [x] Exercitar o contrato de spawn com executável Node fictício para Claude, Codex, Antigravity e Hermes; confirmar pasta e igualdade literal do prompt.
+- [x] Confirmar sinteticamente erro de agente ausente/falha e cancelamento sem iniciar processo real.
+- [x] Rodar testes UI, typecheck, build e testes Rust; verificar traduções e fluxo sintético.
+- [ ] Validação real do proprietário: instalar e iniciar cada CLI disponível, conferir console/pasta/prompt e comportamento de erro.
 - Checkpoint 2B.6C: cada agente disponível abre na pasta e recebe prompt idêntico; registrar agente/versão/resultado.
 
-Checkpoint 2B.6: 2B.6A, 2B.6B e 2B.6C concluídas; libera Fase 2.3 e 2.7.
+Checkpoint sintético 2B.6: PASS; libera o desenvolvimento sintético da Fase 2.3 e 2.7. Aceite real dos quatro CLIs continua pendente do proprietário após atualização.
+
+**Evidência sintética 2B.6 (2026-11-13):** `cargo test --offline --locked --workspace --quiet` passou (641 app + 36 relay; 8 ignorados), incluindo o processo nativo fictício que conferiu argv literal para os quatro agentes; `npm test` (643), `npx tsc --noEmit`, `npm run build`, `npm run synthetic:build`, `node scripts/gen-strings.mjs --check`, validador What's New (14 línguas) e `git diff --check` passaram. Um teste preexistente da área de transferência falhou na primeira execução: ele chama `EmptyClipboard` antes de publicar um PNG e pode apagar dados reais se a publicação falhar. O clipboard foi encontrado vazio pelo Agent Desktop; o teste foi marcado para execução manual e ignorado por padrão. O callback/console/CLI real permanece sem verificação.
 
 ### 2B.7A — herdr como ambiente (M)
 
