@@ -59,7 +59,11 @@ O callback de clique da Shell e o comportamento real da notificação continuam 
 
 **Verificação sintética (2026-11-13):** três testes Rust de geometria/política, 16 testes da variante sintética, `npm test` (638/638), `cargo test --offline --locked --lib` (640 passaram, 7 ignorados), `npm run build`, `npm run synthetic:build`, `npx tsc --noEmit`, `node scripts/gen-strings.mjs --check` e `git diff --check` passaram. O app esconde a janela nativa e a mostra enquanto há permissão/pergunta pendente; os testes usaram apenas fixtures. Não houve teste manual de jogo, vídeo, Alt+Tab nem hardware multi-monitor.
 
-**Avaliação real:** publicar Windows 0.6.6 conforme decisão do proprietário; a confirmação do comportamento em jogos/vídeos e em monitor físico fica para o proprietário após atualizar.
+**Versão de avaliação 0.6.6 (2026-11-13):** publicada em [Windows 0.6.6](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.6), tag no commit `3791e68213875c718e06989a29406c03a52d00e6`. O preflight do branch (`43358819580`) e o workflow manual no tag (`43360619914`) passaram; a release foi publicada e `windows-latest` atualizado.
+
+**Verificação dos instaladores 0.6.6:** baixei os assets finais e conferi os SHA-256 com os digests do GitHub. O Microsoft Defender examinou o diretório exato que continha somente esses dois arquivos: exame personalizado `{701433C6-30AC-49E6-A16E-7DD805310301}`, concluído em 2026-11-13 01:09, sem evento de detecção 1116. Setup `Coucou-Windows-0.6.6-setup.exe` (12.151.033 bytes): `73168be43220e227b51655cc028ea581e7bb6e268c91e2c0dc16ce7c48238e36`. MSI `Coucou-Windows-0.6.6.msi` (15.753.216 bytes): `41cf1dda5cc37bc4b9e06abd2c721e5c65d07a350776f38780cc1f0b47d8848a`.
+
+Jogo/vídeo real, Alt+Tab e troca física de monitor continuam pendentes para o proprietário após atualizar. A detecção geométrica não prova modo exclusivo.
 
 ### 2.3 — Custo e tokens por sessão (M; depende da paridade de agentes)
 
