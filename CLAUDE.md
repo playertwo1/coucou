@@ -32,3 +32,6 @@ Windows and Linux: `cd windows && npm install && npm run tauri dev`
 - New views follow the existing app style. `design/prototype/notch-buddy.html` and `design/captures/` are references for new work, not a reason to change existing views.
 - Every release adds its CHANGELOG.md section, a row in the README Versions table, and commits the regenerated Info.plist with the new version.
 - Every release also adds its What's new, shown once in the notch or the island after Coucou updates itself: an entry for the new version in `NotchBuddy/Resources/whats-new.json` (Mac, the 16 languages) or `windows/src/whats-new/whats-new.json` (Windows and Linux, the 14 languages). 1 to 4 items picked from the CHANGELOG section, each with an icon from `scripts/test-whats-new.py`, a short title and one line, translated in every language. `python3 scripts/test-whats-new.py` checks it; CI and `release.sh` fail without it.
+
+## Fork playertwo1/coucou (Lumen)
+This checkout is the owner's fork. Before working on it, read [AGENTS.md](AGENTS.md) (fork rules, in Portuguese), then `docs/STATE-FORK.md` and `docs/ROADMAP-FORK.md`. Push only to `origin` (`playertwo1/coucou`), never to `upstream`.
