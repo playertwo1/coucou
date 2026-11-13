@@ -40,7 +40,7 @@ Só os dois guias foram lidos; o código não foi lido. As afirmações sobre CP
 
 ## Ideia de formato: pacote de personagem do Lumen (v1)
 
-Proposta para quando houver novos personagens. Não tem etapa aberta no roadmap.
+Proposta para quando houver novos personagens. Está parqueada para estudo posterior em [parqueado.md](../roadmap/parqueado.md#personagens-por-agente-estudo-de-aparência).
 
 ```
 personagens/<id>/
