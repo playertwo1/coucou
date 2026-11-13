@@ -3,7 +3,7 @@
 ## Windows 0.6.13 — 13 de novembro de 2026 *(Lumen, primeira versão; avaliação do proprietário pendente)*
 
 - **Identidade Lumen para Windows** — Bússola de papel original, ícone e sons sintetizados; configurações e atualizações em pt-BR.
-- **Migração preservada** — mantém settings, hooks e identidade de notificações existentes; o teste sintético de upgrade roda no Windows CI antes da publicação.
+- **Migração preservada** — mantém settings, hooks e identidade de notificações existentes; upgrade MSI/NSIS com dados sintéticos passou no Windows CI antes da publicação. A avaliação real pelo proprietário está pendente.
 
 ## 0.6.0 — November 12, 2026
 

@@ -11,3 +11,17 @@
 - [x] Conferir a execução, a release e os assets em `playertwo1/coucou`; workflow manual no tag `43348587966` concluiu com sucesso e publicou [Windows 0.6.5](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.5).
 - [x] Comparar os SHA-256 dos instaladores publicados com o preflight. Os hashes diferiram; os assets finais foram baixados, conferidos com os digests do GitHub e examinados diretamente pelo Defender sem detecções (evento 1001, exame `{9AD2DD74-E9E4-4DCE-8E77-D2954870AA9F}`).
 - Nunca executar esta lista de publicação sem o proprietário pedir release.
+
+## Windows 0.6.13 — Lumen
+
+- [x] Pedido de publicação autorizado pelo proprietário; identidade Bússola de papel escolhida.
+- [x] Validações locais: `npx tsc --noEmit`, `npm test` (659/659), `npm run build`, `cargo test --lib` (650 passaram, 8 ignorados) e `python scripts/test-whats-new.py`.
+- [x] Preflight CI `43424866776` no commit `252639a1efcb670fc16d2b6f5f267688887b430b`: build/empacotamento, testes do app e Rust, notas de release, ícones e upgrades sintéticos MSI/NSIS passaram.
+- [x] Microsoft Defender com assinaturas `1.463.281.0` examinou os artefatos baixados do preflight; nenhum arquivo foi detectado (evento 1001, 2026-11-13).
+- [x] SHA-256 dos artefatos do preflight:
+  - MSI `Lumen-Windows-0.6.13.msi`: `A73368E15A3A2DA184C933F8939D48BB43946307C5BA387EFBA28D3E43C77674`.
+  - Setup `Lumen-Windows-0.6.13-setup.exe`: `E98CC0713117828F1E14E9F7A70EE4E26326C9CD61FD7C1BDA4549B4172A5F3A`.
+  - App portátil `lumen.exe`: `36F318E2EA17528E9C749E1710E38D7B0B9A007EB9F021D5C9729433CE3818CC`.
+  - Hook `lumen-hook.exe`: `3295B2EC302610524E58C3BB32AA84FC8D5CAAA4DD05DCEEABB3764EEA5CBF82`.
+- [ ] Commit da Fase L em `main`, tag `windows-v0.6.13`, execução de publicação e comparação/escaneamento dos assets finais.
+- [ ] Proprietário instalará e avaliará no uso real; L1 permanece em avaliação até esse retorno.
