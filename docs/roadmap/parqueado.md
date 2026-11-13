@@ -18,14 +18,14 @@
 
 ### Personagens por agente — estudo assumido pela L1.4 (2026-11-13)
 
-**Decisão do proprietário (2026-11-13):** a decisão anterior de cancelar a L1.4 foi substituída. Como não há autorização escrita para usar o Mochi, os personagens do Lumen serão originais. A Bússola continua somente como ícone do aplicativo. O estudo foi assumido pela L1.4. Em 2026-11-13, o proprietário aprovou a família visual e autorizou avançar com os oito estados: “vamos seguuir entao com as 8, ficou bom pode segir na roadmap”, acompanhado do lineup dos sete agentes. Isso não escolhe sprite ou Canvas nem aprova implementação no app.
+**Decisão do proprietário (2026-11-13):** a decisão anterior de cancelar a L1.4 foi substituída. Como não há autorização escrita para usar o Mochi, os personagens do Lumen serão originais. A Bússola continua somente como ícone do aplicativo. O estudo foi assumido pela L1.4. O proprietário esclareceu que “vamos seguuir entao com as 8” referia-se à lineup: “falei errado to falando a lineup, gostei deles das imagens que fez das animacoes etc”. O aceite visual cobre a lineup e as pranchas de estados/animações dos sete agentes. Isso não escolhe sprite ou Canvas nem aprova implementação no app.
 
 Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (ideias gerais de estados, proporção e pacotes; sem copiar arte ou código) e [pesquisa QwenPaw](../research/qwenpaw.md) (mapa de eventos para estados). Referências externas podem orientar ideias gerais, mas as imagens finais devem permanecer originais, sem copiar arte nem incluir logos, símbolos ou mascotes oficiais.
 
 **L1.4a — imagens de referência, sem código do app:**
 
 - [x] Gerar lineup dos sete personagens, uma prancha por personagem com quatro estados obrigatórios e quatro desejáveis, teste de 22 px, versões transparentes e `README.md` em pt-BR em `windows/design/personagens/`.
-- [x] O proprietário aprovou as referências em 2026-11-13; evidência registrada acima. O aceite cobre a família original e o avanço com oito estados, sem incluir o estudo separado do Claude com referências de marca.
+- [x] O proprietário aprovou visualmente a lineup e as pranchas de estados/animações em 2026-11-13; evidência e esclarecimento registrados acima. O aceite não inclui o estudo separado do Claude com referências de marca.
 
 **L1.4b — protótipo sprite × Canvas, em andamento fora da release:**
 

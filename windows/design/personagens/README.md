@@ -1,6 +1,6 @@
 # Personagens do Lumen — referências visuais L1.4a
 
-Pranchas conceituais geradas em 2026-11-13 e organizadas em PNG para leitura em fundo preto ou transparente. Em 2026-11-13, o proprietário aprovou a família original e autorizou avançar com os oito estados visuais (“vamos seguuir entao com as 8, ficou bom pode segir na roadmap”), acompanhando o lineup dos sete agentes. O aceite não escolhe sprite ou Canvas nem integra personagens ao aplicativo. A Bússola continua sendo somente o ícone do Lumen.
+Pranchas conceituais geradas em 2026-11-13 e organizadas em PNG para leitura em fundo preto ou transparente. Em 2026-11-13, o proprietário esclareceu que seu comentário se referia à lineup: “falei errado to falando a lineup, gostei deles das imagens que fez das animacoes etc”. O aceite visual cobre a lineup e as pranchas de estados/animações da família original. Não escolhe sprite ou Canvas nem integra personagens ao aplicativo. A Bússola continua sendo somente o ícone do Lumen.
 
 ## Família e paleta
 
