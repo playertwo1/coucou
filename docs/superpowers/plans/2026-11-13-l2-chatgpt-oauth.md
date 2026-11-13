@@ -46,4 +46,6 @@ Sintético PASS não comprova login real. Após a release, o dono confirma naveg
 - `cargo test --manifest-path windows/Cargo.toml -p coucou --lib`: PASS, 660 aprovados, 8 ignorados, 0 falhas.
 - `python scripts/test-whats-new.py windows`: PASS para a versão 0.6.14 em pt-BR. O validador agora preserva o idioma pt-BR nas notas históricas exclusivas do Lumen.
 - `git diff --check` e `rustfmt --check` do módulo novo: PASS.
-- Preflight Windows, exame de instaladores e login OAuth com conta real: NOT_RUN neste ponto.
+- Preflight Windows `43477378762`, commit `fb3dabafc8558584c5a2ba55e81077e654e66d0a`: PASS; build e upgrade sintético MSI/NSIS passaram.
+- Defender examinou MSI, setup, `lumen.exe` e `lumen-hook.exe` individualmente; todos retornaram código 0 e “found no threats”. Hashes e evento da verificação de pasta estão no checklist de release.
+- Login OAuth com conta real: **NOT_RUN**, aguardando validação do proprietário após a publicação.

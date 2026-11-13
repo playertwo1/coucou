@@ -16,7 +16,13 @@
 
 - [x] Autorização recorrente do proprietário para publicar cada etapa depois dos testes sintéticos, registrada em `docs/ROADMAP-FORK.md`.
 - [x] Validações locais: `npx tsc --noEmit`, `npm test` (659/659), `npm run build`, `cargo test --manifest-path windows/Cargo.toml -p coucou --lib` (660 passaram, 8 ignorados) e `python scripts/test-whats-new.py windows`.
-- [ ] Workflow manual `Windows` no branch `codex/l2-chatgpt-oauth`; baixar e examinar com Microsoft Defender os artefatos de preflight.
+- [x] Workflow manual `Windows` no branch `codex/l2-chatgpt-oauth`, commit `fb3dabafc8558584c5a2ba55e81077e654e66d0a`: CI `43477378762` concluiu com sucesso. Build, testes, notas, ícones, empacotamento e upgrade sintético MSI/NSIS passaram.
+- [x] Microsoft Defender, assinaturas `1.463.281.0` (13/11/2026), examinou individualmente os quatro artefatos baixados com `MpCmdRun.exe -Scan -ScanType 3 -File <arquivo> -DisableRemediation`; os quatro retornaram código 0 e “found no threats”. A verificação personalizada da pasta também concluiu sem detecções (evento 1001, exame `{15EB8CCB-EF55-4D39-8DDF-4032CB8A1B5E}`).
+- [x] SHA-256 dos artefatos do preflight:
+  - MSI `Lumen-Windows-0.6.14.msi`: `41F3852B4F967C7CE0FA5455EED6D3ACA49A98C449E3F9DC6421A60ADA240CB0`.
+  - Setup `Lumen-Windows-0.6.14-setup.exe`: `49556A2C5650CC9C519CCB073AB87B3CE614CBA8BF2686361E37B283D55A165F`.
+  - App portátil `lumen.exe`: `326B17A034865EBFEB1D9B178404E487CBEA6EDE1C9B22E8155FF388A1609495`.
+  - Hook `lumen-hook.exe`: `49C7725C391D4BAA1B9B36198ADCC043C48A58E5D5BAE33034F352F1C25771C9`.
 - [ ] Integrar na `main`, publicar tag `windows-v0.6.14`, conferir o workflow e os assets finais no fork; comparar hashes do GitHub e examinar os instaladores finais com Defender.
 - [ ] Proprietário validar login, consentimento, persistência, duas contas, troca e saída. Login real permanece **NOT_RUN** até esse teste.
 

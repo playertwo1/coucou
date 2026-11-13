@@ -1,6 +1,6 @@
 # STATE do fork — ponto de retomada
 
-**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.13`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.13) (Lumen; avaliação real pendente) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; personagens atuais mantidos por decisão do dono; L1.4 cancelada; L1.3 real em avaliação; implementação sintética da L2.1 aprovada; preflight da 0.6.14 pendente
+**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.13`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.13) (Lumen; avaliação real pendente) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; personagens atuais mantidos por decisão do dono; L1.4 cancelada; L1.3 real em avaliação; sintético e preflight Windows da L2.1 aprovados; integração e release 0.6.14 pendentes
 
 Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e evidências ficam nos arquivos de `docs/roadmap/`, e a ordem fica no [ROADMAP-FORK](ROADMAP-FORK.md).
 
@@ -9,7 +9,7 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 | Fase | Estado |
 |---|---|
 | 0, 1, 2 | Pausadas (D-053); ver inventário L0 na Fase L |
-| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; avaliação real da migração pendente; L1.4 cancelada pelo dono; implementação sintética da L2.1 aprovada; preflight da 0.6.14 pendente |
+| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; avaliação real da migração pendente; L1.4 cancelada pelo dono; implementação sintética e preflight Windows da L2.1 aprovados; integração e release 0.6.14 pendentes |
 | 2B, 2C | Pausadas (decisão do dono, 2026-11-13) |
 | M0–M10 | Viram "Lumen assistente"; começam depois do Checkpoint L7 |
 | 3 (identidade) | Incorporada à L1 |
@@ -20,7 +20,7 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 - Worktree `../coucou-permission-toast-2-1a`, branch `codex/windows-permission-notifications-eval`: avaliação de notificações de permissão.
 - Branch `codex/windows-permission-toast-synthetic`.
 - Worktree `../coucou-lumen-identity`, branch `codex/l1-lumen-identidade`: commit `c3b2af2` está em `origin/main`; tag e release `windows-v0.6.13` publicadas. CI `43424866776` e CI da release `43428181413` passaram nos testes sintéticos MSI/NSIS; Defender não detectou ameaças nos artefatos do preflight nem nos instaladores finais. L1 aguarda avaliação real do proprietário.
-- Branch `codex/l2-chatgpt-oauth`: implementação L2.1 e testes locais sintéticos aprovados; versão 0.6.14 preparada. Falta o workflow Windows de preflight e o exame dos artefatos antes da integração/publicação.
+- Branch `codex/l2-chatgpt-oauth`: implementação L2.1, testes locais, preflight Windows `43477378762`, upgrade sintético MSI/NSIS e exame Defender dos quatro artefatos aprovados; versão 0.6.14 preparada. Falta integrar, publicar e conferir os assets finais.
 - Na worktree principal há alterações locais ainda não commitadas do app sintético (`windows/synthetic/`, testes e specs de 2026-11-12). Elas são do dono e ficaram fora do commit de reestruturação de 2026-11-13.
 - As worktrees acima e as alterações locais do app sintético não foram alteradas nesta sessão. O preflight 0.6.12 `43402455643` foi cancelado; a tag existe, mas não há release publicada.
 
@@ -28,12 +28,12 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 
 1. O proprietário relatou que a identidade da 0.6.13 aparece ("aparece tudo"). Ainda faltam os resultados por cenário da migração real: tipo de instalação (MSI ou NSIS), settings, hooks, permissões e atualizador.
 2. **L1.4 foi cancelada pelo proprietário:** manter os personagens atuais do Coucou sem mudanças; a Bússola Lumen fica somente como ícone do aplicativo. Não gerar sprites nem alterar os personagens.
-3. **L2.1 sintética passou em 2026-11-13.** TypeScript, 659 testes Node, build Vite e 660 testes Rust passaram; 8 testes Rust foram ignorados. A versão 0.6.14 aguarda preflight Windows e exame dos instaladores. Depois da publicação, o proprietário testa o login real; a renovação automática e o uso no chat continuam na L2.2.
+3. **L2.1 sintética e preflight passaram em 2026-11-13.** TypeScript, 659 testes Node, build Vite e 660 testes Rust passaram; 8 testes Rust foram ignorados. O CI Windows `43477378762` e o upgrade sintético MSI/NSIS passaram; o Defender examinou os quatro artefatos do preflight sem detecções. Falta integrar e publicar a 0.6.14, conferir os assets finais e, depois, o proprietário testa o login real. A renovação automática e o uso no chat continuam na L2.2.
 4. Achados do QwenPaw registrados em [research/qwenpaw.md](research/qwenpaw.md) e marcados "(QwenPaw)" em L2, L3, L4, L6, M0, M1, M5, M8 e M9.
 
 ## Pendências do dono
 
 - Informar os resultados reais pendentes da instalação da 0.6.13 (MSI/NSIS, settings, hooks, permissões e atualizador).
 - Testar o login ChatGPT real depois da release de avaliação da L2.1.
-- Completar o preflight/release da versão 0.6.14; nenhum teste real do Sign in with ChatGPT foi executado.
+- Testar o login ChatGPT real depois da publicação da 0.6.14; nenhum teste real do Sign in with ChatGPT foi executado.
 - Validações reais abertas nas fases 0, 1 e 2 (ver inventário da L0 na Fase L).
