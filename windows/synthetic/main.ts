@@ -63,11 +63,26 @@ const label = document.createElement("strong");
 label.textContent = t("Synthetic data only");
 const status = document.createElement("output");
 status.setAttribute("aria-live", "polite");
+const runStatus = document.createElement("output");
+runStatus.setAttribute("aria-live", "polite");
 const fullscreenStatus = document.createElement("output");
 fullscreenStatus.setAttribute("aria-live", "polite");
 const request = () => {
   host.__emit("hook", fixtures.permission());
   status.textContent = "";
+};
+let syntheticRun = 0;
+const testLocalRun = () => {
+  const invocation = {
+    session_id: "synthetic-build-session",
+    tool_use_id: `synthetic-build-${++syntheticRun}`,
+    cwd: "C:\\Synthetic\\Coucou",
+    tool_name: "Bash",
+    tool_input: { command: "npm test" },
+  };
+  host.__emit("hook", { ...invocation, hook_event_name: "PreToolUse" });
+  host.__emit("hook", { ...invocation, hook_event_name: "PostToolUse", coucou_run_status: 0 });
+  runStatus.textContent = "Somente dados sintéticos · npm test · resultado fictício";
 };
 function button(text: string, action: () => void) {
   const button = document.createElement("button");
@@ -91,11 +106,11 @@ const syncFullscreen = () => {
   fullscreenButton.setAttribute("aria-pressed", String(fullscreenScenario));
   fullscreenStatus.textContent = visible ? fullscreenInactiveText : fullscreenActiveText;
 };
-controls.append(label, button(t("New agent session"), () => host.__emit("shortcut", "newSession")), button("Enviar só no teste", () => document.querySelector<HTMLButtonElement>(".launch-send")?.click()), button(t("Test permission"), request), button(t("Test Git pill"), () => State.setFocus("integration_git")), fullscreenButton, button(t("Reset test data"), () => {
+controls.append(label, button(t("New agent session"), () => host.__emit("shortcut", "newSession")), button("Enviar só no teste", () => document.querySelector<HTMLButtonElement>(".launch-send")?.click()), button("Simular npm test", testLocalRun), button(t("Test permission"), request), button(t("Test Git pill"), () => State.setFocus("integration_git")), fullscreenButton, button(t("Reset test data"), () => {
   localStorage.clear();
   sessionStorage.clear();
   location.reload();
-}), status, fullscreenStatus);
+}), status, runStatus, fullscreenStatus);
 const usagePanel = document.createElement("div");
 usagePanel.hidden = true;
 usagePanel.id = "synthetic-agent-usage";

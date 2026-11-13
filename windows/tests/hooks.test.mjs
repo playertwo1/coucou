@@ -198,6 +198,29 @@ test("a failed tool call and subagents leave their own steps", () => {
   assert.equal(task().state, "working");
 });
 
+test("local build/test outcomes use the command's original project and append once", () => {
+  hook({ hook_event_name: "PreToolUse", session_id: "s1", tool_use_id: "run-a", cwd: "C:\\repos\\alpha", tool_name: "Bash", tool_input: { command: "npm test" } });
+  hook({ hook_event_name: "PreToolUse", session_id: "s1", tool_use_id: "run-b", cwd: "C:\\repos\\beta", tool_name: "Bash", tool_input: { command: "cargo build" } });
+  hook({ hook_event_name: "PostToolUse", session_id: "s1", tool_use_id: "run-b", tool_name: "Bash", tool_input: { command: "cargo build" }, coucou_run_status: 1, tool_response: "private build log" });
+  hook({ hook_event_name: "PostToolUse", session_id: "s1", tool_use_id: "run-a", tool_name: "Bash", tool_input: { command: "npm test" }, coucou_run_status: 0, tool_response: "private test log" });
+  hook({ hook_event_name: "PostToolUse", session_id: "s1", tool_use_id: "run-a", tool_name: "Bash", tool_input: { command: "npm test" }, coucou_run_status: 0 });
+  assert.equal(task().steps.filter((step) => step === "cargo build · Failed · beta").length, 1);
+  assert.equal(task().steps.filter((step) => step === "npm test · ✓ · alpha").length, 1);
+  assert.equal(task().steps.some((step) => step.includes("private")), false);
+});
+
+test("a local command outside the main project uses its captured working directory", () => {
+  hook({ hook_event_name: "PreToolUse", session_id: "s1", tool_use_id: "run-outside", cwd: "C:\\scratch", tool_name: "Bash", tool_input: { command: "npm test" } });
+  hook({ hook_event_name: "PostToolUse", session_id: "s1", tool_use_id: "run-outside", tool_name: "Bash", tool_input: { command: "npm test" }, coucou_run_status: 0 });
+  assert.equal(task().steps.at(-1), "npm test · ✓ · scratch");
+});
+
+test("an interrupted build is shown as cancelled, not as passed or failed", () => {
+  hook({ hook_event_name: "PreToolUse", session_id: "s1", tool_use_id: "run-cancel", cwd: "C:\\repos\\alpha", tool_name: "Bash", tool_input: { command: "cargo build" } });
+  hook({ hook_event_name: "PostToolUseFailure", session_id: "s1", tool_use_id: "run-cancel", tool_name: "Bash", tool_input: { command: "cargo build" }, coucou_run_status: 2 });
+  assert.deepEqual(task().steps, ["Runs · cargo build", "cargo build · Cancelled · alpha"]);
+});
+
 test("a notification is a rate limit, a question, or nothing", () => {
   hook({ hook_event_name: "Notification", message: "Just so you know." });
   assert.equal(task().state, "idle");

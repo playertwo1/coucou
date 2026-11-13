@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.12",
+      "items": [
+        {
+          "icon": "terminal",
+          "title": {
+            "en": "Local test and build results",
+            "zh-Hans": "本地测试与构建结果",
+            "hi": "स्थानीय टेस्ट और बिल्ड के नतीजे",
+            "es": "Resultados locales de pruebas y compilación",
+            "ar": "نتائج الاختبارات والبناء المحلية",
+            "fr": "Résultats des tests et compilations locaux",
+            "bn": "স্থানীয় পরীক্ষা ও বিল্ডের ফলাফল",
+            "pt-BR": "Resultados de testes e builds locais",
+            "ru": "Результаты локальных тестов и сборок",
+            "id": "Hasil tes dan build lokal",
+            "de": "Ergebnisse lokaler Tests und Builds",
+            "tr": "Yerel test ve derleme sonuçları",
+            "ko": "로컬 테스트 및 빌드 결과",
+            "ja": "ローカルテストとビルドの結果"
+          },
+          "detail": {
+            "en": "See whether npm test or cargo build finished successfully in the right project.",
+            "zh-Hans": "查看 npm test 或 cargo build 是否在对应项目中成功完成。",
+            "hi": "देखें कि npm test या cargo build सही प्रोजेक्ट में सफल हुआ या नहीं।",
+            "es": "Comprueba si npm test o cargo build terminó bien en el proyecto correcto.",
+            "ar": "اعرف ما إذا كان npm test أو cargo build قد اكتمل بنجاح في المشروع الصحيح.",
+            "fr": "Voyez si npm test ou cargo build a réussi dans le bon projet.",
+            "bn": "সঠিক প্রকল্পে npm test বা cargo build সফল হয়েছে কি না দেখুন।",
+            "pt-BR": "Veja se npm test ou cargo build terminou com sucesso no projeto correto.",
+            "ru": "Проверьте, успешно ли npm test или cargo build завершились в нужном проекте.",
+            "id": "Lihat apakah npm test atau cargo build berhasil di proyek yang tepat.",
+            "de": "Sieh, ob npm test oder cargo build im richtigen Projekt erfolgreich war.",
+            "tr": "npm test veya cargo build komutunun doğru projede başarılı olup olmadığını görün.",
+            "ko": "올바른 프로젝트에서 npm test 또는 cargo build가 성공했는지 확인하세요.",
+            "ja": "正しいプロジェクトで npm test または cargo build が成功したか確認できます。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.11",
       "items": [
         {

@@ -55,7 +55,7 @@ const PARENT_POLL: Duration = Duration::from_millis(100);
 
 /// Fields that are pointless to forward and can be enormous (a whole file read,
 /// a full command output). The island never shows them.
-const DROPPED_FIELDS: &[&str] = &["tool_response", "tool_output", "transcript_path"];
+const DROPPED_FIELDS: &[&str] = &["tool_response", "tool_output", "transcript_path", "error"];
 /// Longest string forwarded for any single field; the island truncates to far
 /// less than this anyway.
 const MAX_FIELD_LEN: usize = 2_000;
@@ -237,6 +237,10 @@ fn prepare(raw: &[u8], args: &Args, env: &dyn Fn(&str) -> Option<String>, cwd: &
     let name = normalize::refine(normalize::event(&raw_event), map);
     map.insert("hook_event_name".into(), Value::String(name.clone()));
 
+    if let Some(status) = local_run_status(&name, map) {
+        map.insert("coucou_run_status".into(), Value::Number(status.into()));
+    }
+
     for field in DROPPED_FIELDS {
         map.remove(*field);
     }
@@ -275,6 +279,70 @@ fn prepare(raw: &[u8], args: &Args, env: &dyn Fn(&str) -> Option<String>, cwd: &
     let mut line = payload.to_string();
     line.push('\n');
     Some(Event { line, name, question })
+}
+
+fn structured_exit_code(value: &Value) -> Option<i64> {
+    let object = value.as_object()?;
+    object
+        .get("exit_code")
+        .or_else(|| object.get("exitCode"))
+        .and_then(Value::as_i64)
+        .or_else(|| object.get("outcome").and_then(structured_exit_code))
+        .or_else(|| {
+            object.get("output")?.as_array()?.iter().find_map(structured_exit_code)
+        })
+}
+
+/// Forward only a tiny outcome marker; never retain or parse text command output.
+fn local_run_status(event: &str, map: &Map<String, Value>) -> Option<u8> {
+    let tool = map.get("tool_name").and_then(Value::as_str)?;
+    if !["Bash", "PowerShell", "shell", "run_command"].contains(&tool) {
+        return None;
+    }
+    let command = map.get("tool_input")?.get("command")?.as_str()?;
+    let command = command.split_whitespace().collect::<Vec<_>>().join(" ");
+    if command != "npm test" && command != "cargo build" {
+        return None;
+    }
+
+    if event == "PostToolUseFailure" {
+        return Some(if map.get("is_interrupt").and_then(Value::as_bool) == Some(true) {
+            2
+        } else {
+            1
+        });
+    }
+    if event != "PostToolUse" {
+        return None;
+    }
+
+    let response = map.get("tool_response");
+    let code = map
+        .get("exit_code")
+        .or_else(|| map.get("exitCode"))
+        .and_then(Value::as_i64)
+        .or_else(|| response.and_then(structured_exit_code));
+    if let Some(code) = code {
+        return Some(if code == 0 { 0 } else { 1 });
+    }
+
+    if map.get("error").and_then(Value::as_str).is_some_and(|s| !s.is_empty())
+        || response
+            .and_then(|v| v.get("error"))
+            .and_then(Value::as_str)
+            .is_some_and(|s| !s.is_empty())
+    {
+        return Some(1);
+    }
+
+    match map.get("coucou_agent").and_then(Value::as_str) {
+        // Claude's PostToolUse is emitted only after successful tool execution;
+        // Antigravity reports a non-empty `error` for failed calls.
+        None | Some("claude-desktop") | Some("antigravity") => Some(0),
+        // Codex can emit PostToolUse after nonzero exits; an undocumented shape
+        // or provider without an explicit outcome must not appear green.
+        _ => Some(3),
+    }
 }
 
 /// Which terminal the session runs in. Unlike macOS, Coucou here accepts events
@@ -549,6 +617,58 @@ mod tests {
         let (v, ev) = run(r#"{"hook_event_name":"stop","status":"error","tool_output":"huge"}"#, "cursor", "");
         assert_eq!(ev.name, "StopFailure");
         assert!(v.get("tool_output").is_none());
+    }
+
+    #[test]
+    fn local_run_status_is_minimal_and_never_forwards_output() {
+        let (claude, _) = run(
+            r#"{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"npm test"},"tool_use_id":"call-1","tool_response":{"stdout":"private output"}}"#,
+            "",
+            "",
+        );
+        assert_eq!(claude["coucou_run_status"], 0);
+        assert!(claude.get("tool_response").is_none());
+        assert!(!claude.to_string().contains("private output"));
+
+        let (codex_passed, _) = run(
+            r#"{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"npm test"},"tool_use_id":"call-0","tool_response":{"output":[{"outcome":{"type":"exit","exit_code":0}}]}}"#,
+            "codex",
+            "",
+        );
+        assert_eq!(codex_passed["coucou_run_status"], 0);
+
+        let (codex, _) = run(
+            r#"{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"cargo build"},"tool_use_id":"call-2","tool_response":{"output":[{"outcome":{"type":"exit","exit_code":17},"stdout":"private output"}]}}"#,
+            "codex",
+            "",
+        );
+        assert_eq!(codex["coucou_run_status"], 1);
+        assert!(codex.get("tool_response").is_none());
+        assert!(!codex.to_string().contains("private output"));
+
+        let (unknown, _) = run(
+            r#"{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"cargo build"},"tool_use_id":"call-3","tool_response":"private output"}"#,
+            "codex",
+            "",
+        );
+        assert_eq!(unknown["coucou_run_status"], 3);
+        assert!(!unknown.to_string().contains("private output"));
+
+        let (cancelled, _) = run(
+            r#"{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"npm test"},"tool_use_id":"call-4","is_interrupt":true,"error":"private output"}"#,
+            "",
+            "",
+        );
+        assert_eq!(cancelled["coucou_run_status"], 2);
+        assert!(cancelled.get("error").is_none());
+        assert!(!cancelled.to_string().contains("private output"));
+
+        let (unsupported, _) = run(
+            r#"{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"npm test && cargo build"},"tool_use_id":"call-5","tool_response":{"exit_code":0}}"#,
+            "codex",
+            "",
+        );
+        assert!(unsupported.get("coucou_run_status").is_none());
     }
 
     #[test]

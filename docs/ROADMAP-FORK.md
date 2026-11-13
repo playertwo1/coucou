@@ -5,7 +5,7 @@ Atualizado em 2026-11-13. Fonte canônica de estado: este índice e os arquivos 
 ## Estado e regras de leitura
 
 - Decisão do proprietário (2026-11-12): executar testes sintéticos em todas as etapas; ao concluir cada etapa, criar uma nova versão e publicá-la no GitHub para que o proprietário atualize e valide no uso real. Registrar separadamente o resultado sintético e o aceite real; simulação nunca fecha um checkpoint de runtime. Preservar os requisitos Git e as alterações locais.
-- A avaliação Windows `windows-v0.6.6` foi publicada. A 2.2 tem implementação e testes sintéticos; jogos, troca de monitor e o aceite real de 2.1 seguem pendentes. Próxima dependência: 2B.6 antes de integrar 2.3 e 2.7. O atualizador consulta as releases de `playertwo1/coucou`.
+- A etapa 2.8a tem checkpoint sintético PASS e versão 0.6.12 preparada para avaliação do proprietário; o aceite real permanece pendente. Os checkpoints nativos de 2.1a e 2.2 e a validação com hardware da 2.10 também seguem abertos. Próxima etapa sintética: 2.8b. O atualizador consulta as releases de `playertwo1/coucou`.
 - O aplicativo e várias features já têm código e testes, mas ainda falta validação manual em runtime. Não marque uma feature como concluída só porque compila.
 - Esforço: P = pequeno, M = médio, G = grande. Estimativa serve para comparar itens; uma feature M/G deve ser subdividida antes da implementação.
 - [ ] Pendente.
@@ -51,7 +51,7 @@ Decisões que deram origem às fases M: `docs/questionario/2026-11-09-mochi-assi
 |---:|---|---|---|
 | 1 | 0 — Validar o que já existe | [fase-0-validacao.md](roadmap/fase-0-validacao.md) | Em andamento |
 | 2 | 1 — Recursos do Mac ainda não escolhidos | [fase-1-recursos-mac.md](roadmap/fase-1-recursos-mac.md) | Em andamento (1.2 concluída; 1.1 aguarda teste manual; 1.3 e 1.4 descartadas) |
-| 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Em andamento (2.2 sintética; avaliação 0.6.6 publicada; aceite real pendente) |
+| 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Em andamento (2.8a sintética; 0.6.12 preparada para avaliação; aceites reais pendentes) |
 | 4 | 2B — Paridade entre agentes e ambientes | [fase-2b-paridade-agentes.md](roadmap/fase-2b-paridade-agentes.md) | Pendente |
 | 5 | 2C — Pílulas configuráveis e posição livre | [fase-2c-pilulas-posicao.md](roadmap/fase-2c-pilulas-posicao.md) | Pendente |
 | 6 | M0 — Mochi: descoberta e licenças | [m0-descoberta.md](roadmap/m0-descoberta.md) | Pendente |

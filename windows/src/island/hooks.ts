@@ -17,9 +17,22 @@ import { setClaudePlanUsage, storedClaudePlanUsage } from "../views/usage";
 import { N_, t } from "../i18n/i18n";
 import { Launch } from "../core/launch";
 import { recordAgentWork } from "../mochi/work-streak";
+import { createLocalRunWatcher } from "./local-runs";
 
 const CLAUDE_ID = "integration_claude";
 const CURSOR_ID = "agent_cursor";
+const localRuns = createLocalRunWatcher();
+
+function recordLocalRun(payload: HookPayload, agentId: string) {
+  const run = localRuns.observe(payload);
+  if (!run) return null;
+  const projectName = aliasProjectName(lastPathComponent(run.cwd) || "Session");
+  const mark = run.status === 0 ? "✓"
+    : run.status === 1 ? t("Failed")
+      : run.status === 2 ? t("Cancelled") : t("Unknown");
+  State.appendStep(agentId, `${run.label} · ${mark} · ${projectName}`);
+  return run.status;
+}
 
 /** Most requests waiting at once, the one on the card included (Mac ApprovalQueue.maxPending). */
 const MAX_PENDING = 5;
@@ -168,6 +181,9 @@ interface HookPayload {
   last_assistant_message?: string;
   tool_name?: string;
   tool_input?: Record<string, unknown>;
+  /** Stable provider call ID and minimal completion status for local test/build watching. */
+  tool_use_id?: string;
+  coucou_run_status?: 0 | 1 | 2 | 3;
   /** Set by the relay when an edit was too big to forward whole (> 256 KB). */
   coucou_diff_truncated?: boolean;
   /** Optional agent tag: lowercase, digits and hyphens, ≤ 24 chars. */
@@ -505,6 +521,7 @@ function handleHook(island: Island, payload: HookPayload) {
 
     case "PreToolUse": {
       ensurePill();
+      localRuns.observe(payload);
       supersedeStop();
       clearFinalLine(agentId);
       const tool = payload.tool_name ?? "Tool";
@@ -533,13 +550,14 @@ function handleHook(island: Island, payload: HookPayload) {
         dropPendingCard(island);
       }
       State.updateTask(agentId, "working");
+      recordLocalRun(payload, agentId);
       recordDiff(agentId, payload);
       break;
 
     case "PostToolUseFailure":
       supersedeStop();
       State.updateTask(agentId, "working");
-      State.appendStep(agentId, t("⚠ failed"));
+      if (recordLocalRun(payload, agentId) !== 2) State.appendStep(agentId, t("⚠ failed"));
       break;
 
     case "Notification": {

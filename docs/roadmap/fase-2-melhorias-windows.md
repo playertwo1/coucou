@@ -145,15 +145,25 @@ O Windows Terminal sintético apresentou duas abas `Synthetic Duplicate` com o m
 
 **Limites:** o teste de teclado nativo `Ctrl+Alt+L` não foi enviado pela automação porque o Agent Desktop headless não confirmou foco da janela; o teste automatizado verifica o mapeamento e o roteamento do atalho, e o harness abriu o mesmo cartão. Ditado e CLIs instaladas não foram exercitados com dispositivos/contas reais. Aceite real do proprietário permanece pendente.
 
+**Versão sintética de avaliação 0.6.11 (2026-11-13):** publicada em [Windows 0.6.11](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.11), tag no commit `9bbf5cdfbb77888ca1439acaf1d015e3f87950c2`. O preflight (`43390352040`) e o workflow do tag (`43391881054`) passaram; `windows-latest` foi atualizado.
+
+**Instaladores finais 0.6.11:** baixados da release e conferidos com os digests SHA-256 do GitHub. O exame personalizado do Microsoft Defender no diretório contendo somente os dois instaladores terminou em 2026-11-13 05:30 (evento 1001, `{B0975DC9-3D62-499E-9A9F-E8A7AA47D479}`), sem evento 1116. Setup (12.191.583 bytes): `e0c6d17f77d31b44c2ecd8b57f1a53793bcc81d141f12eed29758b8c6ccc727b`. MSI (15.806.464 bytes): `3c6bc710dde8f195774c470cd0ed48238c30e60016797a0e83d056f217e45033`.
+
 ### 2.8 — Vigia de testes/builds (M)
 
 #### 2.8a — Comandos locais
 
-- [ ] Definir quais comandos/processos observar: `npm test` e `cargo build`, diretório de trabalho e significado de sucesso/falha/cancelamento.
-- [ ] Testar processos simultâneos, comando iniciado fora do projeto, encerramento abrupto e saída não zero.
-- [ ] Implementar leitura do exit code sem relançar nem alterar o comando observado.
-- [ ] Mostrar resultado associado ao projeto correto e não repetir alerta para o mesmo processo.
-- Checkpoint: verde só para exit code zero; vermelho para erro; cancelado não é sucesso.
+- [x] Observar somente `npm test` e `cargo build` em Bash, PowerShell e ferramentas de shell compatíveis; associar pelo diretório de trabalho e ID estável da chamada.
+- [x] Testar execuções simultâneas, diretório fora do projeto principal, ausência de contexto, saída não zero, cancelamento e encerramento sem evento final.
+- [x] Extrair somente o resultado mínimo do hook; não relançar nem alterar o comando e descartar logs/respostas.
+- [x] Mostrar o resultado na pílula do agente e na pasta capturada na chamada; deduplicar conclusão e expirar chamadas pendentes antigas sem inventar resultado.
+- Checkpoint sintético: PASS. Exit code zero é verde; falha fica vermelha; cancelamento e resultado desconhecido nunca aparecem como sucesso.
+
+**Evidência sintética (2026-11-13):** a suíte cobre chamadas simultâneas em projetos diferentes com conclusão fora de ordem, execução fora da pasta principal, comando não suportado, falta de ID/pasta, sucesso, erro, cancelamento, forma de resultado desconhecida, duplicata e conclusão ausente após expiração. O hook Rust remove saída e erro antes do repasse e envia apenas o status numérico. O Agent Desktop confirmou na interface o resultado fictício `npm test · ✓ · Coucou` e o aviso “Somente dados sintéticos”; o executável sintético foi encerrado após a verificação.
+
+**Verificações sintéticas (2026-11-13):** `npm test` passou (656/656); `cargo test --offline --locked -p coucou-hook` passou (37/37); `npx tsc --noEmit`, `node scripts/gen-strings.mjs --check`, `python scripts/test-whats-new.py`, `npm run build`, `npm run synthetic:build`, build do host sintético e `git diff --check` passaram.
+
+**Limites:** a observação depende dos hooks dos agentes suportados e não rastreia processos arbitrários de terminal. Sem ID estável, pasta ou evento final, não é possível atribuir um resultado; chamada sem conclusão expira sem estado final. O status real dos hooks e a experiência do proprietário aguardam avaliação na versão 0.6.12.
 
 #### 2.8b — CI remoto
 
