@@ -1,5 +1,9 @@
 # Changelog
 
+## Windows 0.6.14 — 13 de novembro de 2026 *(Lumen; login real em avaliação)*
+
+- **Entrar com ChatGPT** — conecte e gerencie contas pelo navegador; os tokens ficam no cofre do sistema. O chat usará essa conexão na próxima etapa (L2.2). Testes sintéticos passaram; login real ainda aguarda avaliação do proprietário.
+
 ## Windows 0.6.13 — 13 de novembro de 2026 *(Lumen, primeira versão; avaliação do proprietário pendente)*
 
 - **Identidade Lumen para Windows** — Bússola de papel original, ícone e sons sintetizados; configurações e atualizações em pt-BR.

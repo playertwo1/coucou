@@ -1,0 +1,15 @@
+{
+  "privateDer": "MIIEowIBAAKCAQEAsxe0vmKzAZ//rg9uK2/wUj6W372uxROw1fAOheZbjHw+BkmdpjYuKSnRYnO+7Ordp6MAmm4kLisofJ7Jmh0Ro5I6oB/36ppdv0RtxItpUPbD0haXX3ch+FEUH+/SzXOSAku5tefBUwph+Oj3PasUSs02yV9BfaEtLys6JcSufaxVjOnkBdAmjPI43XT16bwxQ0LUMkD60GVXp1/RBtfoET3Isak90/yj5+oryJJzDab8aLyVjplZAddfFzBzIQhszpg53reACN7ATzBC6cFos3YqmR7OcFVZHemR7/Zn4TB+ue9X6bei18e7bDa0nwMLHV3GxXxVDYAxzUcivwznkQIDAQABAoIBAFzVyQd3ujr5aVwc+4rgt76qWyMX/GSEVIJRsfWO953XOX+g4WurYjpMRxG11h6RkNy5DjL/LRoRnSccWHze3KnhvyoJ6EVgR4BCRHRBoBIsGE3rEASYiK9jt/7mHmwJoII4Jsg4nmohU6/nc2IwMJCl1+SC0DwDNJzi132Eer8Bm0eeI+2bVah0au6ls/tXFuPSKhAharzpbiLESSjADgTa7Eb/LdPR27kEWWKujDxG/hox9YfmgWInzcdew9ga8z3ldkbkFM6KNWD1xxLNKlvdcH0RIyIR3yvhA6MgnlN4rXaAhAuZXXm6cXGzbr4zqXURqiv6LjcvzNkNXdmoJFECgYEAwqUodPRvZzD+sd/GXZduyUFUXzf7s7xba7PMkxa5F71fwX+YBvvAs+Is7Va7jvkTDS2biy4wy18T2dgx5R6dzdtUz8l5dYR1zKgIrp6b9kXKdZgOaOsA7CmAffQVivF7f/HOzsu6JhFCZE4M3QFaQziJAQNz60OJUHgW2nIUXocCgYEA64uKAVnoAJbNyyZuCkhFnNsCdRS1oI3AtnosVgtMuuOzN568JV6ck+pejF7KNYjAtVF+i2cKG3N9zSwXRwhNqK4NCTuJINVCbiiAlvjLlWLKcx+8oQ7kd5TypuWxC86l8nWsKp6gq68ZzFc/Jk43PJmaJq8KWyEfB5t20vagtycCgYAYXm8TPWsZI0Qv5tFB9GyVW82BYlPr68ASWt9Y5vZjZ30uj5fr/+bfXoi7ailvO/XLp5MauLy5KX0lv/B3O/8Lv9L9dL71HJFW/w6fNhJWoeQ4FsJvFkT2TDffDQkJbTRGD3MR5uW2UGDch/0KSloPomtcqh8ALGNrpK1PygqMzwKBgDRC8KreFODUlPKnIzE62d80pLXvk2D9Mq4KK34n4a1xyhjkKmCsPld/X90LRxhbsE5Kt6YchZyTomz8hGmpSPnNLG1I/WMAjk28xNM6fok1sy+Z8hNWJ5D0xmYLfp3dCurh+wI10fZl0naJQSSxpAXZGt/MZKLVlXntn46tU/lvAoGBAIeBJRfID1QdfSzSfvwkkMF53pY4iXUkG/M9iNEqzC7IKiGMVDM3YJCJB6dLSZ4MbABmEaGqebAPaQz5n4tqEMuLyQjsLtlqgbDUmzbZtqNOQcwxrS9tcXNWvWyWEO2oALtYOQfHPSe4IvLQPtKarl/KupSMRVgioZ+awMcVEh/k",
+  "jwks": {
+    "keys": [
+      {
+        "kty": "RSA",
+        "alg": "RS256",
+        "use": "sig",
+        "kid": "synthetic-kid",
+        "n": "sxe0vmKzAZ__rg9uK2_wUj6W372uxROw1fAOheZbjHw-BkmdpjYuKSnRYnO-7Ordp6MAmm4kLisofJ7Jmh0Ro5I6oB_36ppdv0RtxItpUPbD0haXX3ch-FEUH-_SzXOSAku5tefBUwph-Oj3PasUSs02yV9BfaEtLys6JcSufaxVjOnkBdAmjPI43XT16bwxQ0LUMkD60GVXp1_RBtfoET3Isak90_yj5-oryJJzDab8aLyVjplZAddfFzBzIQhszpg53reACN7ATzBC6cFos3YqmR7OcFVZHemR7_Zn4TB-ue9X6bei18e7bDa0nwMLHV3GxXxVDYAxzUcivwznkQ",
+        "e": "AQAB"
+      }
+    ]
+  }
+}

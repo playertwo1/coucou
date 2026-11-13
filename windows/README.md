@@ -27,7 +27,11 @@ Os instaladores não têm assinatura Authenticode, então o SmartScreen pode inf
 
 ## Usar o Lumen
 
-> A tabela de interações herdada abaixo ainda pode mostrar nomes e detalhes visuais da versão original; eles não foram validados no Lumen instalado. A identidade, os links de instalação e o atualizador acima correspondem ao Lumen 0.6.13.
+### Entrar com ChatGPT
+
+Em **Ajustes → Chat → Usar seu plano ChatGPT**, escolha **Continuar com ChatGPT** e conclua a autorização no navegador. O Lumen não recebe sua senha; os tokens ficam no cofre do Windows. Nesta etapa, é possível conectar, alternar e desconectar contas; o chat passará a usar essa conexão na L2.2.
+
+> A tabela de interações herdada abaixo ainda pode mostrar nomes e detalhes visuais da versão original; eles não foram validados no Lumen instalado. A identidade, os links de instalação e o atualizador acima correspondem à versão 0.6.14.
 
 | What you do | What happens |
 |---|---|

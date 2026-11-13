@@ -37,6 +37,25 @@ export interface BootInfo {
   cursorPoll: boolean;
 }
 
+/** ChatGPT account status only; OAuth codes and tokens remain inside Rust. */
+export interface ChatGptAccountSummary {
+  profileId: string;
+  label: string;
+  connected: boolean;
+  planEnabled: boolean;
+  active: boolean;
+}
+
+export interface ChatGptAccountStatus {
+  accounts: ChatGptAccountSummary[];
+  activeProfileId: string | null;
+}
+
+export interface ChatGptSignOutResult {
+  remoteRevoked: boolean;
+  localCleared: boolean;
+}
+
 export interface GitFile {
   path: string;
   status: string;
@@ -462,6 +481,14 @@ export const Bridge = {
    * the provider only when it has a key (or a server address).
    */
   chatModels: (provider: string) => callOrThrow<ModelInfo[]>("chat_models", { provider }),
+  /** Sign in with ChatGPT; the webview receives only account summaries, never credentials. */
+  chatGptStatus: () => callOrThrow<ChatGptAccountStatus>("chatgpt_status"),
+  chatGptSignIn: (profileId?: string) =>
+    callOrThrow<ChatGptAccountStatus>("chatgpt_sign_in", { profileId: profileId ?? null }),
+  chatGptActivate: (profileId: string) =>
+    callOrThrow<ChatGptAccountStatus>("chatgpt_activate", { profileId }),
+  chatGptSignOut: (profileId: string) =>
+    callOrThrow<ChatGptSignOutResult>("chatgpt_sign_out", { profileId }),
   claudeApiModels: () => callOrThrow<ModelInfo[]>("claude_api_models"),
   /** Settings → Local models → Connect: does the server answer, and with which models? */
   /** The custom server's key, bound to the address it is entered for. */

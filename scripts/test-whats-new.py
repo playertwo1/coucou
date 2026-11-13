@@ -61,7 +61,7 @@ def vkey(v):
     return tuple(int(x) for x in v.split("."))
 
 
-def check(label, path, version, langs):
+def check(label, path, version, langs, older_langs=None):
     print(f"\n{label}: {path.relative_to(ROOT)} for {version}")
     before = len(failures)
     try:
@@ -101,7 +101,7 @@ def check(label, path, version, langs):
                     continue
                 # Older entries may miss a language added later (English is shown instead);
                 # the version being shipped must have them all.
-                needed = langs if r is current else ["en"]
+                needed = langs if r is current else (older_langs or ["en"])
                 for lang in needed:
                     v = values.get(lang)
                     if not isinstance(v, str) or not v.strip():
@@ -123,7 +123,13 @@ def main():
     if only in (None, "mac"):
         check("Mac", ROOT / "NotchBuddy/Resources/whats-new.json", mac_version(), MAC_LANGS)
     if only in (None, "windows"):
-        check("Lumen Windows", ROOT / "windows/src/whats-new/lumen-whats-new.json", windows_version(), ["pt-BR"])
+        check(
+            "Lumen Windows",
+            ROOT / "windows/src/whats-new/lumen-whats-new.json",
+            windows_version(),
+            ["pt-BR"],
+            older_langs=["pt-BR"],
+        )
     if only in (None, "linux"):
         check("Coucou Linux", ROOT / "windows/src/whats-new/whats-new.json", linux_version(), windows_langs())
     if failures:

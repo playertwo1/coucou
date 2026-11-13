@@ -104,11 +104,9 @@ pub fn warm_up() {
 
 // ── Entries only Rust reads and writes ───────────────────────────────────────
 //
-// The phone link's certificate, key and pairing token, the relay's room, end-to-end key and access key,
-// and WhatsApp's gateway address, credential and webhook secret.
-// They are not in KNOWN_KEYS
-// on purpose: the island has `secret_present` / `secret_set` / `secret_clear`
-// for those, and none of the three may be reachable from a webview.
+// The phone link, relay, WhatsApp gateway and Sign in with ChatGPT credentials.
+// They are not in KNOWN_KEYS: only their Rust modules may read or write them;
+// the generic `secret_*` commands never expose them to a webview.
 
 /// Every entry of that kind. Anything outside this list is refused.
 pub const INTERNAL_KEYS: &[&str] = &[
@@ -123,11 +121,40 @@ pub const INTERNAL_KEYS: &[&str] = &[
     "whatsapp-url",
     "whatsapp-api-key",
     "whatsapp-webhook-secret",
+    // Sign in with ChatGPT: the profile index and a stable per-installation host identifier.
+    "siwc-index",
+    "siwc-host-id",
 ];
 
 /// Whether the keystore would accept this key through `get_internal` / `set_internal`.
 pub fn is_internal(key: &str) -> bool {
-    INTERNAL_KEYS.contains(&key)
+    INTERNAL_KEYS.contains(&key) || is_siwc_profile_key(key)
+}
+
+fn is_lower_hex(s: &str, len: usize) -> bool {
+    s.len() == len
+        && s.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+fn is_siwc_profile_key(key: &str) -> bool {
+    let Some(rest) = key.strip_prefix("siwc-profile-") else {
+        return false;
+    };
+    let mut parts = rest.split('-');
+    let Some(profile) = parts.next() else {
+        return false;
+    };
+    if !is_lower_hex(profile, 64) {
+        return false;
+    }
+    match (parts.next(), parts.next(), parts.next()) {
+        (Some("meta"), None, None) => true,
+        (Some(generation), Some(kind), None) => {
+            is_lower_hex(generation, 16) && matches!(kind, "access" | "refresh" | "id")
+        }
+        _ => false,
+    }
 }
 
 fn internal_entry(key: &str) -> Result<Entry, String> {
@@ -138,7 +165,16 @@ fn internal_entry(key: &str) -> Result<Entry, String> {
 }
 
 pub fn get_internal(key: &str) -> Option<String> {
-    internal_entry(key).ok()?.get_password().ok().filter(|v| !v.is_empty())
+    read_internal(key).ok().flatten()
+}
+
+/// Reads an internal entry while distinguishing an absent value from a locked or unavailable store.
+pub fn read_internal(key: &str) -> Result<Option<String>, String> {
+    match internal_entry(key)?.get_password() {
+        Ok(value) if !value.is_empty() => Ok(Some(value)),
+        Ok(_) | Err(keyring::Error::NoEntry) => Ok(None),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 pub fn set_internal(key: &str, value: &str) -> Result<(), String> {
@@ -151,6 +187,14 @@ pub fn set_internal(key: &str, value: &str) -> Result<(), String> {
         };
     }
     entry.set_password(value).map_err(|e| e.to_string())
+}
+
+pub fn clear_internal(key: &str) -> Result<(), String> {
+    let entry = internal_entry(key)?;
+    match entry.delete_credential() {
+        Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 #[cfg(test)]
@@ -178,6 +222,28 @@ mod tests {
         }
         // And the other way round: a key of the island is not an internal one.
         assert!(set_internal("github-token", "x").is_err());
+    }
+
+    #[test]
+    fn chatgpt_profile_keys_accept_only_the_fixed_internal_shapes() {
+        let profile = "0123456789abcdef".repeat(4);
+        let generation = "fedcba9876543210";
+        assert!(is_internal("siwc-index"));
+        assert!(is_internal("siwc-host-id"));
+        assert!(is_internal(&format!("siwc-profile-{profile}-meta")));
+        for kind in ["access", "refresh", "id"] {
+            assert!(is_internal(&format!(
+                "siwc-profile-{profile}-{generation}-{kind}"
+            )));
+        }
+        for key in [
+            "siwc-profile-short-meta",
+            "siwc-profile-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcg-meta",
+            "siwc-profile-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-f00d-access",
+            "siwc-profile-0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef-fedcba9876543210-password",
+        ] {
+            assert!(!is_internal(key), "{key}");
+        }
     }
 
     /// Windows Credential Manager caps a secret's size. The phone link stores its certificate (about

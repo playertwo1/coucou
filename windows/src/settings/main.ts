@@ -4,7 +4,7 @@
 // island's settings are drawn here, one Notch page at a time.
 
 import "./settings.css";
-import { Bridge, onEvent, type HookPreview, type HookStatus, type ShortcutsReport, type SubscriptionStatus } from "../core/bridge";
+import { Bridge, onEvent, type ChatGptAccountStatus, type HookPreview, type HookStatus, type ShortcutsReport, type SubscriptionStatus } from "../core/bridge";
 import { CUSTOM_SERVER_KEY, providerDef, urlExposure } from "../core/providers";
 import {
   ISLAND_SHORTCUTS, SHORTCUTS, SHORTCUT_TEXT, activeKeys, displayKeys, duplicates, effective,
@@ -30,7 +30,7 @@ import { updateRows, updatesListener } from "./updates";
 import { colorDot } from "./colors";
 import { renderDiff, statusDot } from "./parts";
 import {
-  LANGUAGES, N_, PRODUCT_NAME, isRtl, onLanguageChange, resolveLanguage, setLanguage, systemLanguages, t, tn,
+  LANGUAGES, LUMEN_WINDOWS, N_, PRODUCT_NAME, isRtl, onLanguageChange, resolveLanguage, setLanguage, systemLanguages, t, tn,
 } from "../i18n/i18n";
 
 /** Where secrets.rs keeps the keys on this OS. */
@@ -651,6 +651,117 @@ function activePillsSection(connected: Record<string, boolean>): HTMLElement {
 }
 
 // ── Chat providers section ────────────────────────────────────────────────────
+
+function chatGptAccountSection(initial: ChatGptAccountStatus | null, initialError: string | null): HTMLElement {
+  const body = h("div", { style: "display:flex;flex-direction:column;gap:10px" });
+  const section = h(
+    "section",
+    {},
+    h("h2", {}, h("span", { text: "Usar seu plano ChatGPT" })),
+    h("div", {
+      class: "hint",
+      text: "Conecte sua conta ChatGPT. As credenciais ficam no cofre do sistema; o uso da conta no chat será habilitado na próxima etapa.",
+    }),
+    body,
+  );
+  let status = initial;
+  let error = initialError;
+  let notice = "";
+  let busy = false;
+
+  const draw = () => {
+    clear(body);
+    const add = h("button", { class: "primary", text: busy ? "Aguardando o navegador…" : "Continuar com ChatGPT" });
+    add.disabled = busy;
+    add.addEventListener("click", () => void signIn());
+    body.append(add);
+    if (error) body.append(h("div", { class: "notice err", text: error }));
+    if (notice) body.append(h("div", { class: "hint", text: notice }));
+    for (const account of status?.accounts ?? []) {
+      const state = !account.connected
+        ? "Sessão desconectada"
+        : account.planEnabled
+          ? account.active ? "Conta selecionada para a próxima etapa" : "Autorização do plano confirmada"
+          : "Conectada, sem autorização para usar o plano";
+      const row = h("div", { style: "display:flex;align-items:center;gap:8px;flex-wrap:wrap" });
+      row.append(h("strong", { text: account.label }), h("span", { class: "hint", text: state }));
+      if (account.connected && account.planEnabled && !account.active) {
+        const use = h("button", { text: "Usar esta conta" });
+        use.disabled = busy;
+        use.addEventListener("click", () => void run(async () => { status = await Bridge.chatGptActivate(account.profileId); }));
+        row.append(use);
+      }
+      const reconnect = h("button", { text: account.connected ? "Reautorizar" : "Conectar novamente" });
+      reconnect.disabled = busy;
+      reconnect.addEventListener("click", () => void signIn(account.profileId));
+      row.append(reconnect);
+      if (account.connected) {
+        const signOut = h("button", { text: "Sair" });
+        signOut.disabled = busy;
+        signOut.addEventListener("click", () => void endSession(account.profileId));
+        row.append(signOut);
+      }
+      body.append(h("div", { style: "display:flex;flex-direction:column;gap:5px;padding:8px 0;border-top:1px solid var(--line, #333)" }, row));
+    }
+  };
+
+  async function run(action: () => Promise<void>) {
+    busy = true;
+    error = null;
+    notice = "";
+    draw();
+    try {
+      await action();
+      status = await Bridge.chatGptStatus();
+    } catch (err) {
+      error = String(err).replace(/^Error:\s*/, "");
+    } finally {
+      busy = false;
+      draw();
+    }
+  }
+
+  async function signIn(profileId?: string) {
+    busy = true;
+    error = null;
+    notice = "Conclua o login na janela do navegador. O Lumen não recebe sua senha.";
+    draw();
+    try {
+      status = await Bridge.chatGptSignIn(profileId);
+      notice = "Conta conectada e salva no cofre do sistema.";
+    } catch (err) {
+      error = String(err).replace(/^Error:\s*/, "");
+      notice = "";
+    } finally {
+      busy = false;
+      draw();
+    }
+  }
+
+  async function endSession(profileId: string) {
+    busy = true;
+    error = null;
+    notice = "";
+    draw();
+    try {
+      const result = await Bridge.chatGptSignOut(profileId);
+      status = await Bridge.chatGptStatus();
+      notice = result.localCleared
+        ? result.remoteRevoked
+          ? "Sessão encerrada e revogada."
+          : "Tokens removidos deste computador; a revogação remota não foi confirmada. Você pode desconectar o Lumen nas configurações da sua conta ChatGPT."
+        : "Não foi possível confirmar a limpeza local das credenciais. Confira o estado da conta antes de continuar.";
+    } catch (err) {
+      error = String(err).replace(/^Error:\s*/, "");
+    } finally {
+      busy = false;
+      draw();
+    }
+  }
+
+  draw();
+  return section;
+}
 
 const CHAT_STRINGS = {
   get providersTitle() { return t("Chat providers"); },
@@ -1628,6 +1739,15 @@ async function render() {
     chatKeys[key] = (await Bridge.secretPresent(key)) ?? false;
   }
   const customKey = (await Bridge.secretPresent(CUSTOM_SERVER_KEY)) ?? false;
+  let chatGptStatus: ChatGptAccountStatus | null = null;
+  let chatGptError: string | null = null;
+  if (LUMEN_WINDOWS && notchPage === "chat") {
+    try {
+      chatGptStatus = await Bridge.chatGptStatus();
+    } catch (err) {
+      chatGptError = String(err).replace(/^Error:\s*/, "");
+    }
+  }
 
   declaredViews.length = 0;
   localRedraw = null;
@@ -1638,7 +1758,7 @@ async function render() {
     general: () => [generalSection()],
     pills: () => [activePillsSection(connected)],
     agents: () => [claudeSection(status), agentsSection(agents), planSection(status)],
-    chat: () => [subscriptionsSection(), apiSection(hasKey, claudeRelay), chatProvidersSection(chatKeys, keyChanged), localSection(customKey)],
+    chat: () => [subscriptionsSection(), apiSection(hasKey, claudeRelay), ...(LUMEN_WINDOWS ? [chatGptAccountSection(chatGptStatus, chatGptError)] : []), chatProvidersSection(chatKeys, keyChanged), localSection(customKey)],
     integrations: () => [integrationsSection(present), ...whatsappSections()],
     phone: () => [phoneSection(settings.phoneLink ?? false, toggle, settings)],
     shortcuts: () => [shortcutsSection(shortcutReport)],

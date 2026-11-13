@@ -182,6 +182,7 @@ No Windows, o fork passa a se chamar Lumen; no Linux e no macOS, o app continua 
 
 | Lumen (Windows) e Coucou (Linux) | Data | Destaques |
 |---------|------|------------|
+| 0.6.14 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.14) · login real em avaliação | 13 nov. 2026 | Login ChatGPT pelo navegador; credenciais no cofre do sistema; integração com o chat vem na L2.2 |
 | 0.6.13 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.13) · avaliação do proprietário pendente | 13 nov. 2026 | Primeira versão Lumen para Windows: Bússola de papel, identidade própria e migração de settings/hooks validada sinteticamente; instalação e identidade aguardam teste real |
 | 0.6.12 · avaliação não publicada | 13 nov. 2026 | Fork: resultados locais de `npm test` e `cargo build` no diretório da chamada; checkpoint sintético passou, avaliação do proprietário e publicação pendentes |
 | 0.6.6 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.6) | Nov 13, 2026 | Fork: hides the island over a foreground app covering its monitor; pending permissions and questions keep it visible (real fullscreen evaluation pending) |

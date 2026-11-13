@@ -37,3 +37,13 @@ Uma subfase por vez. Implementar somente a conexão OAuth, armazenamento seguro,
 ## Checkpoint
 
 Sintético PASS não comprova login real. Após a release, o dono confirma navegador, consentimento, persistência após reinício, duas contas, troca e saída. Até esse teste, a avaliação real fica **NOT_RUN**; a L1.3 também continua em avaliação real. Renovação automática será validada na L2.2.
+
+## Resultado local — 2026-11-13
+
+- `npx tsc --noEmit`: PASS.
+- `npm test`: PASS, 659 testes.
+- `npm run build`: PASS, build Vite de produção.
+- `cargo test --manifest-path windows/Cargo.toml -p coucou --lib`: PASS, 660 aprovados, 8 ignorados, 0 falhas.
+- `python scripts/test-whats-new.py windows`: PASS para a versão 0.6.14 em pt-BR. O validador agora preserva o idioma pt-BR nas notas históricas exclusivas do Lumen.
+- `git diff --check` e `rustfmt --check` do módulo novo: PASS.
+- Preflight Windows, exame de instaladores e login OAuth com conta real: NOT_RUN neste ponto.

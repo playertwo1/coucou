@@ -24,6 +24,7 @@ mod i18n;
 mod identity;
 mod integrations;
 mod calcom;
+mod chatgpt;
 mod island;
 mod launch;
 mod local_chat;
@@ -662,6 +663,26 @@ async fn chat_models(shared: State<'_, Shared>, provider: String) -> Result<Vec<
     chat::models(&settings, &provider).await
 }
 
+#[tauri::command]
+fn chatgpt_status() -> Result<chatgpt::AccountStatus, String> {
+    chatgpt::status()
+}
+
+#[tauri::command]
+async fn chatgpt_sign_in(profile_id: Option<String>) -> Result<chatgpt::AccountStatus, String> {
+    chatgpt::sign_in(profile_id).await
+}
+
+#[tauri::command]
+fn chatgpt_activate(profile_id: String) -> Result<chatgpt::AccountStatus, String> {
+    chatgpt::activate(&profile_id)
+}
+
+#[tauri::command]
+async fn chatgpt_sign_out(profile_id: String) -> Result<chatgpt::SignOutResult, String> {
+    chatgpt::sign_out(profile_id).await
+}
+
 /// The Claude API settings use their own key even when chat uses a CLI plan.
 #[tauri::command]
 async fn claude_api_models() -> Result<Vec<ModelInfo>, String> {
@@ -1076,6 +1097,10 @@ pub fn run() {
             log_line,
             chat_send,
             chat_models,
+            chatgpt_status,
+            chatgpt_sign_in,
+            chatgpt_activate,
+            chatgpt_sign_out,
             claude_api_models,
             local_connect,
             local_set_key,

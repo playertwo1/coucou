@@ -12,6 +12,14 @@
 - [x] Comparar os SHA-256 dos instaladores publicados com o preflight. Os hashes diferiram; os assets finais foram baixados, conferidos com os digests do GitHub e examinados diretamente pelo Defender sem detecções (evento 1001, exame `{9AD2DD74-E9E4-4DCE-8E77-D2954870AA9F}`).
 - Nunca executar esta lista de publicação sem o proprietário pedir release.
 
+## Windows 0.6.14 — L2.1 Sign in with ChatGPT
+
+- [x] Autorização recorrente do proprietário para publicar cada etapa depois dos testes sintéticos, registrada em `docs/ROADMAP-FORK.md`.
+- [x] Validações locais: `npx tsc --noEmit`, `npm test` (659/659), `npm run build`, `cargo test --manifest-path windows/Cargo.toml -p coucou --lib` (660 passaram, 8 ignorados) e `python scripts/test-whats-new.py windows`.
+- [ ] Workflow manual `Windows` no branch `codex/l2-chatgpt-oauth`; baixar e examinar com Microsoft Defender os artefatos de preflight.
+- [ ] Integrar na `main`, publicar tag `windows-v0.6.14`, conferir o workflow e os assets finais no fork; comparar hashes do GitHub e examinar os instaladores finais com Defender.
+- [ ] Proprietário validar login, consentimento, persistência, duas contas, troca e saída. Login real permanece **NOT_RUN** até esse teste.
+
 ## Windows 0.6.13 — Lumen
 
 - [x] Pedido de publicação autorizado pelo proprietário; identidade Bússola de papel escolhida.
