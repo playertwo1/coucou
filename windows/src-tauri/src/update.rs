@@ -8,7 +8,7 @@
 // `GET /repos/playertwo1/coucou/releases`, no cookies, nothing about the user.
 //
 // Windows: the installer this copy came from — the per-user setup.exe in
-// %LOCALAPPDATA%\Coucou, the per-machine .msi under Program Files — is
+// %LOCALAPPDATA%\Lumen, the per-machine .msi under Program Files — is
 // downloaded from GitHub only (redirects to github.com, api.github.com and
 // *.githubusercontent.com, nothing else), checked against the SHA-256 GitHub
 // publishes for that asset, then run; Coucou quits and the installer starts it
@@ -189,9 +189,9 @@ pub fn parse_digest(digest: &str) -> Option<String> {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum InstallKind {
-    /// The per-user setup.exe (NSIS): %LOCALAPPDATA%\Coucou.
+    /// The per-user setup.exe (NSIS): %LOCALAPPDATA%\Lumen.
     Setup,
-    /// The per-machine .msi (WiX): Program Files\Coucou.
+    /// The per-machine .msi (WiX): Program Files\Lumen.
     Msi,
     /// Anything else — the portable exe, a build, Linux: the release page only.
     Manual,
@@ -203,8 +203,8 @@ fn win_path(p: &str) -> String {
 }
 
 /// The installer that put `exe` where it is, from its folder alone: Tauri's
-/// NSIS installer (per user) uses %LOCALAPPDATA%\Coucou, its MSI (per machine)
-/// Program Files\Coucou. `has_uninstaller` is whether NSIS's uninstall.exe sits
+/// NSIS installer (per user) uses %LOCALAPPDATA%\Lumen, its MSI (per machine)
+/// Program Files\Lumen. `has_uninstaller` is whether NSIS's uninstall.exe sits
 /// next to it, so a portable exe someone copied into that folder isn't taken
 /// for an installed one.
 #[cfg_attr(not(windows), allow(dead_code))]
@@ -212,11 +212,11 @@ pub fn install_kind(exe: &str, has_uninstaller: bool, local_app_data: Option<&st
     let exe = win_path(exe);
     let Some((dir, _)) = exe.rsplit_once('\\') else { return InstallKind::Manual };
     if let Some(local) = local_app_data.filter(|l| !l.trim().is_empty()) {
-        if dir == format!("{}\\coucou", win_path(local)) {
+        if dir == format!("{}\\lumen", win_path(local)) {
             return if has_uninstaller { InstallKind::Setup } else { InstallKind::Manual };
         }
     }
-    if program_files.iter().filter(|p| !p.trim().is_empty()).any(|p| dir == format!("{}\\coucou", win_path(p))) {
+    if program_files.iter().filter(|p| !p.trim().is_empty()).any(|p| dir == format!("{}\\lumen", win_path(p))) {
         return InstallKind::Msi;
     }
     InstallKind::Manual
@@ -226,8 +226,8 @@ pub fn install_kind(exe: &str, has_uninstaller: bool, local_app_data: Option<&st
 /// workflow publishes, nothing else.
 pub fn asset_name(kind: InstallKind, version: &str) -> Option<String> {
     match kind {
-        InstallKind::Setup => Some(format!("Coucou-Windows-{version}-setup.exe")),
-        InstallKind::Msi => Some(format!("Coucou-Windows-{version}.msi")),
+        InstallKind::Setup => Some(format!("Lumen-Windows-{version}-setup.exe")),
+        InstallKind::Msi => Some(format!("Lumen-Windows-{version}.msi")),
         InstallKind::Manual => None,
     }
 }
@@ -514,7 +514,7 @@ fn github_client(timeout: Duration) -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .connect_timeout(Duration::from_secs(15))
         .timeout(timeout)
-        .user_agent("Coucou")
+        .user_agent("Lumen")
         .redirect(policy)
         .build()
         .map_err(|e| e.to_string())
@@ -926,18 +926,20 @@ mod tests {
         let local = Some(r"C:\Users\Ana\AppData\Local");
         let pf = vec![r"C:\Program Files".to_string(), r"C:\Program Files (x86)".to_string()];
         let kind = |exe: &str, uninst: bool| install_kind(exe, uninst, local, &pf);
-        assert_eq!(kind(r"C:\Users\Ana\AppData\Local\Coucou\coucou.exe", true), InstallKind::Setup);
-        assert_eq!(kind(r"c:\users\ana\appdata\local\COUCOU\Coucou.exe", true), InstallKind::Setup);
+        assert_eq!(kind(r"C:\Users\Ana\AppData\Local\Lumen\lumen.exe", true), InstallKind::Setup);
+        assert_eq!(kind(r"c:\users\ana\appdata\local\COUCOU\Coucou.exe", true), InstallKind::Manual);
         // A portable exe copied there: no NSIS uninstaller next to it.
-        assert_eq!(kind(r"C:\Users\Ana\AppData\Local\Coucou\coucou.exe", false), InstallKind::Manual);
-        assert_eq!(kind(r"C:\Program Files\Coucou\coucou.exe", false), InstallKind::Msi);
-        assert_eq!(kind(r"C:\Program Files (x86)\Coucou\coucou.exe", false), InstallKind::Msi);
+        assert_eq!(kind(r"C:\Users\Ana\AppData\Local\Lumen\lumen.exe", false), InstallKind::Manual);
+        assert_eq!(kind(r"C:\Program Files\Lumen\lumen.exe", false), InstallKind::Msi);
+        assert_eq!(kind(r"C:\Program Files (x86)\Lumen\lumen.exe", false), InstallKind::Msi);
         // The portable exe, a build, a folder that only looks alike.
         assert_eq!(kind(r"C:\Users\Ana\Downloads\coucou.exe", true), InstallKind::Manual);
         assert_eq!(kind(r"C:\dev\coucou\windows\target\release\coucou.exe", false), InstallKind::Manual);
-        assert_eq!(kind(r"C:\Program Files\Coucou\bin\coucou.exe", false), InstallKind::Manual);
+        assert_eq!(kind(r"C:\Program Files\Lumen\bin\lumen.exe", false), InstallKind::Manual);
         assert_eq!(kind(r"C:\Users\Ana\AppData\Local\Coucou\bin\coucou-hook.exe", true), InstallKind::Manual);
         assert_eq!(kind("coucou.exe", true), InstallKind::Manual);
+        assert_eq!(kind(r"C:\Users\Ana\AppData\Local\Coucou\coucou.exe", true), InstallKind::Manual);
+        assert_eq!(kind(r"C:\Program Files\Coucou\coucou.exe", false), InstallKind::Manual);
         assert_eq!(install_kind(r"C:\Program Files\Coucou\coucou.exe", false, None, &[]), InstallKind::Manual);
         assert_eq!(install_kind("/opt/Coucou/coucou", false, Some(""), &[String::new()]), InstallKind::Manual);
     }
@@ -945,14 +947,23 @@ mod tests {
     #[test]
     fn the_asset_is_the_exact_installer_for_the_kind() {
         let w = latest(&fixture(), "windows-v").unwrap();
-        assert_eq!(pick_asset(&w, InstallKind::Setup).unwrap().name, "Coucou-Windows-0.5.0-setup.exe");
-        assert_eq!(pick_asset(&w, InstallKind::Msi).unwrap().name, "Coucou-Windows-0.5.0.msi");
+        assert_eq!(asset_name(InstallKind::Setup, "0.5.0").as_deref(), Some("Lumen-Windows-0.5.0-setup.exe"));
+        assert_eq!(asset_name(InstallKind::Msi, "0.5.0").as_deref(), Some("Lumen-Windows-0.5.0.msi"));
+        assert_eq!(pick_asset(&w, InstallKind::Setup), None, "legacy Coucou releases lead to the release page");
+        assert_eq!(pick_asset(&w, InstallKind::Msi), None, "legacy Coucou releases lead to the release page");
+        let mut lumen = w.clone();
+        lumen.assets = vec![
+            Asset { name: "Lumen-Windows-0.5.0-setup.exe".into(), url: w.assets[0].url.clone(), size: 1, digest: None },
+            Asset { name: "Lumen-Windows-0.5.0.msi".into(), url: w.assets[0].url.clone(), size: 1, digest: None },
+        ];
+        assert!(pick_asset(&lumen, InstallKind::Setup).is_some());
+        assert!(pick_asset(&lumen, InstallKind::Msi).is_some());
         assert_eq!(pick_asset(&w, InstallKind::Manual), None);
         // A look-alike name, or one served from elsewhere, is never picked.
         let mut odd = w.clone();
         odd.assets = vec![
-            Asset { name: "Coucou-Windows-setup.exe".into(), url: w.assets[0].url.clone(), size: 1, digest: None },
-            Asset { name: "Coucou-Windows-0.5.0.msi".into(), url: "https://evil.example.com/x.msi".into(), size: 1, digest: None },
+            Asset { name: "Lumen-Windows-setup.exe".into(), url: w.assets[0].url.clone(), size: 1, digest: None },
+            Asset { name: "Lumen-Windows-0.5.0.msi".into(), url: "https://evil.example.com/x.msi".into(), size: 1, digest: None },
         ];
         assert_eq!(pick_asset(&odd, InstallKind::Setup), None);
         assert_eq!(pick_asset(&odd, InstallKind::Msi), None);
@@ -972,14 +983,14 @@ mod tests {
 
     #[test]
     fn installers_run_with_tauris_update_flags() {
-        let file = Path::new(r"C:\Temp\coucou-update-1\Coucou-Windows-0.6.0-setup.exe");
+        let file = Path::new(r"C:\Temp\lumen-update-1\Lumen-Windows-0.6.0-setup.exe");
         let (program, args) = installer_command(InstallKind::Setup, file, Some(r"C:\Windows")).unwrap();
         assert_eq!(program, file);
         assert_eq!(args, ["/P", "/UPDATE", "/R"]);
-        let msi = Path::new(r"C:\Temp\coucou-update-1\Coucou-Windows-0.6.0.msi");
+        let msi = Path::new(r"C:\Temp\lumen-update-1\Lumen-Windows-0.6.0.msi");
         let (program, args) = installer_command(InstallKind::Msi, msi, Some(r"C:\Windows\")).unwrap();
         assert_eq!(program, PathBuf::from(r"C:\Windows\System32\msiexec.exe"));
-        assert_eq!(args, ["/i", r"C:\Temp\coucou-update-1\Coucou-Windows-0.6.0.msi", "/passive", "AUTOLAUNCHAPP=True"]);
+        assert_eq!(args, ["/i", r"C:\Temp\lumen-update-1\Lumen-Windows-0.6.0.msi", "/passive", "AUTOLAUNCHAPP=True"]);
         assert_eq!(installer_command(InstallKind::Msi, msi, None).unwrap().0, PathBuf::from("msiexec.exe"));
         assert_eq!(installer_command(InstallKind::Manual, file, None), None);
     }

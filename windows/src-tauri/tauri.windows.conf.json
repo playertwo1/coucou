@@ -1,0 +1,47 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Lumen",
+  "identifier": "app.segundamente.lumen",
+  "mainBinaryName": "lumen",
+  "app": {
+    "windows": [
+      {
+        "label": "island",
+        "title": "Lumen",
+        "url": "index.html",
+        "width": 240,
+        "height": 6,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "focus": false,
+        "visible": true,
+        "center": false,
+        "maximizable": false,
+        "minimizable": false,
+        "closable": false,
+        "dragDropEnabled": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
+      }
+    ]
+  },
+  "bundle": {
+    "icon": [
+      "icons/lumen/32x32.png",
+      "icons/lumen/128x128.png",
+      "icons/lumen/128x128@2x.png",
+      "icons/lumen/icon.ico"
+    ],
+    "resources": { "../target/release/coucou-hook.exe": "lumen-hook.exe" },
+    "shortDescription": "Bússola de papel para suas sessões e ideias.",
+    "longDescription": "O Lumen organiza suas sessões de agentes e integrações numa ilha discreta. Revise permissões, responda perguntas, converse e anexe arquivos sem sair do que está fazendo.",
+    "windows": {
+      "wix": {
+        "upgradeCode": "664695e2-338f-541b-8d41-6266d176533c"
+      }
+    }
+  }
+}

@@ -9,6 +9,7 @@ import { State } from "../core/state";
 import { HOST_OS } from "../core/pills";
 import { SCRIPT_FONTS } from "../core/fonts";
 import { N_, isRtl, t } from "../i18n/i18n";
+import { drawCompass } from "../lumen/compass";
 import {
   USC, eIn, eInOut, eOut, lerp, progressAt,
   type UploadEyeShape, type UploadFrame,
@@ -411,6 +412,16 @@ export class UploadCanvas {
   // ── Mochi ─────────────────────────────────────────────────────────────────
 
   private drawMochi(ctx: CanvasRenderingContext2D, f: UploadFrame) {
+    if (__LUMEN_WINDOWS__) {
+      ctx.save();
+      ctx.translate(f.x, f.y + f.hop);
+      ctx.rotate(f.tilt);
+      ctx.scale(f.sx, f.sy);
+      ctx.translate(-f.d / 2, -f.d / 2);
+      drawCompass(ctx, f.d, f.d, { scale: 1.5 * (1 - f.suck * 0.35), mood: f.suck > 0 ? "active" : "idle" });
+      ctx.restore();
+      return;
+    }
     const R = f.d / 2 / 1.04;
     const mc = Math.max(0, Math.min(f.morph, 1));
 

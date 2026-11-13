@@ -1,5 +1,10 @@
 # Changelog
 
+## Windows 0.6.13 — 13 de novembro de 2026 *(Lumen, primeira versão; avaliação do proprietário pendente)*
+
+- **Identidade Lumen para Windows** — Bússola de papel original, ícone e sons sintetizados; configurações e atualizações em pt-BR.
+- **Migração preservada** — mantém settings, hooks e identidade de notificações existentes; o teste sintético de upgrade roda no Windows CI antes da publicação.
+
 ## 0.6.0 — November 12, 2026
 
 - **Start a Claude Code session from the notch** *(GitHub build)* — the terminal tab in the island's header, or ⌃⌥N: pick the project (the folders your sessions ran in, or any folder), type or dictate what Claude should do, and your terminal opens there with Claude Code and your words. Terminal, iTerm2, Ghostty, kitty, WezTerm and Alacritty; the prompt is never written into a command line

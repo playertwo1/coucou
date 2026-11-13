@@ -1,7 +1,5 @@
-// SoundEngine — port of SoundEngine.swift.
-// The 29 WAVs are the macOS app's own files (see SOUNDS_DIR in vite.config.ts);
-// they are served at /sounds/<name>.wav. Default volume 0.12, slider range 0–0.2,
-// exactly like the Mac player, and several sounds may overlap.
+// On Windows, Lumen synthesizes its three original paper-compass sounds with Web Audio.
+// Linux keeps the upstream sound files; user-provided replacements work on both.
 // A file of the user's own in the sounds folder (src-tauri/src/sounds.rs)
 // replaces a sound; one that doesn't decode falls back to the built-in one.
 
@@ -15,6 +13,17 @@ export const SOUND_NAMES = [
 ] as const;
 
 export type SoundName = (typeof SOUND_NAMES)[number];
+
+/** The compact sound palette used by the original Lumen character on Windows. */
+export function compassTone(name: string) {
+  if (["approve", "approval", "finish", "pop", "greet", "greeting", "send", "love", "proud", "work"].includes(name)) {
+    return { notes: [523.25, 659.25, 783.99], type: "sine" as const, gap: 0.105, duration: 0.17, peak: 0.45, endRatio: 0.96 };
+  }
+  if (["cancel", "deny", "error", "close", "dizzy", "annoyed", "slap"].includes(name)) {
+    return { notes: [493.88, 369.99], type: "triangle" as const, gap: 0.12, duration: 0.14, peak: 0.32, endRatio: 0.79 };
+  }
+  return { notes: [740], type: "triangle" as const, gap: 0.12, duration: 0.09, peak: 0.32, endRatio: 0.79 };
+}
 
 class SoundEngine {
   enabled = true;
@@ -30,7 +39,7 @@ class SoundEngine {
   /** The sounds a file of the user's own replaces, as last loaded. */
   customized = new Set<string>();
   /** Sounds still playing, by name, so one can be faded out (the greeting). */
-  private playing = new Map<string, Set<{ src: AudioBufferSourceNode; gain: GainNode }>>();
+  private playing = new Map<string, Set<{ src: AudioBufferSourceNode | OscillatorNode; gain: GainNode }>>();
 
   /** Creates the context and decodes every WAV. Safe to call more than once. */
   preload(): Promise<void> {
@@ -58,6 +67,7 @@ class SoundEngine {
   private async loadAll(ctx: AudioContext) {
     const own = new Set((await Bridge.customSounds(SOUND_NAMES)) ?? []);
     const customized = new Set<string>();
+    const lumen = typeof __LUMEN_WINDOWS__ !== "undefined" && __LUMEN_WINDOWS__;
     await Promise.all(
       SOUND_NAMES.map(async (name) => {
         if (own.has(name)) {
@@ -72,6 +82,7 @@ class SoundEngine {
             /* not a format this webview decodes: the built-in sound stays */
           }
         }
+        if (lumen) return;
         try {
           const res = await fetch(`/sounds/${name}.wav`);
           if (!res.ok) return;
@@ -124,18 +135,27 @@ class SoundEngine {
     if (this.quiet && name !== "approval" && name !== "question") return;
     const ctx = this.ctx;
     const master = this.master;
-    const buf = this.buffers.get(name);
-    if (!ctx || !master || !buf) return;
+    if (!ctx || !master) return;
     if (this.idleTimer != null) {
       window.clearTimeout(this.idleTimer);
       this.idleTimer = null;
     }
     if (ctx.state === "suspended") void ctx.resume();
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    const gain = ctx.createGain();
-    src.connect(gain);
-    gain.connect(master);
+    const buf = this.buffers.get(name);
+    if (buf) {
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const gain = ctx.createGain();
+      src.connect(gain);
+      gain.connect(master);
+      this.track(name, src, gain);
+      src.start();
+    } else if (typeof __LUMEN_WINDOWS__ !== "undefined" && __LUMEN_WINDOWS__) {
+      this.playCompassTone(name, ctx, master);
+    }
+  }
+
+  private track(name: string, src: AudioBufferSourceNode | OscillatorNode, gain: GainNode) {
     const voice = { src, gain };
     let voices = this.playing.get(name);
     if (!voices) this.playing.set(name, (voices = new Set()));
@@ -144,7 +164,27 @@ class SoundEngine {
       voices.delete(voice);
       gain.disconnect();
     };
-    src.start();
+  }
+
+  private playCompassTone(name: string, ctx: AudioContext, master: GainNode) {
+    const palette = compassTone(name);
+    const start = ctx.currentTime;
+    for (let i = 0; i < palette.notes.length; i++) {
+      const at = start + palette.gap * i;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = palette.type;
+      osc.frequency.setValueAtTime(palette.notes[i], at);
+      osc.frequency.exponentialRampToValueAtTime(palette.notes[i] * palette.endRatio, at + palette.duration);
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(palette.peak, at + 0.006);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + palette.duration);
+      osc.connect(gain);
+      gain.connect(master);
+      this.track(name, osc, gain);
+      osc.start(at);
+      osc.stop(at + palette.duration + 0.01);
+    }
   }
 
   /** Fades every playing copy of `name` to silence over `seconds`, then stops it. */

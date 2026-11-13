@@ -178,9 +178,9 @@ macOS releases are published as `v*` tags. See [CHANGELOG.md](CHANGELOG.md) for 
 | [0.1.1](https://github.com/Louis-CFM/coucou/releases/tag/v0.1.1) | Oct 2, 2026 | Gemini and OpenAI chat, Linux build, more agents and pills, security hardening |
 | [0.1.0](https://github.com/Louis-CFM/coucou/releases/tag/v0.1.0) | Sep 27, 2026 | First release: Mochi, Claude Code sessions, chat, file drop, integrations |
 
-Windows and Linux are released together, under the `windows-v*` and `linux-v*` tags. The newest Windows installer is always at [`windows-latest`](https://github.com/Louis-CFM/coucou/releases/tag/windows-latest), the newest Linux AppImage at [`linux-latest`](https://github.com/Louis-CFM/coucou/releases/tag/linux-latest).
+No Windows, o fork passa a se chamar Lumen; no Linux e no macOS, o app continua Coucou. As releases são separadas nas tags `windows-v*` e `linux-v*`. O instalador Windows mais novo fica em [`windows-latest`](https://github.com/playertwo1/coucou/releases/tag/windows-latest), e o AppImage Linux em [`linux-latest`](https://github.com/Louis-CFM/coucou/releases/tag/linux-latest).
 
-| Windows & Linux | Date | Highlights |
+| Lumen (Windows) e Coucou (Linux) | Data | Destaques |
 |---------|------|------------|
 | 0.6.12 · avaliação não publicada | 13 nov. 2026 | Fork: resultados locais de `npm test` e `cargo build` no diretório da chamada; checkpoint sintético passou, avaliação do proprietário e publicação pendentes |
 | 0.6.6 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.6) | Nov 13, 2026 | Fork: hides the island over a foreground app covering its monitor; pending permissions and questions keep it visible (real fullscreen evaluation pending) |

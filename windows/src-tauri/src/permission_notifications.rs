@@ -31,6 +31,7 @@ use windows::Win32::UI::Shell::{
 };
 use windows::UI::Notifications::{ToastNotification, ToastNotificationManager, ToastNotifier};
 
+// Keep these IDs stable so Windows retains the user's toast permission.
 const AUMID: &str = "fr.louisraille.coucou";
 const AUMID_KEY: &str = "Software\\Classes\\AppUserModelId\\fr.louisraille.coucou";
 const GROUP: &str = "permission";
@@ -331,7 +332,7 @@ fn xml_escape(value: &str) -> String {
 fn register_identity() -> windows::core::Result<()> {
     let path = std::env::var_os("APPDATA").ok_or_else(windows::core::Error::from_win32)?;
     let shortcut =
-        std::path::PathBuf::from(path).join("Microsoft/Windows/Start Menu/Programs/Coucou.lnk");
+        std::path::PathBuf::from(path).join("Microsoft/Windows/Start Menu/Programs/Lumen.lnk");
     let exe = std::fs::canonicalize(
         std::env::current_exe().map_err(|_| windows::core::Error::from_win32())?,
     )
@@ -362,7 +363,7 @@ fn register_identity() -> windows::core::Result<()> {
         properties.Commit()?;
     }
     let key = RegistryKey::create(AUMID_KEY)?;
-    key.set_string(w!("DisplayName"), "Coucou")?;
+    key.set_string(w!("DisplayName"), "Lumen")?;
     key.set_string(w!("CustomActivator"), CLSID_TEXT)?;
     Ok(())
 }
@@ -407,12 +408,15 @@ impl RegistryKey {
         };
         if query.0 == ERROR_SUCCESS.0 {
             existing.truncate(size as usize);
-            if kind != REG_SZ || decode_reg_string(&existing).as_deref() != Some(value) {
+            if kind != REG_SZ {
                 return Err(windows::core::Error::from_win32());
             }
-            return Ok(());
-        }
-        if query.0 != ERROR_FILE_NOT_FOUND.0 {
+            match decode_reg_string(&existing).as_deref() {
+                Some(existing) if existing == value => return Ok(()),
+                Some("Coucou") if value == "Lumen" => {}
+                _ => return Err(windows::core::Error::from_win32()),
+            }
+        } else if query.0 != ERROR_FILE_NOT_FOUND.0 {
             return Err(windows::core::Error::from_win32());
         }
         let data: Vec<u8> = value

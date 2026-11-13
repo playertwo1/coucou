@@ -31,14 +31,16 @@ Regras específicas desta fase, além das do índice:
 Os relatos gerais do proprietário nas fases 0 e 2 ficam registrados como relatos, mas não fecham checkpoints cujo critério exige resultados por cenário. A reabertura das fases pausadas depende de nova decisão do proprietário.
 
 ### L1 — Renomear para Lumen (M; inclui a Fase 3, identidade)
-- [ ] L1.1 Protótipo de 3 opções originais de personagem, ícone e paleta sonora apresentado ao proprietário em 2026-11-13; falta a escolha. Nada de Mochi nem dos assets do Coucou (`LICENSE-ASSETS.md`).
+- [x] L1.1 Protótipo de 3 opções originais de personagem, ícone e paleta sonora apresentado ao proprietário em 2026-11-13; escolha B registrada em 2026-11-13. Nada de Mochi nem dos assets do Coucou (`LICENSE-ASSETS.md`).
   - **A — Farol facetado:** companheiro-prisma assimétrico; ícone com três feixes; azul-noite, ciano e âmbar. Paleta: toque de vidro em duas notas para aviso, duas notas ascendentes para confirmação e nota grave suave para recusa/cancelamento.
   - **B — Bússola de papel:** guia de quatro faces dobradas ao redor de um ponto; ícone de rosa-dos-ventos; índigo, areia e terracota. Paleta: toque seco de madeira para aviso, três notas de marimba ascendentes para confirmação e duas notas descendentes abafadas para recusa/cancelamento.
   - **C — Broto-guia:** ramo geométrico com duas folhas e raiz luminosa; ícone de folhas sobre um caminho; grafite, creme e lima. Paleta: sopro curto com uma nota dedilhada para aviso, duas notas dedilhadas e uma nota alta para confirmação e toque grave com cauda de ar para recusa/cancelamento.
-  - Prancha visual comparativa gerada nesta sessão e apresentada ao proprietário. As descrições sonoras são propostas; nenhum áudio nem asset final foi produzido ou escolhido.
-- [ ] L1.2 Novo nome, `identifier` e plano de migração de settings, hooks e permissões, conforme os itens 3.2 e 3.3 da [Fase 3](fase-3-identidade.md).
-- [ ] L1.3 Testar o upgrade da instalação atual e o caminho do atualizador antes de publicar.
-- Checkpoint L1: a release publicada não contém nome, personagem, ícone nem sons do Coucou/Mochi, e o upgrade preserva os dados.
+  - Prancha visual comparativa gerada nesta sessão e apresentada ao proprietário. Com B escolhida, a paleta sonora é sintetizada pelo Web Audio; nenhum arquivo de áudio externo é distribuído.
+- **Decisão B do proprietário:** Bússola de papel; paleta índigo, areia e terracota; sons sintetizados em tempo de execução. O desenho do personagem e do ícone é original e não inclui assets do Coucou/Mochi.
+- [x] L1.2 Nome `Lumen`, `identifier` `app.segundamente.lumen` e `mainBinaryName` `lumen`; plano de migração registrado em `docs/superpowers/specs/2026-11-13-lumen-identidade-migracao.md` e `docs/superpowers/plans/2026-11-13-lumen-identidade-migracao.md`.
+  - As pastas `%APPDATA%\\Coucou` e `%LOCALAPPDATA%\\Coucou`, o caminho do hook `bin\\coucou-hook.exe`, AUMID/CLSID de notificações e o serviço do Credential Manager ficam estáveis para preservar settings, hooks e permissões. O UpgradeCode MSI continua igual; NSIS instala Lumen ao lado do Coucou, sem remover a instalação antiga. O atualizador passa a usar assets `Lumen-Windows-*` de `playertwo1/coucou` e leva releases antigas à página de releases.
+- [ ] L1.3 Teste sintético de upgrade MSI/NSIS e caminho do atualizador: script criado para CI Windows, com instalação sintética do Coucou 0.6.11, marcadores de dados e verificação de preservação; aguarda execução bem-sucedida no runner antes da release. Nenhum teste foi executado no perfil real do proprietário.
+- Checkpoint L1: identidade visual/sons originais e migração sintética devem passar antes da release. Após publicação, a instalação e o uso real ficam **em avaliação do proprietário**; os testes sintéticos não substituem esse aceite.
 
 ### L2 — Login OAuth do ChatGPT no Lumen (M)
 - [ ] L2.1 Portar o login OAuth do ChatGPT da Segunda Mente (`lib/data/services/openai_auth_service.dart`) para o chat do Lumen, com o token guardado no cofre do Windows. Isso cobre o item "Cérebro" das regras M.

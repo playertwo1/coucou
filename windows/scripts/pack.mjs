@@ -2,7 +2,7 @@
 // windows/release/, with the names they ship under. Used by `npm run pack` and
 // by the release workflows, so both produce exactly the same file names.
 
-import { readFileSync, mkdirSync, copyFileSync, readdirSync, statSync } from "node:fs";
+import { readFileSync, mkdirSync, copyFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -22,12 +22,12 @@ const PACKAGES = {
     {
       dir: "nsis",
       suffix: "-setup.exe",
-      names: [`Coucou-Windows-${version}-setup.exe`, "Coucou-Windows-setup.exe"],
+      names: [`Lumen-Windows-${version}-setup.exe`, "Lumen-Windows-setup.exe"],
     },
     {
       dir: "msi",
       suffix: ".msi",
-      names: [`Coucou-Windows-${version}.msi`, "Coucou-Windows.msi"],
+      names: [`Lumen-Windows-${version}.msi`, "Lumen-Windows.msi"],
     },
   ],
   linux: [
@@ -47,6 +47,17 @@ if (!packages) {
   process.exit(1);
 }
 
+mkdirSync(outDir, { recursive: true });
+
+if (process.platform === "win32") {
+  const hook = join(root, "target", "release", "coucou-hook.exe");
+  if (!existsSync(hook)) {
+    console.error(`No hook relay at ${hook} — build it before packing.`);
+    process.exit(1);
+  }
+  copyFileSync(hook, join(outDir, "lumen-hook.exe"));
+}
+
 /** The newest file in `dir` ending with `suffix`, in case an older build is still lying around. */
 function newest(dir, suffix) {
   let files = [];
@@ -61,7 +72,6 @@ function newest(dir, suffix) {
     .sort((a, b) => statSync(b).mtimeMs - statSync(a).mtimeMs)[0];
 }
 
-mkdirSync(outDir, { recursive: true });
 const written = [];
 for (const { dir, suffix, names } of packages) {
   const built = newest(join(bundleRoot, dir), suffix);

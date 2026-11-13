@@ -17,7 +17,7 @@ use crate::island::WINDOW_LABEL;
 const ITEMS: [(&str, &str); 6] = [
     ("open", n_("Open Coucou")),
     ("recap", n_("Weekly recap")),
-    ("wardrobe", n_("Wardrobe…")),
+    ("wardrobe", if cfg!(windows) { "Detalhes da bússola" } else { n_("Wardrobe…") }),
     ("settings", n_("Settings…")),
     ("pause", n_("Pause")),
     ("quit", n_("Quit")),
@@ -53,7 +53,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
     app.manage(UpdateItem { menu: menu.clone(), item: update, version: Mutex::new(None) });
 
     let mut builder = TrayIconBuilder::with_id("coucou")
-        .tooltip("Coucou")
+        .tooltip(crate::PRODUCT_NAME)
         .menu(&menu)
         .on_menu_event(|app: &AppHandle, event| match event.id.as_ref() {
             "quit" => app.exit(0),

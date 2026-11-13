@@ -1,8 +1,6 @@
 ; Uninstall hooks for the NSIS installer.
 ;
-; The app stages coucou-hook.exe into %LOCALAPPDATA%\Coucou\bin at launch, so the
-; installer never recorded it and the default uninstaller leaves it behind. The
-; inbox and the log live in the same place and are ours too.
+; Keep the legacy relay and runtime files beside existing settings and hooks.
 ;
 ; Claude Code's own settings.json is deliberately NOT touched here: it belongs to
 ; the user, it may contain hooks from other tools, and rewriting somebody's
@@ -14,12 +12,9 @@
   ReadRegStr $0 HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou" "CustomActivator"
   StrCmp $0 "{5A0C5EFA-C98F-4FA4-A337-012F9685BED3}" 0 +2
   DeleteRegKey HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou"
-  RMDir /r "$LOCALAPPDATA\Coucou\bin"
-  RMDir /r "$LOCALAPPDATA\Coucou\inbox"
-  Delete "$LOCALAPPDATA\Coucou\coucou.log"
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
-  WriteRegStr HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou" "DisplayName" "Coucou"
+  WriteRegStr HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou" "DisplayName" "Lumen"
   WriteRegStr HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou" "CustomActivator" "{5A0C5EFA-C98F-4FA4-A337-012F9685BED3}"
 !macroend

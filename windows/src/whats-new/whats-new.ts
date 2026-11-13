@@ -9,6 +9,7 @@
 import { isBusy, type UpdateStatus } from "../core/update";
 import type { BotStateName } from "../core/layout";
 import { mergedSeconds, type RecapHistory } from "../recap/summary";
+import { LUMEN_WINDOWS } from "../i18n/i18n";
 
 /** The icons an entry may use (the same names as the Mac's). */
 export const ICON_NAMES = [
@@ -186,7 +187,8 @@ export function showsUpdateHint(waiting: boolean, state: BotStateName, pending: 
 
 /** The release page of this version, for "All changes". */
 export function releasePage(platform: "windows" | "linux", version: string): string {
-  return `https://github.com/Louis-CFM/coucou/releases/tag/${platform}-v${encodeURIComponent(version)}`;
+  const owner = LUMEN_WINDOWS && platform === "windows" ? "playertwo1" : "Louis-CFM";
+  return `https://github.com/${owner}/coucou/releases/tag/${platform}-v${encodeURIComponent(version)}`;
 }
 
 /** Buy Mochi a coffee: the same Stripe link as the Coucou page (docs/index.html). */

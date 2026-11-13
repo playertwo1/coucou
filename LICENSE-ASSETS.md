@@ -28,6 +28,10 @@ Coucou for Android (`android/`) is part of Coucou and uses the name, Mochi, the 
 
 If you fork Coucou to ship your own app, that's welcome under the MIT License: just give it **your own name, icon, character and sounds**.
 
+## Lumen for Windows
+
+O fork para Windows usa o nome original Lumen e a arte da Bússola de papel, desenhada em `windows/src/lumen/compass.ts` e `windows/scripts/gen-icons.mjs`. A paleta sonora é sintetizada em `windows/src/core/sound.ts`; o pacote não inclui os arquivos WAV compartilhados do Coucou. Os elementos visuais e sonoros do Lumen foram criados para este fork e não derivam dos assets Coucou ou Mochi listados acima.
+
 ## Questions or permission requests
 
 Open an issue on [GitHub](https://github.com/Louis-CFM/coucou/issues) or write to raillelouis@gmail.com.

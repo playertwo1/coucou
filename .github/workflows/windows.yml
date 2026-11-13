@@ -49,6 +49,26 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Set up Python for release-note validation
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
+
+      - name: Build the hook for Rust tests
+        run: cargo build --release -p coucou-hook
+
+      - name: Test the app
+        run: npm test
+
+      - name: Test the Rust library
+        run: cargo test --manifest-path src-tauri/Cargo.toml --lib
+
+      - name: Validate Lumen release notes
+        run: python ../scripts/test-whats-new.py windows
+
+      - name: Generate Lumen icons
+        run: npm run icons
+
       # Three files carry the version and they drift silently. Publishing a
       # "0.1.1" that installs a 0.1.0 is the kind of thing nobody notices until
       # a bug report arrives against the wrong build.
@@ -79,6 +99,13 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
           Get-ChildItem release | Format-Table Name, Length
 
+      - name: Test MSI and NSIS upgrades with synthetic user data
+        shell: pwsh
+        run: |
+          .\scripts\test-lumen-upgrade.ps1 `
+            -MsiPath "release/Lumen-Windows-${{ steps.pack.outputs.version }}.msi" `
+            -SetupPath "release/Lumen-Windows-${{ steps.pack.outputs.version }}-setup.exe"
+
       # Upload only on a manual run or when publishing a release.
       # The repo is public, so artifacts are downloadable by any signed-in GitHub
       # user; the condition keeps them off automatic tag builds while downloads
@@ -86,8 +113,8 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: github.event_name == 'workflow_dispatch' || env.PUBLISH == 'true'
         with:
-          name: Coucou-Windows-setup
-          path: windows/release/Coucou-Windows-${{ steps.pack.outputs.version }}-setup.exe
+          name: Lumen-Windows-setup
+          path: windows/release/Lumen-Windows-${{ steps.pack.outputs.version }}-setup.exe
           retention-days: 3
 
       # MSI installer generated via WiX toolset. Bypasses NSIS extractor false-positives
@@ -95,21 +122,21 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: github.event_name == 'workflow_dispatch' || env.PUBLISH == 'true'
         with:
-          name: Coucou-Windows-msi
-          path: windows/release/Coucou-Windows-${{ steps.pack.outputs.version }}.msi
+          name: Lumen-Windows-msi
+          path: windows/release/Lumen-Windows-${{ steps.pack.outputs.version }}.msi
           retention-days: 3
 
       # The unsigned NSIS installer is what Defender false-positives on, so the
       # bare binaries go up as well. hooks.rs already falls back to looking for
-      # coucou-hook.exe next to coucou.exe, which is exactly this layout, so the
+      # lumen-hook.exe beside lumen.exe, which is exactly this layout, so the
       # portable pair runs with working Claude Code hooks and no installer.
       - uses: actions/upload-artifact@v7
         if: github.event_name == 'workflow_dispatch' || env.PUBLISH == 'true'
         with:
-          name: Coucou-Windows-portable
+          name: Lumen-Windows-portable
           path: |
-            windows/target/release/coucou.exe
-            windows/target/release/coucou-hook.exe
+            windows/target/release/lumen.exe
+            windows/release/lumen-hook.exe
           retention-days: 3
 
       - name: Publish the release
@@ -120,20 +147,20 @@ jobs:
         run: |
           $v = "${{ steps.pack.outputs.version }}"
           $notes = @"
-          Coucou for Windows $v — Mochi at the top of your screen.
+          Lumen para Windows $v — a Bússola de papel orienta suas sessões e ideias.
 
-          Download ``Coucou-Windows-$v.msi`` (Windows Installer) or ``Coucou-Windows-$v-setup.exe`` and run it. The installer is not
-          code-signed yet, so Windows SmartScreen shows a warning: click
-          **More info → Run anyway**.
+          Baixe ``Lumen-Windows-$v.msi`` (Windows Installer) ou ``Lumen-Windows-$v-setup.exe`` e execute.
+          O instalador não tem assinatura digital; o Windows SmartScreen pode exibir um aviso. Nesse caso, clique em
+          **Mais informações → Executar mesmo assim**.
           "@
           # --latest=false is not cosmetic: without it GitHub hands "Latest" to
           # whichever release was published last, and the site's Download for Mac
           # button points at /releases/latest. A Windows tag would silently send
           # Mac users to the .exe. The macOS `v*` releases own that slot.
           gh release create "${{ github.ref_name }}" `
-            "release/Coucou-Windows-$v-setup.exe" `
-            "release/Coucou-Windows-$v.msi" `
-            --title "Coucou for Windows $v" `
+            "release/Lumen-Windows-$v-setup.exe" `
+            "release/Lumen-Windows-$v.msi" `
+            --title "Lumen para Windows $v" `
             --notes $notes `
             --latest=false
 
@@ -151,13 +178,13 @@ jobs:
             # from it gets an old tree.
             git tag -f windows-latest "${{ github.sha }}"
             git push -f origin windows-latest
-            gh release edit windows-latest --title "Coucou for Windows (latest)" --notes "Always the newest Windows build — currently $v."
-            gh release upload windows-latest "release/Coucou-Windows-setup.exe" "release/Coucou-Windows.msi" --clobber
+            gh release edit windows-latest --title "Lumen para Windows (mais recente)" --notes "Build atual do Lumen para Windows: $v."
+            gh release upload windows-latest "release/Lumen-Windows-setup.exe" "release/Lumen-Windows.msi" --clobber
           } else {
             gh release create windows-latest `
-              "release/Coucou-Windows-setup.exe" `
-              "release/Coucou-Windows.msi" `
-              --title "Coucou for Windows (latest)" `
-              --notes "Always the newest Windows build — currently $v." `
+              "release/Lumen-Windows-setup.exe" `
+              "release/Lumen-Windows.msi" `
+              --title "Lumen para Windows (mais recente)" `
+              --notes "Build atual do Lumen para Windows: $v." `
               --latest=false
           }

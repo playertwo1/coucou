@@ -13,7 +13,7 @@ import {
   releasePage, showsUpdateHint, soFar, updateWaiting, usedBefore,
 } from "../src/whats-new/whats-new.ts";
 
-const FILE = JSON.parse(readFileSync(new URL("../src/whats-new/whats-new.json", import.meta.url), "utf8"));
+const LUMEN_FILE = JSON.parse(readFileSync(new URL("../src/whats-new/lumen-whats-new.json", import.meta.url), "utf8"));
 const PKG = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 
 test("versions compare as numbers", () => {
@@ -34,15 +34,15 @@ test("the entry of exactly the running version", () => {
   assert.equal(releaseFor({}, "0.6.0"), null);
 });
 
-test("the version this app ships has its entry, in every language", () => {
-  const release = releaseFor(FILE, PKG.version);
-  assert.ok(release, `whats-new.json has no entry for ${PKG.version}`);
+test("Lumen's version has a pt-BR release entry", () => {
+  const release = releaseFor(LUMEN_FILE, PKG.version);
+  assert.ok(release, `lumen-whats-new.json has no entry for ${PKG.version}`);
   for (const item of release.items) {
     assert.ok(ICON_NAMES.includes(item.icon), item.icon);
-    for (const lang of ["en", "zh-Hans", "hi", "es", "ar", "fr", "bn", "pt-BR", "ru", "id", "de", "tr"]) {
-      assert.ok(item.title[lang]?.trim(), `${item.icon} title ${lang}`);
-      assert.ok(item.detail[lang]?.trim(), `${item.icon} detail ${lang}`);
-    }
+    assert.ok(item.title["pt-BR"]?.trim(), `${item.icon} title pt-BR`);
+    assert.ok(item.detail["pt-BR"]?.trim(), `${item.icon} detail pt-BR`);
+    assert.deepEqual(Object.keys(item.title), ["pt-BR"]);
+    assert.deepEqual(Object.keys(item.detail), ["pt-BR"]);
   }
 });
 

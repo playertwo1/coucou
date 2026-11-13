@@ -11,7 +11,7 @@ import { STAT_ICONS, WHATS_NEW_ICONS } from "../whats-new/icons";
 import { WhatsNew } from "../whats-new/controller";
 import { COFFEE_URL, iconName, localized, releasePage, type Stat } from "../whats-new/whats-new";
 import type { ViewHost } from "./views";
-import { language, t } from "../i18n/i18n";
+import { language, LUMEN_WINDOWS, t } from "../i18n/i18n";
 
 function btn(label: string, kind: "primary" | "secondary", onClick: () => void): HTMLButtonElement {
   return h("button", { class: `btn ${kind}`, onclick: onClick }, h("span", { text: label }));
@@ -85,13 +85,14 @@ export function buildWhatsNew(): ViewHost {
     }
     stack.append(h("div", { class: "title one-line", text: t("Your Coucou so far") }));
     if (WhatsNew.stats.length > 0) stack.append(chips);
-    stack.append(
-      h("div", { class: "sub whatsnew-thanks", text: t("Coucou is free and open source. If it saves you time, you can buy Mochi a coffee.") }),
-      h("div", { class: "actions" },
-        btn(`☕ ${t("Buy Mochi a coffee")}`, "primary", () => WhatsNew.openCoffee(COFFEE_URL)),
-        btn(t("OK"), "secondary", () => WhatsNew.done()),
-      ),
-    );
+    const done = () => WhatsNew.done();
+    if (!LUMEN_WINDOWS) {
+      stack.append(h("div", { class: "sub whatsnew-thanks", text: t("Coucou is free and open source. If it saves you time, you can buy Mochi a coffee.") }));
+    }
+    stack.append(h("div", { class: "actions" },
+      ...(!LUMEN_WINDOWS ? [btn(`☕ ${t("Buy Mochi a coffee")}`, "primary", () => WhatsNew.openCoffee(COFFEE_URL))] : []),
+      btn(t("OK"), "secondary", done),
+    ));
   }
 
   return {

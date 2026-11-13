@@ -9,7 +9,7 @@
 // nothing at all.
 
 import type { AgentSource } from "./state";
-import { N_ } from "../i18n/i18n";
+import { brandText, N_ } from "../i18n/i18n";
 
 export type PillCategory = "workspace" | "agent" | "ai" | "service";
 
@@ -153,7 +153,7 @@ export const PILL_CATALOG: readonly PillDefinition[] = [
   { id: "integration_whatsapp", name: "WhatsApp", color: "#25D366", category: "service",
     subtitle: N_("Integration"), source: "n8n", support: "yes", connect: none },
   // Local countdown: work, then rest, until the user stops. No account, no network.
-  { id: "integration_coucoudoro", name: "Coucoudoro", color: "#0EA5E9", category: "service",
+  { id: "integration_coucoudoro", name: brandText("Coucoudoro"), color: "#0EA5E9", category: "service",
     subtitle: N_("Integration"), source: "n8n", support: "yes", connect: none },
 ];
 

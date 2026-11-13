@@ -47,6 +47,8 @@ use crate::session_window::{self, Proc};
 
 /// File name of the Claude Code relay.
 pub const HOOK_EXE: &str = "coucou-hook.exe";
+/// Bundled relay name; it is copied to the legacy path above for existing hooks.
+pub const HOOK_RESOURCE: &str = "lumen-hook.exe";
 
 /// Environment variable holding the home directory.
 pub const HOME_VAR: &str = "USERPROFILE";

@@ -20,9 +20,28 @@ import EXTRA from "./extra.json";
 
 export const LANGUAGE_CODES = ["en", "zh-Hans", "hi", "es", "ar", "fr", "bn", "pt-BR", "ru", "id", "de", "tr", "ko", "ja"] as const;
 export type Language = (typeof LANGUAGE_CODES)[number];
+export const LUMEN_WINDOWS = typeof __LUMEN_WINDOWS__ !== "undefined" && __LUMEN_WINDOWS__;
+export const PRODUCT_NAME = LUMEN_WINDOWS ? "Lumen" : "Coucou";
+
+/** The non-English catalogs remain generated upstream; only the Windows Lumen build relabels legacy copy. */
+export function brandText(text: string, lumen = LUMEN_WINDOWS): string {
+  if (!lumen) return text;
+  const protectedTokens: string[] = [];
+  let out = text.replace(/coucou-hook(?:\.exe)?|fr\.louisraille\.coucou|[“'\"`]coucou[”'\"`]/g, (token) => {
+    const index = protectedTokens.push(token) - 1;
+    return `\u0000${index}\u0000`;
+  });
+  out = out.replace(/Coucou\s+(?:for|para)\s+Android/gi, "Segunda Mente")
+    .replace(/Coucoudoro/gi, "Foco")
+    .replace(/Open the wardrobe/gi, "Abrir detalhes da bússola")
+    .replace(/Abrir (?:o )?guarda-roupa/gi, "Abrir detalhes da bússola")
+    .replace(/\bCoucou\b/gi, "Lumen")
+    .replace(/\bMochi\b/gi, "Bússola");
+  return out.replace(/\u0000(\d+)\u0000/g, (_token, index: string) => protectedTokens[Number(index)]);
+}
 
 /** The picker's entries, each in its own language, in the Mac's order. */
-export const LANGUAGES: readonly { code: Language; name: string }[] = [
+const ALL_LANGUAGES: readonly { code: Language; name: string }[] = [
   { code: "en", name: "English" },
   { code: "zh-Hans", name: "简体中文" },
   { code: "hi", name: "हिन्दी" },
@@ -38,6 +57,7 @@ export const LANGUAGES: readonly { code: Language; name: string }[] = [
   { code: "ko", name: "한국어" },
   { code: "ja", name: "日本語" },
 ];
+export const LANGUAGES = LUMEN_WINDOWS ? [{ code: "pt-BR", name: "Português (Brasil)" }] as const : ALL_LANGUAGES;
 
 export type Vars = Record<string, string | number>;
 type Plural = Partial<Record<Intl.LDMLPluralRule, string>>;
@@ -50,7 +70,7 @@ const TABLE: Table = {
   ...((EXTRA as { strings: Table }).strings),
 };
 
-let current: Language = "en";
+let current: Language = LUMEN_WINDOWS ? "pt-BR" : "en";
 const listeners = new Set<(lang: Language) => void>();
 
 export function isLanguage(code: unknown): code is Language {
@@ -64,6 +84,7 @@ export function isLanguage(code: unknown): code is Language {
  * else English.
  */
 export function resolveLanguage(picked: string | undefined | null, system: readonly string[] = []): Language {
+  if (LUMEN_WINDOWS) return "pt-BR";
   if (isLanguage(picked)) return picked;
   for (const raw of system) {
     const tag = String(raw ?? "").replace(/_/g, "-").toLowerCase();
@@ -100,6 +121,7 @@ export function isRtl(lang: Language = current): boolean {
 
 /** Switches the language. Returns true when it changed (listeners were told). */
 export function setLanguage(lang: Language): boolean {
+  if (LUMEN_WINDOWS) lang = "pt-BR";
   if (!isLanguage(lang) || lang === current) return false;
   current = lang;
   applyDocumentLanguage();
@@ -159,7 +181,7 @@ export function t(key: string, vars?: Vars): string {
   if (typeof found === "string") text = found;
   else if (found) text = pickPlural(found, current, Number(vars?.count ?? 0)) ?? key;
   else text = key;
-  return interpolate(text, vars);
+  return brandText(interpolate(text, vars));
 }
 
 /**
@@ -172,16 +194,16 @@ export function tn(one: string, other: string, count: number, vars?: Vars): stri
   const found = lookup(other);
   if (found && typeof found !== "string") {
     const text = pickPlural(found, current, count);
-    if (text) return interpolate(text, all);
+    if (text) return brandText(interpolate(text, all));
   }
-  if (typeof found === "string") return interpolate(found, all);
+  if (typeof found === "string") return brandText(interpolate(found, all));
   // English, or a language without this string: the English forms.
   const englishForms = TABLE[other]?.en;
   if (englishForms && typeof englishForms !== "string") {
     const text = pickPlural(englishForms, "en", count);
-    if (text) return interpolate(text, all);
+    if (text) return brandText(interpolate(text, all));
   }
-  return interpolate(count === 1 ? one : other, all);
+  return brandText(interpolate(count === 1 ? one : other, all));
 }
 
 /**

@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import { existsSync, mkdirSync, readdirSync, copyFileSync, createReadStream } from "node:fs";
-import { resolve, join, extname } from "node:path";
+import { dirname, resolve, join, extname } from "node:path";
 
 // ───────────────────────────────────────────────────────────────────────────────
 // THE one and only place the shared sound folder is declared.
@@ -43,7 +43,26 @@ function sharedSounds(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [sharedSounds()],
+  define: { __LUMEN_WINDOWS__: JSON.stringify(process.platform === "win32") },
+  plugins: [
+    {
+      name: "lumen-windows-sources",
+      enforce: "pre",
+      resolveId(source, importer) {
+        if (process.platform !== "win32" || !importer) return null;
+        const target = resolve(dirname(importer.split("?")[0]), source);
+        if (target === resolve(__dirname, "src/mochi/engine")) return resolve(__dirname, "src/lumen/compass-engine.ts");
+        if (target === resolve(__dirname, "src/mochi/greeting")) return resolve(__dirname, "src/lumen/greeting.ts");
+        if (target === resolve(__dirname, "src/views/wardrobe")) return resolve(__dirname, "src/lumen/compass-details.ts");
+        if (target === resolve(__dirname, "src/whats-new/whats-new.json")) return resolve(__dirname, "src/whats-new/lumen-whats-new.json");
+        return null;
+      },
+      transformIndexHtml(html) {
+        return process.platform === "win32" ? html.replace(/<title>.*?<\/title>/i, "<title>Lumen</title>") : html;
+      },
+    },
+    ...(process.platform === "win32" ? [] : [sharedSounds()]),
+  ],
   clearScreen: false,
   server: {
     port: 1420,
@@ -63,7 +82,9 @@ export default defineConfig({
       input: {
         island: resolve(__dirname, "index.html"),
         settings: resolve(__dirname, "settings.html"),
-        mochi: resolve(__dirname, "mochi.html"),
+        ...(process.platform === "win32"
+          ? { lumen: resolve(__dirname, "lumen.html") }
+          : { mochi: resolve(__dirname, "mochi.html") }),
         pill: resolve(__dirname, "pill.html"),
       },
       output: {

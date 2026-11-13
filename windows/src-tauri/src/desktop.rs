@@ -305,17 +305,17 @@ pub fn setup(app: &AppHandle) {
 fn page_url(app: &AppHandle) -> WebviewUrl {
     #[cfg(dev)]
     if let Some(mut base) = app.config().build.dev_url.clone() {
-        base.set_path("/mochi.html");
+        base.set_path(if cfg!(target_os = "windows") { "/lumen.html" } else { "/mochi.html" });
         return WebviewUrl::External(base);
     }
     let _ = app;
-    WebviewUrl::App("mochi.html".into())
+    WebviewUrl::App(if cfg!(target_os = "windows") { "lumen.html" } else { "mochi.html" }.into())
 }
 
 fn create_window(app: &AppHandle, _mode: DesktopMode) -> Option<WebviewWindow> {
     let mut builder = WebviewWindowBuilder::new(app, LABEL, page_url(app))
         .additional_browser_args(crate::BROWSER_ARGS)
-        .title("Mochi")
+        .title(crate::PRODUCT_NAME)
         .inner_size(SIZE, SIZE)
         // GTK won't size a non-resizable window below its natural size (see
         // island::apply_geometry). Windows would grow resize borders instead.

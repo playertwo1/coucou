@@ -10,7 +10,7 @@ import {
 import { dictateButton } from "./dictate";
 import { State } from "../core/state";
 import { begin, banner, end, pause, pendingNote, pillLabel, resume, saveNote } from "../island/coucoudoro";
-import { t } from "../i18n/i18n";
+import { brandText, t } from "../i18n/i18n";
 
 /** Runs `paint` twice a second while a session runs and `el` is on the overview. */
 function liveClock(el: HTMLElement, paint: () => void) {
@@ -56,7 +56,7 @@ export function buildCoucoudoroCard(host: { keyboard(on: boolean): void }): Couc
   const lineBar = h("div", { class: "chat-bar cd-line" }, line, dictateButton(line));
   const today = h("div", { class: "cd-today" });
   const el = h("div", { class: "int-card cd-card" },
-    h("div", { class: "int-head" }, dot(COUCOUDORO_COLOR, 7), h("b", { text: "Coucoudoro" }), subtitle),
+    h("div", { class: "int-head" }, dot(COUCOUDORO_COLOR, 7), h("b", { text: brandText("Coucoudoro") }), subtitle),
     h("div", { class: "cd-row" }, time, controls),
     note,
     lineBar,

@@ -363,5 +363,5 @@ class DesktopMochi {
   }
 }
 
-const canvas = document.getElementById("mochi");
+const canvas = document.querySelector("canvas");
 if (canvas instanceof HTMLCanvasElement) void new DesktopMochi(canvas).start();

@@ -365,7 +365,7 @@ fn save_status_line_previous(status_line: &Value) -> std::io::Result<()> {
     config_file::write_like(&path, &path, config_file::pretty(status_line).as_bytes())
 }
 
-/// Copies the relay (coucou-hook.exe / coucou-hook) into the local data dir's
+/// Copies the relay into the legacy path in the local data dir's
 /// bin/ on launch. In a bundled install it comes from the app resources; in
 /// `tauri dev` it sits next to the app binary in the workspace target directory.
 ///
@@ -386,16 +386,27 @@ pub fn ensure_hook_exe(app: &AppHandle) {
     migrate_status_line_previous(&legacy_status_line_previous_path(), &status_line_previous_path());
 
     let mut candidates: Vec<PathBuf> = Vec::new();
+    #[cfg(windows)]
+    if let Ok(p) = app.path().resolve(platform::HOOK_RESOURCE, tauri::path::BaseDirectory::Resource) {
+        candidates.push(p);
+    }
+    #[cfg(not(windows))]
     if let Ok(p) = app.path().resolve(platform::HOOK_EXE, tauri::path::BaseDirectory::Resource) {
         candidates.push(p);
     }
     if let Ok(exe) = std::env::current_exe() {
         if let Some(parent) = exe.parent() {
+            #[cfg(windows)]
+            candidates.push(parent.join(platform::HOOK_RESOURCE));
             // Installed build, then `tauri dev` (target/debug) next to the
             // release hook the pre-build step produces.
             candidates.push(parent.join(platform::HOOK_EXE));
+            #[cfg(windows)]
+            candidates.push(parent.join("../release").join(platform::HOOK_RESOURCE));
             candidates.push(parent.join("../release").join(platform::HOOK_EXE));
             // Belt and braces: where the old glob form used to land it.
+            #[cfg(windows)]
+            candidates.push(parent.join("_up_/target/release").join(platform::HOOK_RESOURCE));
             candidates.push(parent.join("_up_/target/release").join(platform::HOOK_EXE));
         }
     }

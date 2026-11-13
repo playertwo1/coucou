@@ -1,4 +1,4 @@
-// « OK Coucou »: hearing the wake phrase in what Parakeet wrote, and telling
+// The wake phrase: hearing it in what Parakeet wrote, and telling
 // speech from silence on the microphone. Nothing here touches the OS.
 
 /// Lower case, accents gone, everything but letters and digits a space.
@@ -64,6 +64,10 @@ fn is_coucou_pair(a: &str, b: &str) -> bool {
     )
 }
 
+fn is_assistant_name(word: &str) -> bool {
+    if cfg!(windows) { word == "lumen" } else { is_coucou(word) }
+}
+
 /// When `text` holds the wake phrase, what was said after it (maybe nothing).
 /// The words keep their case and punctuation, as Parakeet wrote them.
 pub fn after_wake(text: &str) -> Option<String> {
@@ -82,11 +86,11 @@ pub fn after_wake(text: &str) -> Option<String> {
             // A word made of two ("ok coucou" written as one token is rare but happens).
             if let Some(w) = norm.get(j) {
                 let parts: Vec<&str> = w.split(' ').collect();
-                if parts.len() == 1 && is_coucou(parts[0]) {
+                if parts.len() == 1 && is_assistant_name(parts[0]) {
                     return Some(words[j + 1..].join(" ").trim_start_matches([',', '.', '!', ' ']).trim().to_string());
                 }
                 if let Some(next) = norm.get(j + 1) {
-                    if is_coucou_pair(w, next) {
+                    if !cfg!(windows) && is_coucou_pair(w, next) {
                         return Some(words[j + 2..].join(" ").trim_start_matches([',', '.', '!', ' ']).trim().to_string());
                     }
                 }
@@ -94,7 +98,7 @@ pub fn after_wake(text: &str) -> Option<String> {
         }
         // "okcoucou" in one piece.
         if let Some(rest) = norm[i].strip_prefix("okay").or_else(|| norm[i].strip_prefix("ok")) {
-            if is_coucou(rest.trim()) {
+            if is_assistant_name(rest.trim()) {
                 return Some(words[i + 1..].join(" ").trim().to_string());
             }
         }
@@ -219,6 +223,11 @@ mod tests {
 
     #[test]
     fn the_wake_phrase_however_parakeet_writes_it() {
+        if cfg!(windows) {
+            assert_eq!(after_wake("OK Lumen, play some music.").as_deref(), Some("play some music."));
+            assert_eq!(after_wake("Okay, Lúmen! Que horas são?").as_deref(), Some("Que horas são?"));
+            assert_eq!(after_wake("Okay, Coucou."), None);
+        } else {
         assert_eq!(after_wake("OK Coucou, play some music.").as_deref(), Some("play some music."));
         assert_eq!(after_wake("Okay, coucou! Quelle heure est-il ?").as_deref(), Some("Quelle heure est-il ?"));
         assert_eq!(after_wake("O.K. Cuckoo what's the weather").as_deref(), Some("what's the weather"));
@@ -240,6 +249,7 @@ mod tests {
         assert_eq!(after_wake("Okay, Google."), None);
         assert_eq!(after_wake("on a dit coucou à Paul"), None);
         assert_eq!(after_wake("ok let's go"), None);
+        }
         assert_eq!(normalize("Ça VA, Élodie ?"), "ca va elodie");
     }
 

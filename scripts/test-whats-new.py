@@ -52,6 +52,11 @@ def windows_langs():
     return json.loads((ROOT / "windows/src/i18n/strings.json").read_text(encoding="utf-8"))["languages"]
 
 
+def linux_version():
+    data = json.loads((ROOT / "windows/src/whats-new/whats-new.json").read_text(encoding="utf-8"))
+    return data["releases"][0]["version"]
+
+
 def vkey(v):
     return tuple(int(x) for x in v.split("."))
 
@@ -118,7 +123,9 @@ def main():
     if only in (None, "mac"):
         check("Mac", ROOT / "NotchBuddy/Resources/whats-new.json", mac_version(), MAC_LANGS)
     if only in (None, "windows"):
-        check("Windows and Linux", ROOT / "windows/src/whats-new/whats-new.json", windows_version(), windows_langs())
+        check("Lumen Windows", ROOT / "windows/src/whats-new/lumen-whats-new.json", windows_version(), ["pt-BR"])
+    if only in (None, "linux"):
+        check("Coucou Linux", ROOT / "windows/src/whats-new/whats-new.json", linux_version(), windows_langs())
     if failures:
         print(f"\n{len(failures)} failure(s)")
         sys.exit(1)

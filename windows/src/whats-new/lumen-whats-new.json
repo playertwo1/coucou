@@ -1,0 +1,14 @@
+{
+  "releases": [
+    {
+      "version": "0.6.13",
+      "items": [
+        {
+          "icon": "paint",
+          "title": { "pt-BR": "A Bússola de papel chegou" },
+          "detail": { "pt-BR": "Índigo, areia e terracota orientam suas sessões e ideias." }
+        }
+      ]
+    }
+  ]
+}

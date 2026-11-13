@@ -2,7 +2,7 @@
 // out loud, and what leaves the computer. Port of the Mac's Settings → Voice.
 
 import { h, clear } from "../../views/dom";
-import { t } from "../../i18n/i18n";
+import { PRODUCT_NAME, t } from "../../i18n/i18n";
 import { Bridge } from "../../core/bridge";
 import type { VoiceOutput } from "../../core/flow";
 import type { HubContext } from "../shell";
@@ -43,7 +43,7 @@ function elevenKey(): HTMLElement {
 export async function voicePage(page: HTMLElement, ctx: HubContext) {
   const status = await ctx.refresh();
   const prefs = status.prefs;
-  page.append(ctx.hero("voice", "OK Coucou", t("Say « OK Coucou », then ask anything: add a pill, play music, the weather, an email to prepare.")));
+  page.append(ctx.hero("voice", `OK ${PRODUCT_NAME}`, t("Say « OK Coucou », then ask anything: add a pill, play music, the weather, an email to prepare.")));
 
   const ready = status.models.parakeet.state === "ready";
   page.append(label(t("Listening")));

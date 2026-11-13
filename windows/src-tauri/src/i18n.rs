@@ -72,6 +72,13 @@ fn env_languages() -> Vec<String> {
 /// the system's languages we have, else English. Same rules as resolveLanguage
 /// in src/i18n/i18n.ts.
 pub fn resolve(picked: &str, system: &[String]) -> &'static str {
+    resolve_for(picked, system, cfg!(windows))
+}
+
+fn resolve_for(picked: &str, system: &[String], lumen_windows: bool) -> &'static str {
+    if lumen_windows {
+        return "pt-BR";
+    }
     if let Some(code) = LANGUAGES.iter().find(|c| **c == picked) {
         return code;
     }
@@ -208,7 +215,32 @@ pub fn tf(key: &str, vars: &[(&str, &str)]) -> String {
         Some(Value::Object(forms)) => pick_plural(forms, "other").unwrap_or_else(|| key.to_string()),
         _ => key.to_string(),
     };
-    interpolate(&text, vars)
+    brand_text(&interpolate(&text, vars), cfg!(windows))
+}
+
+fn brand_text(text: &str, lumen_windows: bool) -> String {
+    if !lumen_windows {
+        return text.to_string();
+    }
+    let tokens = ["coucou-hook.exe", "coucou-hook", "fr.louisraille.coucou", "“coucou”", "\"coucou\"", "`coucou`"];
+    let mut protected = text.to_string();
+    for (index, token) in tokens.iter().enumerate() {
+        protected = protected.replace(token, &format!("\u{0}TOKEN{index}\u{0}"));
+    }
+    let branded = protected
+        .replace("Coucou for Android", "Segunda Mente")
+        .replace("Coucou para Android", "Segunda Mente")
+        .replace("Open the wardrobe", "Abrir detalhes da bússola")
+        .replace("Abrir o guarda-roupa", "Abrir detalhes da bússola")
+        .replace("Coucoudoro", "Foco")
+        .replace("coucoudoro", "Foco")
+        .replace("Coucou", "Lumen")
+        .replace("coucou", "Lumen")
+        .replace("Mochi", "Bússola")
+        .replace("mochi", "bússola");
+    tokens.iter().enumerate().fold(branded, |text, (index, token)| {
+        text.replace(&format!("\u{0}TOKEN{index}\u{0}"), token)
+    })
 }
 
 /// A count with its words: `tn("{count} file", "{count} files", n, &[])`.
@@ -224,12 +256,12 @@ pub fn tn(one: &str, other: &str, count: u64, vars: &[(&str, &str)]) -> String {
         _ => None,
     };
     let text = text.unwrap_or_else(|| if count == 1 { one.to_string() } else { other.to_string() });
-    interpolate(&text, &all)
+    brand_text(&interpolate(&text, &all), cfg!(windows))
 }
 
 #[cfg(test)]
 pub(crate) fn set_for_test(lang: &str) {
-    TEST_LANG.with(|c| c.set(resolve(lang, &[])));
+    TEST_LANG.with(|c| c.set(resolve_for(lang, &[], false)));
 }
 
 #[cfg(test)]
@@ -239,13 +271,21 @@ mod tests {
     #[test]
     fn resolves_like_the_webview() {
         let sys = |v: &[&str]| v.iter().map(|s| s.to_string()).collect::<Vec<_>>();
-        assert_eq!(resolve("fr", &sys(&["ru"])), "fr");
-        assert_eq!(resolve("", &sys(&["fr_FR.UTF-8"])), "fr");
-        assert_eq!(resolve("", &sys(&["pt-PT"])), "pt-BR");
-        assert_eq!(resolve("", &sys(&["zh-CN"])), "zh-Hans");
-        assert_eq!(resolve("", &sys(&["zh-TW", "it", "es-MX"])), "es");
-        assert_eq!(resolve("", &sys(&["it-IT"])), "en");
-        assert_eq!(resolve("xx", &[]), "en");
+        assert_eq!(resolve_for("fr", &sys(&["ru"]), false), "fr");
+        assert_eq!(resolve_for("", &sys(&["fr_FR.UTF-8"]), false), "fr");
+        assert_eq!(resolve_for("", &sys(&["pt-PT"]), false), "pt-BR");
+        assert_eq!(resolve_for("", &sys(&["zh-CN"]), false), "zh-Hans");
+        assert_eq!(resolve_for("", &sys(&["zh-TW", "it", "es-MX"]), false), "es");
+        assert_eq!(resolve_for("", &sys(&["it-IT"]), false), "en");
+        assert_eq!(resolve_for("xx", &[], false), "en");
+        assert_eq!(resolve_for("fr", &sys(&["en"]), true), "pt-BR");
+    }
+
+    #[test]
+    fn lumen_relabels_brand_copy_without_changing_hook_markers() {
+        assert_eq!(brand_text("Coucou e Mochi", true), "Lumen e Bússola");
+        assert_eq!(brand_text("coucou-hook.exe e “coucou”", true), "coucou-hook.exe e “coucou”");
+        assert_eq!(brand_text("Coucou for Android", true), "Segunda Mente");
     }
 
     #[test]
@@ -254,7 +294,7 @@ mod tests {
         // From the Mac's catalog.
         assert_eq!(t("Allow"), "Autoriser");
         // From extra.json.
-        assert_eq!(t("Open Coucou"), "Ouvrir Coucou");
+        assert_eq!(t("Open Coucou"), if cfg!(windows) { "Ouvrir Lumen" } else { "Ouvrir Coucou" });
         assert_eq!(t("A string nobody translated"), "A string nobody translated");
         assert_eq!(tf("Open {name}", &[("name", "Vercel")]), "Ouvrir Vercel");
         set_for_test("en");
@@ -291,10 +331,10 @@ mod tests {
     #[test]
     fn german_resolves_translates_and_selects_singular_only_for_one() {
         for tag in ["de", "de-DE", "de-AT", "de-CH", "de_DE.UTF-8"] {
-            assert_eq!(resolve("", &[tag.to_string()]), "de");
+            assert_eq!(resolve_for("", &[tag.to_string()], false), "de");
         }
-        assert_eq!(resolve("de", &["fr-FR".to_string()]), "de");
-        assert_eq!(resolve("fr", &["de-DE".to_string()]), "fr");
+        assert_eq!(resolve_for("de", &["fr-FR".to_string()], false), "de");
+        assert_eq!(resolve_for("fr", &["de-DE".to_string()], false), "fr");
         set_for_test("de");
         assert_eq!(t("Allow"), "Zulassen");
         assert_eq!(t("Deny"), "Ablehnen");
@@ -315,9 +355,9 @@ mod tests {
     #[test]
     fn turkish_resolves_translates_and_preserves_counted_nouns() {
         let system = |tag: &str| vec![tag.to_string()];
-        assert_eq!(resolve("tr", &system("en-US")), "tr");
+        assert_eq!(resolve_for("tr", &system("en-US"), false), "tr");
         for tag in ["tr", "tr-TR", "tr_TR.UTF-8"] {
-            assert_eq!(resolve("", &system(tag)), "tr");
+            assert_eq!(resolve_for("", &system(tag), false), "tr");
         }
         set_for_test("tr");
         assert_eq!(t("Allow"), "İzin ver");

@@ -9,100 +9,74 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "src-tauri", "icons");
+const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "src-tauri", "icons", "lumen");
 
-// ── Mochi ─────────────────────────────────────────────────────────────────────
-
-const BASE_TOP = [255, 250, 245]; // #FFFAF5
-const BASE_BOTTOM = [221, 204, 191]; // #DDCCBF
-const INK = [26, 20, 18]; // #1A1412
-const RIM = [0, 0, 0];
-
+// Original Bússola de papel icon: indigo tile, sand face and terracotta needle.
 const SS = 4; // supersampling factor
 
-/** Superellipse (exponent 2.7) test in body-local coordinates. */
-function insideBody(x, y, rx, ry) {
-  const n = 2.7;
-  return Math.pow(Math.abs(x / rx), n) + Math.pow(Math.abs(y / ry), n) <= 1;
+const INK = [38, 34, 75];
+const PAPER = [244, 232, 201];
+const SHADE = [210, 191, 150];
+const CLAY = [190, 92, 65];
+
+function insideRoundRect(x, y, size, radius) {
+  const cx = Math.max(radius, Math.min(size - radius, x));
+  const cy = Math.max(radius, Math.min(size - radius, y));
+  return (x - cx) ** 2 + (y - cy) ** 2 <= radius ** 2;
 }
 
-function insidePill(x, y, w, h) {
-  const hw = w / 2;
-  const hh = h / 2;
-  const r = Math.min(hw, hh);
-  const cx = Math.max(-hw + r, Math.min(hw - r, x));
-  const cy = Math.max(-hh + r, Math.min(hh - r, y));
-  return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+function insidePoly(x, y, points) {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const [xi, yi] = points[i];
+    const [xj, yj] = points[j];
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
 }
 
-function renderMochi(size) {
+function renderCompass(size) {
   const px = new Uint8Array(size * size * 4);
-  const R = size * 0.34;
-  const rx = R * 1.14;
-  const ry = R * 0.88;
   const cx = size / 2;
-  const cy = size / 2 + R * 0.06;
-  const rim = R * 0.055; // dark outline so the tray icon reads on light themes
-
-  // Eyes — same geometry as BotEngine (yaw ±0.37, pitch −0.12)
-  const eyeYaw = 0.37;
-  const eyePitch = -0.12;
-  const cp = Math.cos(eyePitch);
-  const ex = Math.sin(eyeYaw) * cp * rx;
-  const ey = -Math.sin(eyePitch) * ry;
-  const fx = Math.max(0.18, Math.cos(eyeYaw));
-  const fy = Math.max(0.18, cp);
-  const ew = R * 0.25 * fx;
-  const eh = R * 0.27 * fy;
+  const cy = size / 2;
+  const radius = size * 0.36;
+  const p = (x, y) => [cx + x * size, cy + y * size];
+  const points = [
+    { color: CLAY, shape: [p(0, 0), p(-0.075, -0.035), p(0, -0.31), p(0.075, -0.035)] },
+    { color: INK, shape: [p(0, 0), p(0.075, -0.035), p(0.31, 0), p(0.075, 0.035)] },
+    { color: SHADE, shape: [p(0, 0), p(0.075, 0.035), p(0, 0.31), p(-0.075, 0.035)] },
+    { color: CLAY, shape: [p(0, 0), p(-0.075, 0.035), p(-0.31, 0), p(-0.075, -0.035)] },
+    { color: SHADE, shape: [p(0, -0.015), p(0.04, -0.055), p(0.19, -0.19), p(0.12, -0.035)] },
+    { color: PAPER, shape: [p(0.015, 0), p(0.055, 0.04), p(0.19, 0.19), p(0.035, 0.12)] },
+    { color: INK, shape: [p(0, 0.015), p(-0.04, 0.055), p(-0.19, 0.19), p(-0.12, 0.035)] },
+    { color: SHADE, shape: [p(-0.015, 0), p(-0.055, -0.04), p(-0.19, -0.19), p(-0.035, -0.12)] },
+  ];
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
-      let bodyHits = 0;
-      let rimHits = 0;
-      let eyeHits = 0;
+      const sum = [0, 0, 0, 0];
       for (let sy = 0; sy < SS; sy++) {
         for (let sx = 0; sx < SS; sx++) {
-          const px0 = x + (sx + 0.5) / SS - cx;
-          const py0 = y + (sy + 0.5) / SS - cy;
-          if (!insideBody(px0, py0, rx + rim, ry + rim)) continue;
-          rimHits++;
-          if (!insideBody(px0, py0, rx, ry)) continue;
-          bodyHits++;
-          if (
-            insidePill(px0 + ex, py0 - ey, ew, eh) ||
-            insidePill(px0 - ex, py0 - ey, ew, eh)
-          ) {
-            eyeHits++;
+          const px = x + (sx + 0.5) / SS;
+          const py = y + (sy + 0.5) / SS;
+          let color = insideRoundRect(px, py, size, size * 0.19) ? INK : null;
+          if ((px - cx) ** 2 + (py - cy) ** 2 <= radius ** 2) color = PAPER;
+          for (const point of points) {
+            if (insidePoly(px, py, point.shape)) color = point.color;
           }
+          if ((px - cx) ** 2 + (py - cy) ** 2 <= (size * 0.047) ** 2) color = INK;
+          if (!color) continue;
+          sum[0] += color[0];
+          sum[1] += color[1];
+          sum[2] += color[2];
+          sum[3] += 255;
         }
       }
-      if (rimHits === 0) continue;
-
-      const total = SS * SS;
-      const rimA = rimHits / total;
-      const bodyA = bodyHits / total;
-      const eyeA = eyeHits / total;
-
-      // Body gradient: top-right → bottom-left, like the Canvas gradient.
-      const t = Math.min(1, Math.max(0, ((x - cx) * -0.6 + (y - cy) * 0.8) / (2 * ry) + 0.5));
-      const body = [0, 1, 2].map((i) => BASE_TOP[i] + (BASE_BOTTOM[i] - BASE_TOP[i]) * t);
-
-      // rim under body, body over rim, eyes over body
-      let col = RIM.slice();
-      let alpha = rimA;
-      if (bodyA > 0) {
-        col = col.map((c, i) => c * (1 - bodyA / rimA) + body[i] * (bodyA / rimA));
-        alpha = rimA;
-      }
-      if (eyeA > 0) {
-        col = col.map((c, i) => c * (1 - eyeA) + INK[i] * eyeA);
-      }
-
       const o = (y * size + x) * 4;
-      px[o] = Math.round(col[0]);
-      px[o + 1] = Math.round(col[1]);
-      px[o + 2] = Math.round(col[2]);
-      px[o + 3] = Math.round(Math.min(1, alpha) * 255);
+      px[o] = Math.round(sum[0] / (SS * SS));
+      px[o + 1] = Math.round(sum[1] / (SS * SS));
+      px[o + 2] = Math.round(sum[2] / (SS * SS));
+      px[o + 3] = Math.round(sum[3] / (SS * SS));
     }
   }
   return px;
@@ -182,7 +156,7 @@ function encodeICO(entries) {
 
 mkdirSync(OUT, { recursive: true });
 
-const png = (size) => encodePNG(size, renderMochi(size));
+const png = (size) => encodePNG(size, renderCompass(size));
 
 const files = {
   "32x32.png": png(32),

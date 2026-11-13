@@ -14,7 +14,7 @@ import {
 import type { IslandViewName } from "../core/layout";
 import { Sound } from "../core/sound";
 import { State } from "../core/state";
-import { t } from "../i18n/i18n";
+import { brandText, t } from "../i18n/i18n";
 
 export interface CoucoudoroHost {
   /** Open the island on this view (the hook server's alert path). */
@@ -146,7 +146,7 @@ export function pillLabel(clockText: (seconds: number) => string, now = Date.now
   const fresh = banner(now);
   if (fresh) return fresh;
   const left = remaining(Coucoudoro.snap, now);
-  return Coucoudoro.snap.phase !== "idle" && left != null ? clockText(left) : "Coucoudoro";
+  return Coucoudoro.snap.phase !== "idle" && left != null ? clockText(left) : brandText("Coucoudoro");
 }
 
 export function eventText(event: CoucoudoroEvent): string {

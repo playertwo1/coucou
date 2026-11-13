@@ -4,7 +4,7 @@
 
 import { BotEngine } from "../mochi/engine";
 import { formatCount, formatDuration, weekRangeLabel, type WeeklySummary } from "./summary";
-import { t } from "../i18n/i18n";
+import { LUMEN_WINDOWS, PRODUCT_NAME, t } from "../i18n/i18n";
 import { SCRIPT_FONTS } from "../core/fonts";
 
 export const SHARE_W = 1080;
@@ -30,7 +30,7 @@ const T = {
   get longestSession() { return t("Longest session"); },
   get approved() { return t("Approved"); },
   get denied() { return t("Denied"); },
-  footer: "Coucou · github.com/Louis-CFM/coucou",
+  get footer() { return `${PRODUCT_NAME} · github.com/${LUMEN_WINDOWS ? "playertwo1" : "Louis-CFM"}/coucou`; },
 };
 
 /**
@@ -131,8 +131,8 @@ function badge(x: Ctx, left: number, top: number, w: number, label: string, valu
   x.fillText(ellipsize(x, value, w - 64 - labelW - 16), left + w - 32, mid);
 }
 
-/** A still Mochi, drawn by the same engine as the island's. */
-function drawMochi(x: Ctx, cx: number, top: number, size: number) {
+/** The companion, drawn by the same engine as the island's. */
+function drawCompanion(x: Ctx, cx: number, top: number, size: number) {
   const engine = new BotEngine();
   engine.setState("idle", true);
   engine.update(1 / 60);
@@ -185,13 +185,13 @@ export function renderShareImage(s: WeeklySummary, hideProjects: boolean): HTMLC
 
   x.textBaseline = "top";
 
-  drawMochi(x, cx, y + MOCHI / 2 - MOCHI_DRAW / 2 - MOCHI_DRAW * 0.02, MOCHI_DRAW);
+  drawCompanion(x, cx, y + MOCHI / 2 - MOCHI_DRAW / 2 - MOCHI_DRAW * 0.02, MOCHI_DRAW);
   y += MOCHI + 20;
 
   x.fillStyle = INK;
   x.textAlign = "center";
   font(x, 900, 52);
-  x.fillText("Coucou", cx, y);
+  x.fillText(PRODUCT_NAME, cx, y);
   y += 62 + 6;
 
   x.fillStyle = DIM;
