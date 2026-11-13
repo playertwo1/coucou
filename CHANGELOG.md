@@ -26,9 +26,9 @@ Fixes:
 - **Mochi reads the memory pressure** as soon as he comes back on screen (#795 by @orrrrli)
 - **iPhone link**: the relay is sturdier (#1035) and no longer retries a bad device token forever (#1036), by @hasnain-amir
 
-## Windows 0.6.12 — November 13, 2026 *(playertwo1 fork; evaluation release)*
+## Windows 0.6.12 — 13 de novembro de 2026 *(fork playertwo1; avaliação preparada, ainda não publicada)*
 
-- **Local test and build results** — see whether `npm test` or `cargo build` succeeded in the calling working folder. Synthetic tests pass; real-agent hook behavior remains under owner evaluation.
+- **Resultados locais de testes e builds** — mostra se `npm test` ou `cargo build` passaram no diretório da chamada. Os testes sintéticos passaram; o comportamento dos hooks com agentes reais aguarda avaliação do proprietário.
 
 ## Windows 0.6.6 — November 13, 2026 *(playertwo1 fork; evaluation release)*
 

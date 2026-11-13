@@ -1,5 +1,7 @@
 > Parte do roadmap do fork. Índice, regras gerais e ordem das fases: [ROADMAP-FORK.md](../ROADMAP-FORK.md).
 
+**Estado após a L0 (2026-11-13): Pausada (D-053).** A etapa 1.2 permanece fechada com prova real; 1.3 e 1.4 permanecem descartadas por decisão do proprietário. Os demais testes manuais e critérios visuais/hardware seguem pendentes no [inventário L0](fase-l-lumen.md). Checklists e histórico foram preservados.
+
 ## Fase 1 — Recursos do Mac ainda não escolhidos
 
 Regra: cada item abaixo começa por descoberta e aprovação de um mini-spec. A implementação não começa enquanto a interação exata estiver indefinida.

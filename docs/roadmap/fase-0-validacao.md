@@ -1,5 +1,7 @@
 > Parte do roadmap do fork. Índice, regras gerais e ordem das fases: [ROADMAP-FORK.md](../ROADMAP-FORK.md).
 
+**Estado após a L0 (2026-11-13): Pausada (D-053).** O checkpoint 0.4 permanece fechado pela evidência detalhada abaixo; 0.5a continua N/A por decisão do proprietário. Os relatos PASS sem versão/cenários e as validações manuais ainda não registradas permanecem abertos, conforme o [inventário L0](fase-l-lumen.md). Checklists e histórico foram preservados.
+
 ## Snapshot de validação — 2026-11-09
 
 - [x] `npm run tauri dev` abriu a versão de desenvolvimento 0.6.2.
