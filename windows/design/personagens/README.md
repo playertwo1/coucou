@@ -37,5 +37,6 @@ As alterações ficam no olhar, na boca, numa inclinação pequena ou em bolinha
 - `claude-code-estados.png`, `codex-estados.png`, `chatgpt-estados.png`, `antigravity-estados.png`, `gemini-cli-estados.png`, `opencode-estados.png`, `generico-estados.png`: uma grade de oito estados por agente, com rótulos em pt-BR sobre preto.
 - `*-estados-transparente.png`: as mesmas pranchas, com fundo transparente.
 - `teste-22px.png`: os sete personagens em 22 px reais de largura sobre preto; a ordem é a mesma do lineup.
+- `claude-marca-mascote-estudo.png` e `claude-marca-mascote-estudo-transparente.png`: uma variação exploratória isolada, feita depois do lineup a pedido do proprietário. Usa como referências visuais as pinças de um caranguejo e um motivo radial coral; não incorpora um arquivo oficial de logo ou ilustração.
 
-As marcas aparecem somente como rótulos pedidos para identificar os agentes. Não há logotipos, símbolos ou mascotes oficiais nas ilustrações. A Etapa L1.4b permanece bloqueada até o proprietário aprovar estas referências.
+As sete pranchas da família original não incluem logotipos, símbolos ou mascotes oficiais. O estudo pontual do Claude fica separado para comparação e não foi aprovado para o app nem para distribuição. As referências visuais da L1.4a continuam aguardando decisão do proprietário; a L1.4b permanece bloqueada.
