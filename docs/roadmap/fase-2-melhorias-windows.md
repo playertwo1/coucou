@@ -111,14 +111,22 @@ O Windows Terminal sintético apresentou duas abas `Synthetic Duplicate` com o m
 
 **Limites:** esta comprovação usa títulos e sessões inventados. O foco da aba de sessões reais e o comportamento em uma instalação do proprietário ainda aguardam avaliação após atualizar.
 
+**Versão sintética de avaliação 0.6.9 (2026-11-13):** publicada em [Windows 0.6.9](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.9), tag no commit `856a82d64fe39b39e1d1647c7f4241f2ef9b5074`. O preflight (`43378038467`) e o workflow manual do tag (`43379679895`) passaram; `windows-latest` foi atualizado.
+
+**Instaladores 0.6.9:** os assets finais foram baixados e seus SHA-256 conferiram com os digests do GitHub. Exame personalizado do Microsoft Defender no diretório contendo somente os dois instaladores terminou em 2026-11-13 03:49 (evento 1001, `{A9243818-AD1B-4C0E-A080-58EC20391DDD}`), sem evento de detecção 1116. Setup (12.183.969 bytes): `df18d9087b9d8e9c67fe55a94527e2a53f6ec2dc5718f2eb50c5a370a4c4f4c2`. MSI (15.794.176 bytes): `824a5b868019e018eab4b1e4ab3ad37e14f330df1d27015becb6b26b8254b02d`.
+
 ### 2.6 — Histórico e busca de sessões (M)
 
-- [ ] Inventariar arquivos locais de sessão, retenção e campos seguros para indexar; não ler prompt completo para log.
-- [ ] Definir no mini-spec quais eventos/resumos ficam visíveis e como excluir/limpar histórico.
-- [ ] Criar testes para sessões ausentes, JSONL incompleto, sessão duplicada e consulta sem resultado.
-- [ ] Implementar busca local por projeto, agente, data e termos aprovados no mini-spec.
-- [ ] Conferir que buscar não altera arquivos de sessão e que os resultados abrem a sessão correta.
-- Checkpoint: índice local reproduzível, sem telemetria e sem conteúdo sensível em logs.
+- [x] Inventariar os registros locais documentados do Codex, retenção e campos seguros; limitar leitura aos limites existentes do parser e não indexar prompts, respostas ou ferramentas.
+- [x] Definir em [mini-spec](../superpowers/specs/2026-11-13-windows-session-history-design.md) busca local por projeto/agente/data, sem segundo índice persistido nem exclusão de arquivos do Codex; remoção feita pelo Codex desaparece na leitura seguinte.
+- [x] Criar testes com fonte ausente, JSONL incompleto, sessão duplicada, identificador inválido e consulta sem resultado.
+- [x] Implementar busca em metadados Codex e abertura explícita pela CLI com argumentos separados, cwd verificado e falha fechada sem CLI/metadados válidos.
+- [x] Conferir que a busca é somente leitura e que a ação da interface chama a fixture de abertura sem iniciar uma sessão real.
+- Checkpoint sintético: PASS; nenhuma telemetria, prompt, resposta, caminho ou arquivo de sessão exposto na interface/logs.
+
+**Verificação sintética (2026-11-13):** `npm test` (646 aprovados), `cargo test --offline --locked --workspace --quiet` (649 testes do app e 36 do hook relay aprovados; 8 ignorados), `npm run build`, `npm run synthetic:build`, build do host sintético, `node scripts/gen-strings.mjs --check`, `python scripts/test-whats-new.py` e `git diff --check` passaram. No Agent Desktop, a variante sintética exibiu as sessões inventadas Jardim/Oficina; a busca por “Jardim” deixou apenas a sessão Jardim e a ação “Abrir Jardim” ficou disponível. O callback sintético aceita somente IDs de fixture; nenhum processo Codex foi iniciado.
+
+**Limites:** só o layout local documentado do Codex é suportado; não há indexação de conteúdo de conversa. A confirmação com sessões reais e a abertura de uma sessão pelo proprietário ficam pendentes após atualizar.
 
 ### 2.7 — Lançador rápido (P; depende da Etapa 2B.6)
 
