@@ -40,7 +40,13 @@ Cada item segue a sequência: descoberta do código atual → mini-spec/aceite �
 - [ ] Validação real do proprietário: toast visível, Allow abrindo o cartão certo, Deny negando só o pedido certo, fechamento/expiração sem decisão, pedidos simultâneos e atualização NSIS/MSI.
 - Checkpoint real 2.1: em avaliação; callback da Shell ainda não comprovado. Próximo desenvolvimento: 2.2, com o aceite real de 2.1 sujeito ao retorno do proprietário.
 
-**Versão de avaliação 0.6.5 (2026-11-12):** sintéticos de 2.1b aprovados e implementação pronta para o proprietário validar no Windows. O callback e a apresentação real continuam pendentes; não tratar esta publicação como aceite de runtime.
+**Versão de avaliação 0.6.5 (2026-11-12):** publicada em [Windows 0.6.5](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.5). A tag `windows-v0.6.5` aponta para `bb6d48f907e73be91ed26c2844ab808ceb827604`. O preflight do branch (`43346487966`) passou; o workflow manual no tag (`43348587966`) concluiu com sucesso e publicou a release e os dois instaladores. O push da tag não iniciou o workflow automaticamente, então ele foi executado manualmente no próprio tag.
+
+**Verificação dos instaladores 0.6.5:** os assets finais foram baixados, seus SHA-256 conferiram com os digests publicados pelo GitHub e os dois arquivos exatos passaram por exame personalizado do Microsoft Defender (evento 1001, exame `{9AD2DD74-E9E4-4DCE-8E77-D2954870AA9F}`, 2026-11-12 23:10, zero eventos de detecção). Ambos não têm assinatura digital, como esperado. Setup `Coucou-Windows-0.6.5-setup.exe` (12.149.586 bytes): `baf5092fdfaf1b7034a2a31a4d7184f782dd00b8dfba7aace870a09586ac05e9`. MSI `Coucou-Windows-0.6.5.msi` (15.749.120 bytes): `2f062e8c430e9a63f9882a3d17ce7d0b8eb86b240b7289e21cd2e6cd5c2c61d1`.
+
+**Verificações sintéticas e build:** `npm test` (632 aprovados), `cargo test --offline --locked --workspace` (637 testes do app e 36 do hook relay aprovados; 7 ignorados), `npm run build`, `npm run synthetic:build`, verificação de strings/What's New e `npm audit --audit-level=high` (zero vulnerabilidades) passaram.
+
+O callback de clique da Shell e o comportamento real da notificação continuam pendentes de validação pelo proprietário; a publicação é avaliação e não aceite de runtime. Próximo desenvolvimento: 2.2.
 
 ### 2.2 — Modo jogo/tela cheia (P)
 
