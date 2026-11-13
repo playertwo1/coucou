@@ -58,7 +58,7 @@ Pesquisas de projetos externos ficam em `docs/research/`; as ideias aproveitadas
 | 1 | 0 — Validar o que já existe | [fase-0-validacao.md](roadmap/fase-0-validacao.md) | Pausada (D-053; L0 concluída; 0.4 fechado) |
 | 2 | 1 — Recursos do Mac ainda não escolhidos | [fase-1-recursos-mac.md](roadmap/fase-1-recursos-mac.md) | Pausada (D-053; 1.2 concluída; 1.3 e 1.4 descartadas) |
 | 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Pausada (D-053; 2.8a sintética; 0.6.12 sem release) |
-| 4 | L — Lumen + Segunda Mente | [fase-l-lumen.md](roadmap/fase-l-lumen.md) | Em andamento (0.6.14 publicada; avaliação real da migração e do login ChatGPT pendentes; L1.4 reativada em 2026-11-13; L1.4a aguarda aprovação visual; L1.4b bloqueada; L2.1 aprovada sinteticamente) |
+| 4 | L — Lumen + Segunda Mente | [fase-l-lumen.md](roadmap/fase-l-lumen.md) | Em andamento (0.6.14 publicada; avaliação real da migração e do login ChatGPT pendentes; L1.4a aprovada em 2026-11-13; protótipo isolado L1.4b em andamento; L1.4c bloqueada; L2.1 aprovada sinteticamente) |
 | — | 2B — Paridade entre agentes e ambientes | [fase-2b-paridade-agentes.md](roadmap/fase-2b-paridade-agentes.md) | Pausada (D-053) |
 | — | 2C — Pílulas configuráveis e posição livre | [fase-2c-pilulas-posicao.md](roadmap/fase-2c-pilulas-posicao.md) | Pausada (D-053) |
 | 6 | M0 — Mochi: descoberta e licenças | [m0-descoberta.md](roadmap/m0-descoberta.md) | Pendente |
@@ -73,7 +73,7 @@ Pesquisas de projetos externos ficam em `docs/research/`; as ideias aproveitadas
 | 15 | M9 — Mochi: memória avançada, gateway e observabilidade | [m9-memoria-gateway.md](roadmap/m9-memoria-gateway.md) | Pendente |
 | 16 | M10 — Mochi: release | [m10-release.md](roadmap/m10-release.md) | Pendente |
 | — | 3 — Identidade própria (só com decisão do proprietário) | [fase-3-identidade.md](roadmap/fase-3-identidade.md) | Decidida em 2026-11-13: entra na Fase L, etapa L1 (Lumen) |
-| — | Parqueado | [parqueado.md](roadmap/parqueado.md) | Estudo de personagens assumido pela L1.4; L1.4a aguarda aprovação visual; L1.4b bloqueada |
+| — | Parqueado | [parqueado.md](roadmap/parqueado.md) | Estudo de personagens assumido pela L1.4; L1.4a aprovada; L1.4b em andamento |
 | — | Checklist de release (só com pedido explícito) | [release-checklist.md](roadmap/release-checklist.md) | — |
 
 As fases M ("Lumen assistente") só começam depois do Checkpoint L7. A dependência antiga dos Checkpoints 2B.8 e 2C.3 deve ser reavaliada antes da M0, porque as fases 2B e 2C estão pausadas. Dentro das fases M, a ordem é M0 → M10; uma fase não começa antes do fechamento da anterior, salvo onde o arquivo da fase disser o contrário.

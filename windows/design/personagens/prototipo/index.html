@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>L1.4b · Codex sprite × Canvas</title>
+  <style>
+    :root { color-scheme: dark; font: 16px/1.45 system-ui, sans-serif; background: #000; color: #f5f6f8; }
+    body { margin: 0; padding: 24px; }
+    main { max-width: 720px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 1.25rem; }
+    p { margin: 0 0 18px; color: #c7c4d8; }
+    .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 22px; }
+    label, fieldset { display: grid; gap: 5px; margin: 0; }
+    fieldset { border: 0; padding: 0; }
+    legend { margin-bottom: 5px; }
+    select, button { min-height: 36px; border: 1px solid #514c74; border-radius: 9px; padding: 6px 10px; color: #f5f6f8; background: #15131f; font: inherit; }
+    .sizes { display: flex; gap: 12px; align-items: center; min-height: 36px; }
+    .sizes label { display: flex; gap: 5px; align-items: center; }
+    .samples { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .sample { min-height: 142px; padding: 14px; border: 1px solid #302c48; border-radius: 14px; background: #08070d; }
+    h2 { margin: 0 0 18px; font-size: 1rem; font-weight: 600; }
+    .figure { display: grid; place-items: center; }
+    #sprite, #canvas { display: block; }
+    #sprite { background-image: url("codex-spritesheet.png"); background-repeat: no-repeat; }
+    #canvas { background: transparent; }
+    .status { margin-top: 14px; font-size: .9rem; color: #c7c4d8; }
+    [hidden] { display: none !important; }
+    @media (max-width: 500px) { body { padding: 16px; } .sample { padding: 10px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>L1.4b · Codex: sprite × Canvas</h1>
+    <p>Comparação local dos oito estados sobre preto. As duas amostras usam o mesmo tamanho em pixels.</p>
+
+    <div class="controls">
+      <label for="state">Estado
+        <select id="state">
+          <option value="idle">Parado</option>
+          <option value="thinking">Pensando</option>
+          <option value="working">Trabalhando</option>
+          <option value="sleeping">Dormindo</option>
+          <option value="approval">Aguardando aprovação</option>
+          <option value="question">Pergunta</option>
+          <option value="error">Erro</option>
+          <option value="finished">Concluído</option>
+        </select>
+      </label>
+      <fieldset>
+        <legend>Tamanho real</legend>
+        <div class="sizes">
+          <label><input type="radio" name="size" value="22" checked> 22 px</label>
+          <label><input type="radio" name="size" value="96"> 96 px</label>
+        </div>
+      </fieldset>
+      <button id="visibility" type="button" aria-pressed="false">Ocultar ilha</button>
+    </div>
+
+    <div class="samples" id="samples">
+      <section class="sample" aria-labelledby="sprite-title">
+        <h2 id="sprite-title">Sprite · PNG</h2>
+        <div class="figure"><div id="sprite" role="img" aria-label="Codex · Parado"></div></div>
+      </section>
+      <section class="sample" aria-labelledby="canvas-title">
+        <h2 id="canvas-title">Desenho · Canvas</h2>
+        <div class="figure"><canvas id="canvas" role="img" aria-label="Codex · Parado"></canvas></div>
+      </section>
+    </div>
+    <div class="status" id="status" aria-live="polite">Amostras visíveis · desenho somente sob demanda, sem animação.</div>
+  </main>
+
+  <script>
+    const states = ["idle", "thinking", "working", "sleeping", "approval", "question", "error", "finished"];
+    const labels = ["Parado", "Pensando", "Trabalhando", "Dormindo", "Aguardando aprovação", "Pergunta", "Erro", "Concluído"];
+    const aliases = { searching: "thinking", ratelimit: "sleeping", dizzy: "question" };
+    const logicalStates = ["idle", "working", "thinking", "searching", "approval", "question", "error", "finished", "ratelimit", "sleeping", "dizzy"];
+    const missing = logicalStates.filter(name => !states.includes(name) && !aliases[name]);
+    const invalidAliases = Object.values(aliases).filter(name => !states.includes(name));
+    console.assert(states.length === 8 && missing.length === 0 && invalidAliases.length === 0, "Estados visuais/aliases incompletos", { states, missing, invalidAliases });
+
+    const stateInput = document.querySelector("#state");
+    const sprite = document.querySelector("#sprite");
+    const canvas = document.querySelector("#canvas");
+    const ctx = canvas.getContext("2d");
+    const samples = document.querySelector("#samples");
+    const visibility = document.querySelector("#visibility");
+    const status = document.querySelector("#status");
+    const outline = "#26224B", teal = "#2DD4BF", sand = "#F4E8C9";
+    console.assert(JSON.stringify([...stateInput.options].map(option => option.value)) === JSON.stringify(states), "Opções do seletor divergentes dos quadros");
+
+    function rounded(x, y, w, h, r, fill, stroke = outline, line = 3) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.lineWidth = line;
+      ctx.strokeStyle = stroke;
+      ctx.stroke();
+    }
+
+    function curve(points, width = 3) {
+      ctx.beginPath();
+      ctx.moveTo(points[0][0], points[0][1]);
+      ctx.quadraticCurveTo(points[1][0], points[1][1], points[2][0], points[2][1]);
+      ctx.lineWidth = width;
+      ctx.strokeStyle = outline;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+
+    function drawCodex(state) {
+      ctx.save();
+      if (state === "working") { ctx.translate(48, 48); ctx.rotate(-.035); ctx.translate(-48, -48); }
+      if (state === "question") { ctx.translate(48, 48); ctx.rotate(-.04); ctx.translate(-48, -48); }
+
+      rounded(18, 16, 59, 69, 20, teal, outline, 3);
+      rounded(74, 55, 14, 27, 7, sand, outline, 3);
+
+      if (state === "sleeping") {
+        curve([[27, 43], [34, 50], [41, 43]], 3.5);
+        curve([[49, 43], [56, 50], [63, 43]], 3.5);
+      } else if (state === "finished") {
+        curve([[27, 45], [34, 36], [41, 45]], 3.5);
+        curve([[49, 45], [56, 36], [63, 45]], 3.5);
+      } else {
+        ctx.fillStyle = outline;
+        ctx.beginPath(); ctx.ellipse(34, 43, 5.5, 7.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(56, 43, 5.5, 7.5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = sand;
+        const glintY = state === "error" ? 41 : state === "thinking" ? 40 : 42;
+        ctx.beginPath(); ctx.arc(state === "thinking" ? 36 : 32, glintY, 2.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(state === "thinking" ? 59 : 54, glintY + 1, 2.2, 0, Math.PI * 2); ctx.fill();
+      }
+
+      if (state === "question") {
+        ctx.fillStyle = outline; ctx.beginPath(); ctx.arc(47, 62, 3.4, 0, Math.PI * 2); ctx.fill();
+      } else if (state === "error") {
+        curve([[40, 65], [47, 59], [54, 65]], 3.2);
+      } else if (state === "finished") {
+        ctx.fillStyle = outline; ctx.beginPath(); ctx.ellipse(47, 62, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+      } else {
+        curve([[41, 60], [47, 67], [53, 60]], 3.2);
+      }
+
+      if (state === "thinking") {
+        ctx.fillStyle = sand; ctx.strokeStyle = outline; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(82, 13, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(74, 2, 2.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      } else if (state === "sleeping" || state === "finished") {
+        ctx.fillStyle = outline;
+        ctx.beginPath(); ctx.arc(82, 13, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(74, 2, 2.5, 0, Math.PI * 2); ctx.fill();
+      } else if (state === "approval") {
+        ctx.strokeStyle = teal; ctx.lineWidth = 2.5;
+        for (const radius of [8, 12, 16]) {
+          ctx.beginPath(); ctx.arc(82, 22, radius, 4.05, 5.42); ctx.stroke();
+        }
+        ctx.fillStyle = sand; ctx.strokeStyle = outline; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(82, 14, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = outline; ctx.beginPath(); ctx.arc(93, 49, 4.5, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function render() {
+      if (samples.hidden) return;
+      const state = stateInput.value;
+      const stateIndex = states.indexOf(state);
+      const size = Number(document.querySelector('input[name="size"]:checked').value);
+      const row = Math.floor(stateIndex / 4), col = stateIndex % 4;
+      sprite.style.width = `${size}px`;
+      sprite.style.height = `${size}px`;
+      sprite.style.backgroundSize = `${size * 4}px ${size * 2}px`;
+      sprite.style.backgroundPosition = `${-col * size}px ${-row * size}px`;
+      canvas.width = size;
+      canvas.height = size;
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      ctx.scale(size / 96, size / 96);
+      ctx.lineJoin = "round";
+      drawCodex(state);
+      const label = labels[stateIndex];
+      sprite.setAttribute("aria-label", `Codex · ${label}`);
+      canvas.setAttribute("aria-label", `Codex · ${label}`);
+      console.assert(canvas.width === size && canvas.height === size, "Canvas com tamanho intrínseco inesperado");
+      console.assert(sprite.offsetWidth === size && sprite.offsetHeight === size, "Sprite com tamanho CSS inesperado");
+    }
+
+    function setVisibility() {
+      samples.hidden = visibility.getAttribute("aria-pressed") === "true";
+      visibility.setAttribute("aria-pressed", String(samples.hidden));
+      visibility.textContent = samples.hidden ? "Mostrar ilha" : "Ocultar ilha";
+      status.textContent = samples.hidden
+        ? "Ilha oculta · sem animação, temporizador ou loop de desenho."
+        : "Amostras visíveis · desenho somente sob demanda, sem animação.";
+      if (!samples.hidden) render();
+    }
+
+    stateInput.addEventListener("change", render);
+    document.querySelectorAll('input[name="size"]').forEach(input => input.addEventListener("change", render));
+    visibility.addEventListener("click", setVisibility);
+    const atlas = new Image();
+    atlas.onload = () => console.assert(atlas.naturalWidth === 384 && atlas.naturalHeight === 192, "Spritesheet deveria ter 384 × 192 px");
+    atlas.onerror = () => { status.textContent = "Falha ao carregar codex-spritesheet.png."; };
+    atlas.src = "codex-spritesheet.png";
+    render();
+  </script>
+</body>
+</html>

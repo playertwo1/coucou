@@ -1,6 +1,6 @@
 # Personagens do Lumen — referências visuais L1.4a
 
-Pranchas conceituais para avaliação do proprietário. Foram geradas em 2026-11-13 e organizadas em PNG para leitura em fundo preto ou transparente. Elas ainda não representam aprovação visual nem alteração do aplicativo. A Bússola continua sendo somente o ícone do Lumen.
+Pranchas conceituais geradas em 2026-11-13 e organizadas em PNG para leitura em fundo preto ou transparente. Em 2026-11-13, o proprietário aprovou a família original e autorizou avançar com os oito estados visuais (“vamos seguuir entao com as 8, ficou bom pode segir na roadmap”), acompanhando o lineup dos sete agentes. O aceite não escolhe sprite ou Canvas nem integra personagens ao aplicativo. A Bússola continua sendo somente o ícone do Lumen.
 
 ## Família e paleta
 
@@ -39,4 +39,4 @@ As alterações ficam no olhar, na boca, numa inclinação pequena ou em bolinha
 - `teste-22px.png`: os sete personagens em 22 px reais de largura sobre preto; a ordem é a mesma do lineup.
 - `claude-marca-mascote-estudo.png` e `claude-marca-mascote-estudo-transparente.png`: uma variação exploratória isolada, feita depois do lineup a pedido do proprietário. Usa como referências visuais as pinças de um caranguejo e um motivo radial coral; não incorpora um arquivo oficial de logo ou ilustração.
 
-As sete pranchas da família original não incluem logotipos, símbolos ou mascotes oficiais. O estudo pontual do Claude fica separado para comparação e não foi aprovado para o app nem para distribuição. As referências visuais da L1.4a continuam aguardando decisão do proprietário; a L1.4b permanece bloqueada.
+As sete pranchas da família original não incluem logotipos, símbolos ou mascotes oficiais. O estudo pontual do Claude fica separado para comparação e não foi aprovado para o app nem para distribuição. A família original foi aprovada em 2026-11-13; a comparação L1.4b sprite × Canvas está em andamento fora do app.
