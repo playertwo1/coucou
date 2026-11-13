@@ -4,6 +4,7 @@ export function createFixtures(instanceId = crypto.randomUUID()) {
   const openedFromToast: string[] = [];
   const gitStatusReads: string[] = [];
   const gitDiffReads: string[] = [];
+  const openedSessions: string[] = [];
   let next = 0;
   let nextToast = 0;
   const pending = new Map<string, number>();
@@ -27,6 +28,12 @@ export function createFixtures(instanceId = crypto.randomUUID()) {
   return {
     decisions,
     openedFromToast,
+    openedSessions,
+    openCodexSession(sessionId: string) {
+      if (!["synthetic-session-garden", "synthetic-session-workshop"].includes(sessionId)) return false;
+      openedSessions.push(sessionId);
+      return true;
+    },
     gitStatusReads,
     gitDiffReads,
     fullscreen: {

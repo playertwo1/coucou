@@ -53,6 +53,14 @@ pub struct SessionUsage {
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct HistorySession {
+    pub session_id: String,
+    pub date: String,
+    pub project: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DailyUsage {
     pub date: String,
     pub tokens: u64,
@@ -71,6 +79,7 @@ pub struct Snapshot {
     pub source_available: bool,
     pub partial: bool,
     pub sessions: Vec<SessionUsage>,
+    pub history: Vec<HistorySession>,
     pub daily: Vec<DailyUsage>,
     pub projects: Vec<ProjectUsage>,
     pub cost_usd: Option<f64>,
@@ -79,6 +88,7 @@ pub struct Snapshot {
 #[derive(Default)]
 struct Session {
     project: Option<(String, String)>,
+    last_active: Option<String>,
     model: Option<(String, String)>,
     events: BTreeSet<(String, u64)>,
     partial: bool,
@@ -86,21 +96,23 @@ struct Session {
 
 /// Read the local Codex rollouts; no prompt or response content is returned.
 pub fn read() -> Snapshot {
+    let (texts, partial) = read_texts(&sessions_root());
+    let mut snapshot = from_texts(texts);
+    snapshot.partial |= partial;
+    snapshot
+}
+
+fn sessions_root() -> PathBuf {
     let home = std::env::var_os("CODEX_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| crate::platform::home_dir().join(".codex"));
-    read_sessions(&home.join("sessions"))
+    home.join("sessions")
 }
 
-fn read_sessions(root: &Path) -> Snapshot {
-    let Ok(root_meta) = fs::symlink_metadata(root) else {
-        return Snapshot::default();
-    };
-    if !root_meta.is_dir() {
-        return Snapshot {
-            partial: root_meta.file_type().is_symlink(),
-            ..Snapshot::default()
-        };
+fn read_texts(root: &Path) -> (Vec<String>, bool) {
+    let Ok(root_meta) = fs::symlink_metadata(root) else { return (Vec::new(), false) };
+    if !root_meta.is_dir() || root_meta.file_type().is_symlink() {
+        return (Vec::new(), true);
     }
     let mut files = Vec::new();
     let mut partial = false;
@@ -126,10 +138,8 @@ fn read_sessions(root: &Path) -> Snapshot {
             return None;
         };
         Some(text)
-    });
-    let mut snapshot = from_texts(texts);
-    snapshot.partial |= partial;
-    snapshot
+    }).collect();
+    (texts, partial)
 }
 
 fn collect_files(dir: &Path, files: &mut Vec<PathBuf>, partial: &mut bool) {
@@ -197,6 +207,7 @@ fn from_texts(rollouts: impl IntoIterator<Item = String>) -> Snapshot {
         source_available = true;
         let mut file_id = None;
         let mut file_project = None;
+        let mut file_last_active = None;
         let mut file_model = None;
         let mut file_events = Vec::new();
         let mut file_partial = false;
@@ -216,9 +227,12 @@ fn from_texts(rollouts: impl IntoIterator<Item = String>) -> Snapshot {
                         .or(payload.id)
                         .or(payload.thread_id)
                         .or(file_id);
-                    if let (Some(timestamp), Some(cwd)) = (line.timestamp, payload.cwd) {
+                    if let Some(timestamp) = line.timestamp {
                         if valid_utc_timestamp(&timestamp) {
-                            file_project = project_name(&cwd).map(|name| (timestamp, name));
+                            file_last_active = Some(timestamp.clone());
+                            if let Some(cwd) = payload.cwd {
+                                file_project = project_name(&cwd).map(|name| (timestamp, name));
+                            }
                         } else {
                             file_partial = true;
                         }
@@ -250,11 +264,14 @@ fn from_texts(rollouts: impl IntoIterator<Item = String>) -> Snapshot {
             }
         }
 
-        let Some(id) = file_id.filter(|id| !id.is_empty()) else {
+        let Some(id) = file_id.filter(|id| valid_history_id(id)) else {
             partial = true;
             continue;
         };
         let session = sessions.entry(id).or_default();
+        if file_last_active.as_ref().is_some_and(|date| session.last_active.as_ref().map_or(true, |old| date > old)) {
+            session.last_active = file_last_active;
+        }
         if file_project.as_ref().is_some_and(|candidate| {
             session
                 .project
@@ -280,6 +297,17 @@ fn from_texts(rollouts: impl IntoIterator<Item = String>) -> Snapshot {
         partial,
         ..Snapshot::default()
     };
+    snapshot.history = sessions
+        .iter()
+        .filter_map(|(session_id, session)| {
+            Some(HistorySession {
+                session_id: session_id.clone(),
+                date: session.last_active.as_ref()?.get(..10)?.to_string(),
+                project: session.project.as_ref().map(|(_, project)| project.clone()),
+            })
+        })
+        .collect();
+    snapshot.history.sort_by(|a, b| b.date.cmp(&a.date).then_with(|| a.project.cmp(&b.project)));
     let mut daily = BTreeMap::<String, u64>::new();
     let mut projects = BTreeMap::<String, u64>::new();
 
@@ -332,6 +360,43 @@ fn from_texts(rollouts: impl IntoIterator<Item = String>) -> Snapshot {
     snapshot
 }
 
+fn valid_history_id(id: &str) -> bool {
+    !id.is_empty()
+        && !id.starts_with('-')
+        && id.len() <= 128
+        && id.chars().all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+}
+
+pub fn session_directory(session_id: &str) -> Option<PathBuf> {
+    if !valid_history_id(session_id) {
+        return None;
+    }
+    let (texts, _) = read_texts(&sessions_root());
+    session_directory_from_texts(session_id, texts).filter(|cwd| cwd.is_dir())
+}
+
+fn session_directory_from_texts(session_id: &str, texts: impl IntoIterator<Item = String>) -> Option<PathBuf> {
+    for text in texts {
+        for line in text.lines() {
+            let Ok(line) = serde_json::from_str::<RolloutLine>(line) else { continue };
+            if line.kind.as_deref() != Some("session_meta") {
+                continue;
+            }
+            let Some(payload) = line.payload else { continue };
+            let id = payload.session_id.or(payload.id).or(payload.thread_id);
+            if id.as_deref() != Some(session_id) {
+                continue;
+            }
+            let Some(cwd) = payload.cwd else { continue };
+            let cwd = PathBuf::from(cwd);
+            if cwd.is_absolute() {
+                return Some(cwd);
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -360,6 +425,14 @@ mod tests {
             Some("synthetic-no-price")
         );
         assert_eq!(snapshot.sessions[0].cost_usd, None);
+        assert_eq!(
+            snapshot.history,
+            [HistorySession {
+                session_id: "synthetic-a".into(),
+                date: "2026-11-12".into(),
+                project: Some("Garden".into()),
+            }]
+        );
         assert_eq!(
             snapshot.projects,
             [ProjectUsage {
@@ -396,6 +469,7 @@ mod tests {
         let empty = from_texts(std::iter::empty::<String>());
         assert!(!empty.source_available);
         assert!(empty.sessions.is_empty());
+        assert!(empty.history.is_empty());
 
         let no_project = concat!(
             r#"{"timestamp":"2026-11-13T12:00:00Z","type":"session_meta","payload":{"id":"synthetic-no-project"}}"#,
@@ -405,8 +479,19 @@ mod tests {
         );
         let snapshot = from_texts([no_project.into()]);
         assert_eq!(snapshot.sessions[0].project, None);
+        assert_eq!(snapshot.history.len(), 1);
+        assert_eq!(snapshot.history[0].session_id, "synthetic-no-project");
         assert!(snapshot.projects.is_empty());
         assert_eq!(snapshot.sessions[0].tokens, 7);
+    }
+
+    #[test]
+    fn session_directory_is_resolved_only_from_matching_safe_metadata() {
+        let rollout = r#"{"timestamp":"2026-11-13T12:00:00Z","type":"session_meta","payload":{"id":"synthetic-a","cwd":"C:\\Synthetic\\Garden"}}"#.to_string();
+        assert_eq!(session_directory_from_texts("synthetic-a", [rollout.clone()]), Some(PathBuf::from(r"C:\Synthetic\Garden")));
+        assert_eq!(session_directory_from_texts("other-session", [rollout.clone()]), None);
+        assert_eq!(session_directory_from_texts("--help", [rollout]), None);
+        assert!(!valid_history_id("--help"));
     }
 
     #[test]

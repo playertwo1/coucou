@@ -5,10 +5,10 @@ import { h, clear } from "../../views/dom";
 import { t } from "../../i18n/i18n";
 import { FlowBridge, type FlowStats, type Totals } from "../../core/flow";
 import { Bridge } from "../../core/bridge";
-import type { AgentUsageSnapshot } from "../../core/agent-usage";
+import { searchAgentHistory, type AgentUsageSnapshot, type HistorySession } from "../../core/agent-usage";
 import type { HubContext } from "../shell";
 import { emptyState } from "../hero";
-import { number, segmented, shortCount } from "../ui";
+import { button, number, row, segmented, shortCount } from "../ui";
 
 type Period = "week" | "month" | "all";
 
@@ -113,12 +113,49 @@ export function agentUsageCard(usage: AgentUsageSnapshot | null): HTMLElement {
         number(session.tokens) + " " + t("Tokens") + " · " + t("Cost unavailable"),
       )),
     );
-    card.append(daily, sessions);
+    card.append(daily, sessions, sessionHistoryCard(usage.history, (sessionId) => Bridge.openCodexSession(sessionId)));
   }
   for (const agent of ["Claude", "Antigravity", "Hermes"]) {
     card.append(h("div", { class: "hub-app-bar" },
       h("div", { class: "top" }, h("b", { text: agent, style: "font-weight:500" }), h("span", { text: t("Unavailable") })),
     ));
   }
+  return card;
+}
+
+export function sessionHistoryCard(sessions: HistorySession[], onOpen: (sessionId: string) => Promise<boolean>): HTMLElement {
+  const search = h("input", { class: "hub-input", type: "search", placeholder: t("Search"), "aria-label": t("Search") }) as HTMLInputElement;
+  const results = h("div", { style: "display:flex;flex-direction:column;gap:8px" });
+  const status = h("div", { class: "hub-note", hidden: true });
+  const card = h("div", { class: "hub-card" },
+    h("div", { class: "title", style: "font:700 13px var(--font)", text: t("Recent sessions") }),
+    search,
+    results,
+    status,
+  );
+  function draw() {
+    clear(results);
+    const matches = searchAgentHistory(sessions, search.value);
+    if (matches.length === 0) {
+      results.append(h("div", { class: "hub-note", text: t("No sessions found.") }));
+      return;
+    }
+    for (const session of matches) {
+      const project = session.project ?? t("Unknown project");
+      const open = button(t("Open {name}", { name: project }), () => {
+        open.disabled = true;
+        void onOpen(session.sessionId).then((ok) => {
+          status.textContent = ok ? "" : t("Could not open session.");
+          status.hidden = ok;
+        }).catch(() => {
+          status.textContent = t("Could not open session.");
+          status.hidden = false;
+        }).finally(() => { open.disabled = false; });
+      }, "", true);
+      results.append(row(`${session.date} · ${project} · Codex`, null, open));
+    }
+  }
+  search.addEventListener("input", draw);
+  draw();
   return card;
 }

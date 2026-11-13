@@ -103,6 +103,10 @@ fn launch_args(agent: LaunchAgent, prompt: Option<&str>) -> Vec<String> {
     agent.prompt_flags().iter().map(|arg| (*arg).to_string()).chain([prompt.to_string()]).collect()
 }
 
+fn resume_codex_args(session_id: &str) -> Vec<String> {
+    vec!["resume".into(), session_id.into()]
+}
+
 #[cfg(windows)]
 fn npm_entrypoint(shim: &Path) -> Option<PathBuf> {
     let body = std::fs::read_to_string(shim).ok()?;
@@ -397,6 +401,32 @@ pub fn launch_session(folder: String, prompt: String, agent: LaunchAgent) -> Lau
     }
 }
 
+/// Resume a saved local Codex conversation after an explicit history-row click.
+#[tauri::command]
+pub fn open_codex_session(session_id: String) -> bool {
+    let Some(folder) = crate::agent_usage::session_directory(&session_id) else { return false };
+    let Some(program) = launch_program(LaunchAgent::Codex) else { return false };
+    let mut args = program.prefix_args;
+    args.extend(resume_codex_args(&session_id));
+    let spawn = Spawn {
+        program: program.executable.to_string_lossy().into_owned(),
+        args,
+        env: Vec::new(),
+        dir: folder.to_string_lossy().into_owned(),
+    };
+    #[cfg(windows)]
+    {
+        let opened = start(&spawn, true).is_ok();
+        crate::log::line(format!("session history: Codex resume {}", if opened { "started" } else { "failed" }));
+        opened
+    }
+    #[cfg(not(windows))]
+    {
+        let _ = spawn;
+        false
+    }
+}
+
 /// "Choose a folder…": the system's folder picker, `start` open in it.
 #[tauri::command]
 pub async fn pick_folder(app: tauri::AppHandle, start: Option<String>) -> Option<String> {
@@ -480,6 +510,12 @@ mod tests {
         for agent in [LaunchAgent::Claude, LaunchAgent::Codex, LaunchAgent::Antigravity, LaunchAgent::Hermes] {
             assert!(launch_args(agent, None).is_empty());
         }
+    }
+
+    #[test]
+    fn codex_resume_uses_only_a_validated_session_id_as_a_literal_argument() {
+        assert_eq!(resume_codex_args("synthetic-session-1"), s(&["resume", "synthetic-session-1"]));
+        assert!(!open_codex_session("--help".into()));
     }
 
     #[test]

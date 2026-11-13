@@ -14,6 +14,8 @@ const host = window as unknown as {
     decisions: typeof fixtures.decisions;
     gitStatusReads: typeof fixtures.gitStatusReads;
     gitDiffReads: typeof fixtures.gitDiffReads;
+    openedSessions: typeof fixtures.openedSessions;
+    openCodexSession: typeof fixtures.openCodexSession;
     request: () => void;
   };
 };
@@ -102,4 +104,11 @@ State.subscribe(() => {
   status.textContent = last ? `${t("Synthetic data only")} · ${last.requestId} · ${last.decision === "allow" ? t("Allow") : t("Deny")}` : "";
 });
 syncFullscreen();
-host.__synthetic = { decisions: fixtures.decisions, gitStatusReads: fixtures.gitStatusReads, gitDiffReads: fixtures.gitDiffReads, request };
+host.__synthetic = {
+  decisions: fixtures.decisions,
+  gitStatusReads: fixtures.gitStatusReads,
+  gitDiffReads: fixtures.gitDiffReads,
+  openedSessions: fixtures.openedSessions,
+  openCodexSession: fixtures.openCodexSession,
+  request,
+};

@@ -302,6 +302,16 @@ export const Bridge = {
   openSession: (sessionId: string | null, path: string | null) =>
     call<boolean>("open_session", { sessionId, path }),
 
+  /** Resume the clicked local Codex session; the synthetic app only records the chosen fixture. */
+  openCodexSession: async (sessionId: string): Promise<boolean> => {
+    if (IS_SYNTHETIC) {
+      const synthetic = window as unknown as { __synthetic?: { openCodexSession?: (id: string) => void } };
+      synthetic.__synthetic?.openCodexSession?.(sessionId);
+      return true;
+    }
+    return (await call<boolean>("open_codex_session", { sessionId })) ?? false;
+  },
+
   /** The Claude desktop app, for the Claude Desktop pill (Windows only). */
   openClaudeDesktop: () => call<boolean>("open_claude_desktop"),
 

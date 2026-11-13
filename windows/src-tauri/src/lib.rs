@@ -1044,6 +1044,7 @@ pub fn run() {
             open_session,
             launch::launch_agents,
             launch::launch_session,
+            launch::open_codex_session,
             launch::pick_folder,
             launch::drop_into_session,
             open_claude_desktop,

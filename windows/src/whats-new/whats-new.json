@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.10",
+      "items": [
+        {
+          "icon": "terminal",
+          "title": {
+            "en": "Session history",
+            "zh-Hans": "会话历史",
+            "hi": "सेशन इतिहास",
+            "es": "Historial de sesiones",
+            "ar": "سجل الجلسات",
+            "fr": "Historique des sessions",
+            "bn": "সেশনের ইতিহাস",
+            "pt-BR": "Histórico de sessões",
+            "ru": "История сессий",
+            "id": "Riwayat sesi",
+            "de": "Sitzungsverlauf",
+            "tr": "Oturum geçmişi",
+            "ko": "세션 기록",
+            "ja": "セッション履歴"
+          },
+          "detail": {
+            "en": "Find local Codex sessions by project, agent or date; open one when you choose.",
+            "zh-Hans": "按项目、代理或日期查找本地 Codex 会话，并按需打开。",
+            "hi": "प्रोजेक्ट, एजेंट या तारीख से स्थानीय Codex सेशन खोजें और चुनकर खोलें।",
+            "es": "Busca sesiones locales de Codex por proyecto, agente o fecha y abre la que elijas.",
+            "ar": "ابحث عن جلسات Codex المحلية حسب المشروع أو الوكيل أو التاريخ، وافتح ما تختاره.",
+            "fr": "Recherchez les sessions Codex locales par projet, agent ou date, puis ouvrez celle de votre choix.",
+            "bn": "প্রকল্প, এজেন্ট বা তারিখ দিয়ে স্থানীয় Codex সেশন খুঁজুন এবং পছন্দমতো খুলুন।",
+            "pt-BR": "Encontre sessões locais do Codex por projeto, agente ou data e abra quando quiser.",
+            "ru": "Ищите локальные сессии Codex по проекту, агенту или дате и открывайте выбранные.",
+            "id": "Cari sesi Codex lokal berdasarkan proyek, agen, atau tanggal, lalu buka yang dipilih.",
+            "de": "Lokale Codex-Sitzungen nach Projekt, Agent oder Datum finden und bei Bedarf öffnen.",
+            "tr": "Yerel Codex oturumlarını proje, ajan veya tarihe göre bulun ve seçtiğinizi açın.",
+            "ko": "프로젝트, 에이전트 또는 날짜로 로컬 Codex 세션을 찾고 원하는 세션을 여세요.",
+            "ja": "プロジェクト、エージェント、日付でローカルの Codex セッションを検索し、選んで開けます。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.9",
       "items": [
         {

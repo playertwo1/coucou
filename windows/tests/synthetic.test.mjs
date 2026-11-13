@@ -156,6 +156,13 @@ test("synthetic Git status and diff read only the invented Jardim fixture", () =
   assert.deepEqual(fixture.gitDiffReads, ["synthetic://Jardim", "C:/Users/owner/private"]);
 });
 
+test("synthetic session history records only an explicit click on an invented result", () => {
+  const fixture = createFixtures();
+  assert.equal(fixture.openCodexSession("synthetic-session-garden"), true);
+  assert.equal(fixture.openCodexSession("real-session"), false);
+  assert.deepEqual(fixture.openedSessions, ["synthetic-session-garden"]);
+});
+
 test("synthetic host contains no native IPC or production backend", () => {
   const native = readFileSync(new URL("../synthetic/host/src/main.rs", import.meta.url), "utf8");
   const manifest = readFileSync(new URL("../synthetic/host/Cargo.toml", import.meta.url), "utf8");
