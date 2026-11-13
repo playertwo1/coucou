@@ -23,7 +23,11 @@
   - Setup `Lumen-Windows-0.6.14-setup.exe`: `49556A2C5650CC9C519CCB073AB87B3CE614CBA8BF2686361E37B283D55A165F`.
   - App portátil `lumen.exe`: `326B17A034865EBFEB1D9B178404E487CBEA6EDE1C9B22E8155FF388A1609495`.
   - Hook `lumen-hook.exe`: `49C7725C391D4BAA1B9B36198ADCC043C48A58E5D5BAE33034F352F1C25771C9`.
-- [ ] Integrar na `main`, publicar tag `windows-v0.6.14`, conferir o workflow e os assets finais no fork; comparar hashes do GitHub e examinar os instaladores finais com Defender.
+- [x] Integrado na `main` no commit `3129f5f7036cf46ceffec66dbd0bbc85857f53c5`; tag `windows-v0.6.14` publicada. Workflow da release [`43482202733`](https://github.com/playertwo1/coucou/actions/runs/43482202733) concluiu com sucesso, incluindo testes Node/Rust, empacotamento, upgrade sintético MSI/NSIS, publicação e atualização de `windows-latest`. Release: https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.14.
+- [x] Baixados os assets finais; os SHA-256 locais conferem com os digests do GitHub. Os instaladores finais foram examinados individualmente pelo Defender, assinaturas `1.463.281.0` (13/11/2026), sem ameaças detectadas.
+  - Setup `Lumen-Windows-0.6.14-setup.exe`: `7C9453C21D7051CEF5E97ED345E6AED2E59F2A1B44A4EA224A1A9B5226027E9E`.
+  - MSI `Lumen-Windows-0.6.14.msi`: `E7DC4037F732454D1C1E701BB67BA3445149036A0C57E941990F0746F693238E`.
+- [x] `windows-latest` aponta para os mesmos assets finais; os digests publicados são idênticos aos da release `windows-v0.6.14`.
 - [ ] Proprietário validar login, consentimento, persistência, duas contas, troca e saída. Login real permanece **NOT_RUN** até esse teste.
 
 ## Windows 0.6.13 — Lumen

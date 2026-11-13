@@ -48,4 +48,5 @@ Sintético PASS não comprova login real. Após a release, o dono confirma naveg
 - `git diff --check` e `rustfmt --check` do módulo novo: PASS.
 - Preflight Windows `43477378762`, commit `fb3dabafc8558584c5a2ba55e81077e654e66d0a`: PASS; build e upgrade sintético MSI/NSIS passaram.
 - Defender examinou MSI, setup, `lumen.exe` e `lumen-hook.exe` individualmente; todos retornaram código 0 e “found no threats”. Hashes e evento da verificação de pasta estão no checklist de release.
-- Login OAuth com conta real: **NOT_RUN**, aguardando validação do proprietário após a publicação.
+- Release `windows-v0.6.14` publicada; workflow `43482202733` passou, os hashes dos assets conferem com o GitHub e o Defender não detectou ameaças nos instaladores finais. Evidências completas no checklist de release.
+- Login OAuth com conta real: **NOT_RUN**, aguardando validação do proprietário.

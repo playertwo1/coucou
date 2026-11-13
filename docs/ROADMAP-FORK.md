@@ -8,7 +8,7 @@ Atualizado em 2026-11-13. Fonte canônica de estado: este índice e os arquivos 
 
 - Decisão do proprietário (2026-11-13; D-050 a D-055 da Segunda Mente): este fork vira o **Lumen**, o lado desktop da Segunda Mente. A [Fase L](roadmap/fase-l-lumen.md) vai na frente. Das fases 0, 1 e 2, fecha-se só o que está quase pronto. As fases 2B e 2C ficam pausadas. As fases M passam a se chamar "Lumen assistente" e vêm depois da L. O Lumen é só em pt-BR: a regra das 13 línguas abaixo não vale para a Fase L.
 - Decisão do proprietário (2026-11-12): executar testes sintéticos em todas as fases e etapas. Ao concluir cada etapa, gerar uma nova versão e publicá-la no GitHub para o proprietário atualizar e testar no uso real. Registrar separadamente os resultados sintéticos e reais; publicação para teste não fecha checkpoint que exige validação real, e nenhum resultado sintético substitui essa validação. Esta é uma autorização recorrente para publicar cada etapa concluída.
-- O fork está na `main`, com a versão `windows-v0.6.13` publicada (2026-11-13); o atualizador consulta as releases de `playertwo1/coucou`.
+- O fork está na `main`, com a versão `windows-v0.6.14` publicada (2026-11-13); o atualizador consulta as releases de `playertwo1/coucou`.
 - A L0 foi concluída: as fases 0, 1 e 2 e as fases 2B/2C estão **Pausadas (D-053)**, com inventário e evidências em [Fase L](roadmap/fase-l-lumen.md). A 2.8a tem PASS sintético, mas `windows-v0.6.12` não tem release publicada; o preflight `43402455643` foi cancelado e não há varredura válida dos assets finais. O aceite real de 2.1–2.8a segue pendente nos limites indicados na Fase L.
 - O aplicativo e várias features já têm código e testes, mas ainda falta validação manual em runtime. Não marque uma feature como concluída só porque compila.
 - Esforço: P = pequeno, M = médio, G = grande. Estimativa serve para comparar itens; uma feature M/G deve ser subdividida antes da implementação.
@@ -58,7 +58,7 @@ Pesquisas de projetos externos ficam em `docs/research/`; as ideias aproveitadas
 | 1 | 0 — Validar o que já existe | [fase-0-validacao.md](roadmap/fase-0-validacao.md) | Pausada (D-053; L0 concluída; 0.4 fechado) |
 | 2 | 1 — Recursos do Mac ainda não escolhidos | [fase-1-recursos-mac.md](roadmap/fase-1-recursos-mac.md) | Pausada (D-053; 1.2 concluída; 1.3 e 1.4 descartadas) |
 | 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Pausada (D-053; 2.8a sintética; 0.6.12 sem release) |
-| 4 | L — Lumen + Segunda Mente | [fase-l-lumen.md](roadmap/fase-l-lumen.md) | Em andamento (0.6.13 publicada; avaliação real da migração pendente; L1.4 cancelada pelo dono; sintéticos e preflight Windows da L2.1 passaram; integração/release 0.6.14 pendentes) |
+| 4 | L — Lumen + Segunda Mente | [fase-l-lumen.md](roadmap/fase-l-lumen.md) | Em andamento (0.6.14 publicada; avaliação real da migração e do login ChatGPT pendentes; L1.4 cancelada pelo dono; L2.1 aprovada sinteticamente) |
 | — | 2B — Paridade entre agentes e ambientes | [fase-2b-paridade-agentes.md](roadmap/fase-2b-paridade-agentes.md) | Pausada (D-053) |
 | — | 2C — Pílulas configuráveis e posição livre | [fase-2c-pilulas-posicao.md](roadmap/fase-2c-pilulas-posicao.md) | Pausada (D-053) |
 | 6 | M0 — Mochi: descoberta e licenças | [m0-descoberta.md](roadmap/m0-descoberta.md) | Pendente |

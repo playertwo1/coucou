@@ -23,7 +23,7 @@ Baixe **[Lumen-Windows.msi](https://github.com/playertwo1/coucou/releases/downlo
 ou **[Lumen-Windows-setup.exe](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows-setup.exe)**,
 sempre a versão mais recente, e execute. O `.exe` instala somente para o usuário atual, sem pedir acesso de administrador; o `.msi` pode pedir esse acesso.
 
-Os instaladores não têm assinatura Authenticode, então o SmartScreen pode informar que o editor é desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.13 foram examinados pelo Microsoft Defender em 13/11/2026, sem ameaças detectadas. Esse resultado vale para os arquivos desta versão. Também é possível [compilar pelo código-fonte](#build-it-yourself).
+Os instaladores não têm assinatura Authenticode, então o SmartScreen pode informar que o editor é desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.14 foram examinados pelo Microsoft Defender em 13/11/2026, sem ameaças detectadas. Esse resultado vale para os arquivos desta versão. Também é possível [compilar pelo código-fonte](#build-it-yourself).
 
 ## Usar o Lumen
 
