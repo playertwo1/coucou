@@ -16,6 +16,19 @@
 - [ ] Testar que nada é enviado sem opt-in e que reimportar não duplica a transcrição.
 - Checkpoint: integração externa só começa após escolha do fluxo e aprovação da spec.
 
+### Personagens por agente (estudo de aparência)
+
+Estudo para ver se personagens próprios por agente ficam bons no Lumen. Substitui como estudo a L1.4, cancelada pelo proprietário em 2026-11-13. Não bloqueia L2 a L7 e só volta com decisão do proprietário.
+
+Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (formato de pacote de personagem e estados) e [pesquisa QwenPaw](../research/qwenpaw.md) (mapa de eventos para estados).
+
+- [ ] Gerar imagens de referência originais para um agente só (por exemplo, Codex) nos 4 estados obrigatórios do pacote: `idle`, `thinking`, `working`, `sleeping`.
+- [ ] Protótipo fora do app publicado: o mesmo personagem como sprite e como desenho em código, no formato de pacote da pesquisa.
+- [ ] Medir: legibilidade a 22 px e 96 px na ilha escura, CPU com a ilha escondida (meta 0 %), memória e tamanho do instalador.
+- [ ] O proprietário compara com os personagens atuais e decide: adotar, ajustar ou descartar. Só então abrir uma etapa de implementação com spec e plano.
+- Limites: nada do Mochi, do Coucou, do Clawd, nem logos ou mascotes de empresas. O Mochi não pode ir para releases públicas do Lumen sem autorização escrita do autor (`LICENSE-ASSETS.md`).
+- Checkpoint: sem o protótipo medido e a decisão do proprietário, não alterar os personagens do app.
+
 ### Conectores externos do pacote Mochi
 
 - [ ] n8n, PowerToys, LocalSend e KDE Connect: só voltam com um caso de uso real descrito pelo proprietário.
