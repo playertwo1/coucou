@@ -16,18 +16,26 @@
 - [ ] Testar que nada é enviado sem opt-in e que reimportar não duplica a transcrição.
 - Checkpoint: integração externa só começa após escolha do fluxo e aprovação da spec.
 
-### Personagens por agente (estudo de aparência)
+### Personagens por agente — estudo assumido pela L1.4 (2026-11-13)
 
-Estudo para ver se personagens próprios por agente ficam bons no Lumen. Substitui como estudo a L1.4, cancelada pelo proprietário em 2026-11-13. Não bloqueia L2 a L7 e só volta com decisão do proprietário.
+**Decisão do proprietário (2026-11-13):** a decisão anterior de cancelar a L1.4 foi substituída. Como não há autorização escrita para usar o Mochi, os personagens do Lumen serão originais. A Bússola continua somente como ícone do aplicativo. O estudo passa a ser conduzido pela L1.4; nenhuma referência visual ou implementação foi aprovada.
 
-Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (formato de pacote de personagem e estados) e [pesquisa QwenPaw](../research/qwenpaw.md) (mapa de eventos para estados).
+Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (ideias gerais de estados, proporção e pacotes; sem copiar arte ou código) e [pesquisa QwenPaw](../research/qwenpaw.md) (mapa de eventos para estados). Referências externas podem orientar ideias gerais, mas as imagens finais devem permanecer originais, sem copiar arte nem incluir logos, símbolos ou mascotes oficiais.
 
-- [ ] Gerar imagens de referência originais para um agente só (por exemplo, Codex) nos 4 estados obrigatórios do pacote: `idle`, `thinking`, `working`, `sleeping`.
-- [ ] Protótipo fora do app publicado: o mesmo personagem como sprite e como desenho em código, no formato de pacote da pesquisa.
-- [ ] Medir: legibilidade a 22 px e 96 px na ilha escura, CPU com a ilha escondida (meta 0 %), memória e tamanho do instalador.
-- [ ] O proprietário compara com os personagens atuais e decide: adotar, ajustar ou descartar. Só então abrir uma etapa de implementação com spec e plano.
-- Limites: nada do Mochi, do Coucou, do Clawd, nem logos ou mascotes de empresas. O Mochi não pode ir para releases públicas do Lumen sem autorização escrita do autor (`LICENSE-ASSETS.md`).
-- Checkpoint: sem o protótipo medido e a decisão do proprietário, não alterar os personagens do app.
+**L1.4a — imagens de referência, sem código do app:**
+
+- [x] Gerar lineup dos sete personagens, uma prancha por personagem com quatro estados obrigatórios e quatro desejáveis, teste de 22 px, versões transparentes e `README.md` em pt-BR em `windows/design/personagens/`.
+- [ ] O proprietário revisar as pranchas e aprovar ou pedir ajustes. O material permanece em avaliação; não inferir aceite.
+
+**L1.4b — protótipo sprite × código, bloqueado pela aprovação da L1.4a:**
+
+- [ ] Comparar o mesmo personagem em sprite e Canvas fora da release.
+- [ ] Medir legibilidade a 22 e 96 px, CPU com a ilha escondida (meta 0 %), memória e tamanho do instalador.
+- [ ] Aguardar a escolha explícita do proprietário entre sprite e código.
+
+**Histórico do escopo anterior enquanto o estudo estava parqueado:** a proposta era gerar imagens de um agente só nos quatro estados `idle`, `thinking`, `working` e `sleeping`, depois comparar sprite e desenho em código. A decisão atual ampliou a Etapa 1 para sete agentes e oito estados visuais; o protótipo só começa após aprovação explícita.
+
+Checkpoint atual: a L1.4a aguarda revisão do proprietário. Não iniciar a L1.4b nem alterar os personagens do aplicativo antes da aprovação e da escolha previstas na L1.4b.
 
 ### Conectores externos do pacote Mochi
 
