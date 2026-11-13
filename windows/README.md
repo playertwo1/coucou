@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="Coucou icon">
+<img src="src-tauri/icons/lumen/128x128.png" width="96" alt="Ícone do Lumen">
 
-# Coucou for Windows
+# Lumen para Windows
 
-**Mochi doesn't get a notch on a PC — so it lives at the top of your screen instead.**
+**A Bússola de papel do Lumen acompanha suas sessões no topo da tela do PC.**
 
-Approve Claude Code permissions, watch your session work, drop a file, chat with Claude, keep an eye on your services — without leaving what you're doing.
+Revise permissões do Claude Code, acompanhe sessões, anexe arquivos, converse e confira seus serviços sem sair do que está fazendo.
 
 ![Windows 10/11](https://img.shields.io/badge/Windows-10%2F11-0078D4?logo=windows)
 ![Tauri 2](https://img.shields.io/badge/Tauri-2-FFC131?logo=tauri&logoColor=black)
@@ -15,38 +15,19 @@ Approve Claude Code permissions, watch your session work, drop a file, chat with
 
 </div>
 
-<img src="screenshots/greeting.png" width="640" alt="Mochi waving hello at launch">
-
 ---
 
-## Install
+## Instalar
 
-Download **[Coucou-Windows.msi](https://github.com/Louis-CFM/coucou/releases/download/windows-latest/Coucou-Windows.msi)**
-(Windows Installer) or **[Coucou-Windows-setup.exe](https://github.com/Louis-CFM/coucou/releases/download/windows-latest/Coucou-Windows-setup.exe)**,
-always the newest version, and run it. The .exe installs for the current user only, with no admin prompt; the .msi may ask for admin rights.
+Baixe **[Lumen-Windows.msi](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows.msi)**
+ou **[Lumen-Windows-setup.exe](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows-setup.exe)**,
+sempre a versão mais recente, e execute. O `.exe` instala somente para o usuário atual, sem pedir acesso de administrador; o `.msi` pode pedir esse acesso.
 
-**Windows will show a warning the first time — that's expected.** The installer isn't code-signed yet, so SmartScreen doesn't know the publisher:
+Os instaladores não têm assinatura Authenticode, então o SmartScreen pode informar que o editor é desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.13 foram examinados pelo Microsoft Defender em 13/11/2026, sem ameaças detectadas. Esse resultado vale para os arquivos desta versão. Também é possível [compilar pelo código-fonte](#build-it-yourself).
 
-1. A **"Windows protected your PC"** screen appears, with *Publisher: Unknown publisher*.
-2. Click **More info** (*Informations complémentaires* in French). This reveals a **Run anyway** button.
-3. Click **Run anyway** (*Exécuter quand même*). The installer starts normally.
+## Usar o Lumen
 
-This is only because the app isn't signed with a paid certificate yet. Coucou is open source, and Microsoft Defender scans the installer as clean.
-
-Microsoft Defender once flagged the installer by mistake (`Trojan:Win32/Wacatac.H!ml`,
-a machine-learning false positive); Microsoft reviewed it and removed the detection.
-If Defender still blocks it on your PC, update its definitions (`Update-MpSignature`
-in PowerShell) and try again.
-
-You can also [build it yourself](#build-it-yourself).
-
-## Using it
-
-<img src="screenshots/compact.png" width="292" alt="The compact island, with the integration pills as mini Mochis">
-<img src="screenshots/overview.png" width="640" alt="The overview: the focused integration on the left, the other pills on the right">
-<img src="screenshots/approval.png" width="640" alt="A Claude Code permission request, with Deny and Allow">
-<img src="screenshots/chat.png" width="640" alt="Chatting with Claude from the island">
-<img src="screenshots/drop.png" width="640" alt="Mochi turned into a box, waiting for a file">
+> A tabela de interações herdada abaixo ainda pode mostrar nomes e detalhes visuais da versão original; eles não foram validados no Lumen instalado. A identidade, os links de instalação e o atualizador acima correspondem ao Lumen 0.6.13.
 
 | What you do | What happens |
 |---|---|
@@ -405,47 +386,21 @@ API key), and change the port of Coucou's webhook (47823).
   opens WhatsApp Web in the browser, at the same chat.
 - You type the path to your own GOWA binary instead of picking it.
 
-## New versions
+## Novas versões
 
-Coucou can tell you when a new version is out, and on Windows install it in one
-click. Nothing goes to GitHub before you agree: about 30 seconds after launch the
-island asks once, **Get new versions from the island?** (asked again a day later
-at most if you leave the card unanswered, never over a permission or a question).
-**Settings → General → Updates** has the same switch, and **Check now**, which
-looks once even with the switch off.
+O Lumen avisa quando uma nova versão está disponível e, no Windows, pode instalar a atualização em um clique. Nenhuma consulta é feita ao GitHub antes da sua autorização. Cerca de 30 segundos após a abertura, o app pergunta se pode avisar sobre novas versões; se você não responder, pergunta novamente no máximo uma vez por dia, sem cobrir uma permissão ou pergunta pendente. O mesmo controle e a opção **Verificar agora** ficam em **Ajustes → Geral → Atualizações**.
 
-Once allowed, Coucou asks GitHub at launch and every 6 hours:
-`GET https://api.github.com/repos/Louis-CFM/coucou/releases?per_page=30`,
-unauthenticated, no cookies, nothing about you. It keeps the published
-`windows-vX.Y.Z` releases (`linux-vX.Y.Z` on Linux — never the rolling
-`windows-latest` / `linux-latest`, drafts or prereleases) and takes the highest.
-When it is newer than yours, the island opens on it once a day at most, with
-Mochi surprised: **Coucou X is out**, the first line of its *What's new*, and the
-version you have; **Update now · What's new · Later**. The tray menu offers
-**Update Coucou to X…** for as long as it is out.
+Depois da autorização, o Lumen consulta na abertura e a cada seis horas `GET https://api.github.com/repos/playertwo1/coucou/releases?per_page=30`, sem autenticação, cookies ou dados sobre você. No Windows, considera somente releases publicadas `windows-vX.Y.Z`, sem drafts, pré-lançamentos ou a tag móvel `windows-latest`. Se encontrar uma versão mais recente, mostra a primeira linha das notas e as opções para atualizar, ler as notas ou adiar. O menu da bandeja também oferece a atualização enquanto ela estiver disponível.
 
-**Update now** (Windows) uses the installer this copy came from:
+**Atualizar agora** usa o instalador desta cópia:
 
-- the per-user `setup.exe` (Coucou in `%LOCALAPPDATA%\Coucou`, with its
-  `uninstall.exe`): `Coucou-Windows-X.Y.Z-setup.exe /P /UPDATE /R` — passive,
-  no "reinstall or uninstall?" step, the old uninstaller never runs, your
-  shortcuts and settings stay, and the installer starts Coucou again;
-- the per-machine `.msi` (Coucou in `Program Files\Coucou`):
-  `msiexec /i Coucou-Windows-X.Y.Z.msi /passive AUTOLAUNCHAPP=True`, which asks
-  for admin rights as installing it by hand does, then starts Coucou again;
-- anything else — the portable exe, a build — gets **Get it on GitHub**, the
-  release page, instead.
+- O instalador por usuário fica em `%LOCALAPPDATA%\Lumen`, com `uninstall.exe`; o arquivo é `Lumen-Windows-X.Y.Z-setup.exe /P /UPDATE /R`. Ele atualiza sem iniciar o desinstalador antigo, preserva atalhos e dados e abre o Lumen ao terminar.
+- O instalador MSI fica em `Program Files\Lumen`; o arquivo é `msiexec /i Lumen-Windows-X.Y.Z.msi /passive AUTOLAUNCHAPP=True`. O Windows pode pedir acesso de administrador.
+- A versão portátil e builds manuais abrem a página de releases para a atualização.
 
-The installer is downloaded into a temporary folder, following redirects only to
-`github.com`, `api.github.com` and `*.githubusercontent.com`, and checked
-against the SHA-256 GitHub publishes for that file (the asset's `digest`). No
-checksum, or one that doesn't match, and nothing is installed. Then it runs and
-Coucou quits. The checksum proves the file is exactly the one on the release
-page; like a download by hand, it doesn't prove who uploaded it (the installer
-isn't code-signed yet).
+O instalador é baixado para uma pasta temporária. O atualizador segue redirecionamentos somente para `github.com`, `api.github.com` e `*.githubusercontent.com`, e confere o SHA-256 com o `digest` publicado pelo GitHub. Sem o checksum ou com divergência, não instala. A conferência confirma que o arquivo baixado corresponde ao publicado; ela não identifica quem o publicou. Os instaladores atuais não têm assinatura Authenticode.
 
-On Linux the card and the tray item point to the release page: AppImage, .deb,
-.rpm and the Arch package are updated the way you installed them.
+No Linux, o Coucou aponta para a página de releases; AppImage, `.deb`, `.rpm` e o pacote Arch são atualizados conforme o método usado na instalação.
 
 ## Build it yourself
 
@@ -467,26 +422,27 @@ otherwise needs a real drag from Explorer to see — and `dev/recap-preview.html
 the weekly recap card and its shared image on a sample week. None of these pages
 ships in the app.
 
-`npm run pack` leaves two files in `windows/release/`, the same names the release
-workflow publishes:
+`npm run pack` grava em `windows/release/` os instaladores com versão e os nomes
+da tag móvel publicados pelo workflow:
 
 ```
-Coucou-Windows-X.Y.Z-setup.exe    the versioned installer
-Coucou-Windows-setup.exe          the same file under the rolling name
+Lumen-Windows-X.Y.Z-setup.exe
+Lumen-Windows-setup.exe
+Lumen-Windows-X.Y.Z.msi
+Lumen-Windows.msi
 ```
 
-Installing is optional — `target/release/coucou.exe` runs on its own. There is no
-window in the taskbar and no console: the island at the top of the screen and the
-Mochi in the notification area are the whole app, and Quit lives in its menu.
+Instalar é opcional: `target/release/lumen.exe` roda sozinho. Não há janela na
+barra de tarefas nem console; o app aparece como ilha no topo da tela e como
+ícone do Lumen na área de notificação. A opção para sair fica no menu desse ícone.
 
-The 29 sounds are the macOS app's own files; they are never duplicated in this
-folder. The path is declared once, in `SOUNDS_DIR` at the top of
-`vite.config.ts` — when they move to `shared/sounds/`, change that one line.
+No Windows, a paleta de sons do Lumen é sintetizada pelo Web Audio durante a
+execução; o pacote não distribui arquivos de som do Coucou ou do Mochi.
 
-The app icon and the tray icon are drawn in code, like Mochi itself:
+Os ícones do Lumen são gerados para a identidade Bússola de papel:
 
 ```powershell
-npm run icons          # regenerates src-tauri/icons from scripts/gen-icons.mjs
+npm run icons          # regenera os ícones de Lumen
 ```
 
 ### Layout

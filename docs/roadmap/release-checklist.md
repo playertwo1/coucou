@@ -23,5 +23,11 @@
   - Setup `Lumen-Windows-0.6.13-setup.exe`: `E98CC0713117828F1E14E9F7A70EE4E26326C9CD61FD7C1BDA4549B4172A5F3A`.
   - App portátil `lumen.exe`: `36F318E2EA17528E9C749E1710E38D7B0B9A007EB9F021D5C9729433CE3818CC`.
   - Hook `lumen-hook.exe`: `3295B2EC302610524E58C3BB32AA84FC8D5CAAA4DD05DCEEABB3764EEA5CBF82`.
-- [ ] Commit da Fase L em `main`, tag `windows-v0.6.13`, execução de publicação e comparação/escaneamento dos assets finais.
+- [x] Commit `c3b2af2` enviado a `main`; tag `windows-v0.6.13` publicada. CI de release `43428181413` concluiu com sucesso: https://github.com/playertwo1/coucou/actions/runs/43428181413. Release: https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.13.
+- [x] Assets finais baixados; SHA-256 local confere com os digests do GitHub. Os hashes diferem do preflight, então os instaladores finais foram examinados separadamente pelo Defender; nenhuma ameaça detectada (assinaturas `1.463.281.0`, evento 1001, 2026-11-13).
+  - Setup `Lumen-Windows-0.6.13-setup.exe`: `FC60E4148044527FC78A4977EDA9B06636591D5C00CBD3D9BC2DF41C55F9D6B9`.
+  - MSI `Lumen-Windows-0.6.13.msi`: `856D5CE0C08E51D236233803DF8C01766C6358B61178CBF977A371691E23EEB6`.
+- [x] Release móvel `windows-latest` atualizada e verificada: contém somente `Lumen-Windows-setup.exe` e `Lumen-Windows.msi`; os dois assets antigos `Coucou-Windows-*` foram removidos dessa tag móvel. A release histórica `windows-v0.6.11` permanece disponível.
+- [x] `README.md` e `windows/README.md` apontam os downloads, atualizações e nomes dos instaladores para Lumen. A tabela herdada de interações no guia Windows está identificada como não validada no app instalado.
+- [x] Os instaladores não têm assinatura Authenticode (`NotSigned`); o fluxo não exige certificado e o Windows pode mostrar um aviso do SmartScreen.
 - [ ] Proprietário instalará e avaliará no uso real; L1 permanece em avaliação até esse retorno.

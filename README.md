@@ -182,6 +182,7 @@ No Windows, o fork passa a se chamar Lumen; no Linux e no macOS, o app continua 
 
 | Lumen (Windows) e Coucou (Linux) | Data | Destaques |
 |---------|------|------------|
+| 0.6.13 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.13) · avaliação do proprietário pendente | 13 nov. 2026 | Primeira versão Lumen para Windows: Bússola de papel, identidade própria e migração de settings/hooks validada sinteticamente; instalação e identidade aguardam teste real |
 | 0.6.12 · avaliação não publicada | 13 nov. 2026 | Fork: resultados locais de `npm test` e `cargo build` no diretório da chamada; checkpoint sintético passou, avaliação do proprietário e publicação pendentes |
 | 0.6.6 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.6) | Nov 13, 2026 | Fork: hides the island over a foreground app covering its monitor; pending permissions and questions keep it visible (real fullscreen evaluation pending) |
 | 0.6.5 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.5) | Nov 12, 2026 | Fork: permission notifications when the island is hidden; real Windows toast activation under owner evaluation |
@@ -259,17 +260,11 @@ It installs the same signed and notarized GitHub build as the download below. Co
 2. Unzip and move **Coucou.app** to `/Applications`.
 3. Launch it, and click **Open** when macOS asks you to confirm. Updating from 0.1.0? macOS may ask you, once for each key you saved, to let Coucou use it: enter your Mac password and click **Always Allow**.
 
-### Windows
+### Lumen para Windows
 
-Download **[Coucou-Windows.msi](https://github.com/Louis-CFM/coucou/releases/download/windows-latest/Coucou-Windows.msi)** or **[Coucou-Windows-setup.exe](https://github.com/Louis-CFM/coucou/releases/download/windows-latest/Coucou-Windows-setup.exe)** (Windows 10/11, always the newest version) and run it. You can also [build it from source](#build-from-source).
+Baixe **[Lumen-Windows.msi](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows.msi)** ou **[Lumen-Windows-setup.exe](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows-setup.exe)** para Windows 10/11 e execute. O instalador `.exe` vale só para o usuário atual; o `.msi` pode pedir acesso de administrador. Também é possível [compilar pelo código-fonte](#build-from-source).
 
-**Windows will show a warning the first time — that's expected.** The installer isn't code-signed yet, so SmartScreen doesn't know the publisher:
-
-1. A **"Windows protected your PC"** screen appears, with *Publisher: Unknown publisher*.
-2. Click **More info** (*Informations complémentaires* in French). This reveals a **Run anyway** button.
-3. Click **Run anyway** (*Exécuter quand même*). The installer starts normally.
-
-This is only because the app isn't signed with a paid certificate yet. Coucou is open source, and Microsoft Defender scans the installer as clean.
+Os instaladores não têm assinatura Authenticode, então o SmartScreen pode exibir um aviso de editor desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.13 foram examinados pelo Microsoft Defender em 13/11/2026, sem ameaças detectadas.
 
 **Windows and Linux 0.5.9** keep a small island at the top of the screen once it is closed (Mochi, the time or your Claude usage in it), fold it with ✕, keep your language when you dictate, take any dictation key you like and, on Windows, quiet the other apps while you speak. **0.5.8** bring 14 fixes and features by @Ohualtex: permission requests wait their turn, Claude Desktop cards on Windows and its pill on Linux, plan usage in the compact island. **0.5.7** bring **Mail** to Windows with classic Outlook (search, automatic sorting, mail plans from the chat) and a search field for the settings. **0.5.6** chat on your own AI subscription (Claude Code, Antigravity, Gemini CLI, Codex, Cursor, Copilot) and speak Korean and Japanese. **0.5.5** answer on your Claude plan through Claude Code when no API key is saved. **0.5.4** bring 25 reliability fixes from the community. **0.5.3** bring **WhatsApp** to the island (experimental), with the gateway installed in one click. **0.5.2** turn Mochi blue when a new version waits and show what it brings after the update; they add **GitLab and Gitea** pills. **0.5.1** tell you when a new version is out (once you agree) and, on Windows, install it in one click; they also speak German and Turkish. **0.5.0** caught up with the Mac: Coucou is now an app with its own window in the taskbar, **Flow dictation** anywhere (hold right Ctrl, speak, let go) with Parakeet running offline on your computer, the **Notetaker** for your calls, and **« OK Coucou »** to talk to Mochi, powered by Claude with your key. On Linux, dictation works on X11 and Wayland. 0.4.0 paired with [Coucou for Android](#coucou-for-android): approve, answer and chat from your Android phone (Settings → Android phone, off by default). 0.3.0 added open on hover, your own sounds, a colour of your own for each Mochi and the Mochi-to-desktop shortcut; on Linux, the Spotify pill with Mochi dancing to it, global shortcuts on Wayland and "Open terminal" that brings the terminal forward. 0.2.0 caught up with the Mac: Codex, Copilot CLI, Muse Code and six more agents with approvals from the island, answers to Claude's questions, live diffs, GitHub pull requests and CI, plan usage, local models, the wardrobe, Mochi on the desktop, keyboard shortcuts, the weekly recap and 10 languages. See the [changelog](CHANGELOG.md).
 
@@ -277,7 +272,7 @@ There is no notch on a PC, so the island slides out of the top edge of the scree
 instead of hiding inside one. See [`windows/README.md`](windows/README.md) for the
 rest of the differences.
 
-**New versions.** Once you agree (the island asks once, or Settings → General → Updates), Coucou for Windows and Linux tells you when a new version is out; on Windows, **Update now** downloads the installer you used, checks its SHA-256 against the one GitHub publishes and installs it in one click. See [`windows/README.md`](windows/README.md#new-versions).
+**Novas versões.** Depois da sua autorização (o app pergunta uma vez ou use Ajustes → Geral → Atualizações), o Lumen no Windows e o Coucou no Linux avisam quando há uma nova versão. No Windows, **Atualizar agora** baixa o tipo de instalador usado, confere o SHA-256 publicado pelo GitHub e instala a atualização. Veja o [guia do Lumen para Windows](windows/README.md).
 
 ### Linux
 
