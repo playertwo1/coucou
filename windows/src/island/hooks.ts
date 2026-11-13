@@ -557,7 +557,7 @@ function handleHook(island: Island, payload: HookPayload) {
     case "PostToolUseFailure":
       supersedeStop();
       State.updateTask(agentId, "working");
-      if (recordLocalRun(payload, agentId) !== 2) State.appendStep(agentId, t("⚠ failed"));
+      if (recordLocalRun(payload, agentId) === null) State.appendStep(agentId, t("⚠ failed"));
       break;
 
     case "Notification": {

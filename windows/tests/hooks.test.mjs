@@ -221,6 +221,12 @@ test("an interrupted build is shown as cancelled, not as passed or failed", () =
   assert.deepEqual(task().steps, ["Runs · cargo build", "cargo build · Cancelled · alpha"]);
 });
 
+test("a failed local build does not add a second generic failure step", () => {
+  hook({ hook_event_name: "PreToolUse", session_id: "s1", tool_use_id: "run-failed", cwd: "C:\\repos\\alpha", tool_name: "Bash", tool_input: { command: "cargo build" } });
+  hook({ hook_event_name: "PostToolUseFailure", session_id: "s1", tool_use_id: "run-failed", tool_name: "Bash", tool_input: { command: "cargo build" }, coucou_run_status: 1 });
+  assert.deepEqual(task().steps, ["Runs · cargo build", "cargo build · Failed · alpha"]);
+});
+
 test("a notification is a rate limit, a question, or nothing", () => {
   hook({ hook_event_name: "Notification", message: "Just so you know." });
   assert.equal(task().state, "idle");
