@@ -5,7 +5,7 @@ Atualizado em 2026-11-12. Fonte canônica de estado: este índice e os arquivos 
 ## Estado e regras de leitura
 
 - Decisão do proprietário (2026-11-12): executar testes sintéticos em todas as etapas; ao concluir cada etapa, criar uma nova versão e publicá-la no GitHub para que o proprietário atualize e valide no uso real. Registrar separadamente o resultado sintético e o aceite real; simulação nunca fecha um checkpoint de runtime. Preservar os requisitos Git e as alterações locais.
-- O fork tem a versão `windows-v0.6.4` publicada; o atualizador consulta as releases de `playertwo1/coucou`.
+- O fork prepara a avaliação Windows `windows-v0.6.5`; o atualizador consulta as releases de `playertwo1/coucou`.
 - O aplicativo e várias features já têm código e testes, mas ainda falta validação manual em runtime. Não marque uma feature como concluída só porque compila.
 - Esforço: P = pequeno, M = médio, G = grande. Estimativa serve para comparar itens; uma feature M/G deve ser subdividida antes da implementação.
 - [ ] Pendente.
@@ -51,7 +51,7 @@ Decisões que deram origem às fases M: `docs/questionario/2026-11-09-mochi-assi
 |---:|---|---|---|
 | 1 | 0 — Validar o que já existe | [fase-0-validacao.md](roadmap/fase-0-validacao.md) | Em andamento |
 | 2 | 1 — Recursos do Mac ainda não escolhidos | [fase-1-recursos-mac.md](roadmap/fase-1-recursos-mac.md) | Em andamento (1.2 concluída; 1.1 aguarda teste manual; 1.3 e 1.4 descartadas) |
-| 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Em andamento (2.11) |
+| 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Em andamento (2.2; aceite real de 2.1 pendente) |
 | 4 | 2B — Paridade entre agentes e ambientes | [fase-2b-paridade-agentes.md](roadmap/fase-2b-paridade-agentes.md) | Pendente |
 | 5 | 2C — Pílulas configuráveis e posição livre | [fase-2c-pilulas-posicao.md](roadmap/fase-2c-pilulas-posicao.md) | Pendente |
 | 6 | M0 — Mochi: descoberta e licenças | [m0-descoberta.md](roadmap/m0-descoberta.md) | Pendente |

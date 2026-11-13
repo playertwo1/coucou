@@ -47,6 +47,8 @@ mod update;
 mod voice;
 #[cfg(windows)]
 mod webview_drop;
+#[cfg(windows)]
+mod permission_notifications;
 mod webview_memory;
 mod capture;
 mod vitals;
@@ -405,8 +407,14 @@ fn quit_app(app: AppHandle) {
 /// Tray → Pause. Paused means paused: the pollers stop talking to the network,
 /// not just the island stopping showing things.
 #[tauri::command]
-fn set_paused(paused: bool) {
+fn set_paused(app: AppHandle, paused: bool) {
     integrations::set_paused(paused);
+    #[cfg(windows)]
+    if paused {
+        if let Some(toasts) = app.try_state::<permission_notifications::PermissionToasts>() {
+            permission_notifications::clear_all(&toasts);
+        }
+    }
 }
 
 // ── Claude Code hooks ─────────────────────────────────────────────────────────
@@ -518,8 +526,28 @@ async fn codex_plan_usage() -> Option<serde_json::Value> {
 
 #[tauri::command]
 fn approval_decision(app: AppHandle, request_id: String, decision: String) {
-    recap::record_decision(&app, &request_id, &decision);
-    pipe::answer(&app, &request_id, &decision);
+    resolve_approval(&app, &request_id, &decision);
+}
+
+pub(crate) fn resolve_approval(app: &AppHandle, request_id: &str, decision: &str) -> bool {
+    if !matches!(decision, "allow" | "deny") || !pipe::answer(app, request_id, decision) {
+        return false;
+    }
+    recap::record_decision(app, request_id, decision);
+    true
+}
+
+#[cfg(windows)]
+#[tauri::command]
+fn permission_toast_show(
+    app: AppHandle,
+    toasts: State<'_, permission_notifications::PermissionToasts>,
+    request_id: String,
+    session_id: String,
+    agent_id: String,
+    was_hidden: bool,
+) -> bool {
+    permission_notifications::show(&app, &toasts, request_id, session_id, agent_id, was_hidden)
 }
 
 /// An option picked on the island for a question Claude Code asked.
@@ -912,6 +940,15 @@ fn open_settings_window(app: AppHandle, page: Option<String>) {
 }
 
 pub fn run() {
+    // COM may launch the registered local server for an old toast after Coucou exits.
+    // The class is only available in the live process; a new process must not open the app.
+    if std::env::args_os().any(|arg| arg == "--toast-activation") {
+        return;
+    }
+    #[cfg(windows)]
+    if let Err(err) = permission_notifications::set_process_app_id() {
+        log::line(format!("could not set toast app identity: {err}"));
+    }
     platform::prepare_environment();
     let loaded = settings::load();
     i18n::set_picked(&loaded.language);
@@ -919,6 +956,7 @@ pub fn run() {
 
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+            if argv.iter().any(|arg| arg == "--toast-activation") { return; }
             // `coucou --shortcut <action>`: what a desktop's own keyboard
             // settings run where we can't listen for keys ourselves (Wayland).
             match shortcuts::from_args(&argv) {
@@ -998,6 +1036,8 @@ pub fn run() {
             status_line_apply,
             codex_plan_usage,
             approval_decision,
+            #[cfg(windows)]
+            permission_toast_show,
             approval_answer,
             approval_ack,
             approval_decline,
@@ -1142,6 +1182,8 @@ pub fn run() {
         ])
         .setup(move |app| {
             let handle = app.handle().clone();
+            #[cfg(windows)]
+            app.manage(permission_notifications::start(handle.clone()));
             secrets::warm_up();
             app.manage(phone_link::PhoneLink::new(handle.clone()));
             tray::build(&handle)?;
@@ -1203,6 +1245,10 @@ pub fn run() {
         .run(|app, event| {
             // Withdraw the phone link's announcement on the local network before the process ends.
             if let tauri::RunEvent::Exit = event {
+                #[cfg(windows)]
+                if let Some(toasts) = app.try_state::<permission_notifications::PermissionToasts>() {
+                    permission_notifications::shutdown(&toasts);
+                }
                 phone_link::stop_on_exit(app);
                 notes::shutdown(app);
                 // GOWA started by Coucou stops with it; the conversations were only in memory.

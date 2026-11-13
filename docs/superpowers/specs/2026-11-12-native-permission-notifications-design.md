@@ -55,6 +55,10 @@ Roadmap: Fase 2.1. Status: mini-spec aprovada pelo proprietário em 2026-11-12 n
 
 Desabilitar o backend de toast e remover seus callbacks/associações restaura o card e o terminal existentes. Não migrar configurações de agentes nem gravar permissões permanentes. Se houver registro de identidade no instalador, documentar os recursos exatos e remover somente os pertencentes ao Coucou; nunca apagar registros de outros apps.
 
+## Decisão posterior do proprietário (2026-11-12)
+
+O proprietário autorizou concluir e aprovar sinteticamente a 2.1b, publicar uma versão de avaliação e avançar no roadmap antes da prova do callback nativo da 2.1a. O fluxo de avaliação mantém Allow abrindo o cartão para revisão quando o resumo é genérico; Deny usa a decisão única do pipe. Isso não transforma o resultado inconclusivo da Shell em aceite real. A validação real será feita pelo proprietário após atualizar o aplicativo.
+
 ## Referências primárias
 
 - [Evento Activated: clique/toque e assinatura pelo app em execução](https://learn.microsoft.com/en-us/uwp/api/windows.ui.notifications.toastnotification.activated).

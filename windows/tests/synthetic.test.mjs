@@ -60,6 +60,85 @@ test("synthetic requests consume only their own pending decision once", () => {
   assert.deepEqual(createFixtures().decisions, []);
 });
 
+test("synthetic toast is issued only for a pending permission while the island is hidden", () => {
+  const fixture = createFixtures("run-a");
+  const request = fixture.permission("session-a", 1_000, 60_000);
+  assert.equal(fixture.createPermissionToast(request.request_id, { islandVisible: true, now: 1_000 }), null);
+  assert.equal(fixture.createPermissionToast(request.request_id, { islandVisible: false, kind: "question", now: 1_000 }), null);
+  assert.equal(fixture.createPermissionToast("forged-request", { islandVisible: false, now: 1_000 }), null);
+
+  const token = fixture.createPermissionToast(request.request_id, { islandVisible: false, now: 1_000 });
+  assert.ok(token);
+  assert.equal(token.includes(request.request_id), false);
+  assert.equal(fixture.toastExpiry(token), 31_000);
+});
+
+test("synthetic Allow opens the exact card for review and Deny decides only its request", () => {
+  const fixture = createFixtures("run-a");
+  const first = fixture.permission("session-a", 1_000);
+  const second = fixture.permission("session-b", 1_000);
+  const firstToast = fixture.createPermissionToast(first.request_id, { islandVisible: false, now: 1_000 });
+  const secondToast = fixture.createPermissionToast(second.request_id, { islandVisible: false, now: 1_000 });
+
+  assert.equal(fixture.activatePermissionToast(secondToast, "allow", 1_001), "opened");
+  assert.equal(fixture.activatePermissionToast(firstToast, "deny", 1_002), "denied");
+  assert.equal(fixture.activatePermissionToast(secondToast, "deny", 1_003), "invalid");
+  assert.deepEqual(fixture.openedFromToast, [second.request_id]);
+  assert.deepEqual(fixture.decisions, [{ requestId: first.request_id, decision: "deny" }]);
+});
+
+test("opening, closing or timing out a synthetic toast never decides", () => {
+  const fixture = createFixtures("run-a");
+  const opened = fixture.permission("session-open", 1_000);
+  const dismissed = fixture.permission("session-dismiss", 1_000);
+  const timedOut = fixture.permission("session-timeout", 1_000);
+  const openToast = fixture.createPermissionToast(opened.request_id, { islandVisible: false, now: 1_000 });
+  const dismissToast = fixture.createPermissionToast(dismissed.request_id, { islandVisible: false, now: 1_000 });
+  const timeoutToast = fixture.createPermissionToast(timedOut.request_id, { islandVisible: false, now: 1_000 });
+
+  assert.equal(fixture.activatePermissionToast(openToast, "open", 1_001), "opened");
+  assert.equal(fixture.activatePermissionToast(dismissToast, "close", 1_001), "dismissed");
+  assert.equal(fixture.activatePermissionToast(timeoutToast, "timeout", 1_001), "expired");
+  assert.deepEqual(fixture.openedFromToast, [opened.request_id]);
+  assert.deepEqual(fixture.decisions, []);
+  assert.equal(fixture.decide({ requestId: opened.request_id, decision: "allow", now: 1_002 }), true);
+  assert.equal(fixture.decide({ requestId: dismissed.request_id, decision: "deny", now: 1_002 }), true);
+  assert.equal(fixture.decide({ requestId: timedOut.request_id, decision: "deny", now: 1_002 }), true);
+});
+
+test("synthetic toast expiry is capped by the request deadline and never decides", () => {
+  const fixture = createFixtures("run-a");
+  const request = fixture.permission("session-request-expiry", 1_000, 5_000);
+  const cappedToast = fixture.createPermissionToast(request.request_id, { islandVisible: false, now: 1_000 });
+  assert.equal(fixture.toastExpiry(cappedToast), 6_000);
+  assert.equal(fixture.activatePermissionToast(cappedToast, "allow", 6_000), "expired");
+  assert.deepEqual(fixture.decisions, []);
+  assert.equal(fixture.decide({ requestId: request.request_id, decision: "deny", now: 6_000 }), false);
+
+  const later = fixture.permission("session-toast-expiry", 1_000, 60_000);
+  const shortToast = fixture.createPermissionToast(later.request_id, { islandVisible: false, now: 1_000 });
+  assert.equal(fixture.toastExpiry(shortToast), 31_000);
+  assert.equal(fixture.activatePermissionToast(shortToast, "allow", 31_000), "expired");
+  assert.deepEqual(fixture.decisions, []);
+  assert.equal(fixture.decide({ requestId: later.request_id, decision: "deny", now: 31_001 }), true);
+});
+
+test("card decisions and another synthetic app run invalidate old toast tokens", () => {
+  const firstRun = createFixtures("run-a");
+  const request = firstRun.permission("session-race", 1_000);
+  const token = firstRun.createPermissionToast(request.request_id, { islandVisible: false, now: 1_000 });
+  assert.equal(firstRun.decide({ requestId: request.request_id, decision: "allow", now: 1_001 }), true);
+  assert.equal(firstRun.activatePermissionToast(token, "deny", 1_002), "invalid");
+  assert.equal(firstRun.decisions.length, 1);
+
+  const nextRun = createFixtures("run-b");
+  const nextRequest = nextRun.permission("session-next", 1_000);
+  const nextToken = nextRun.createPermissionToast(nextRequest.request_id, { islandVisible: false, now: 1_000 });
+  assert.notEqual(token, nextToken);
+  assert.equal(nextRun.activatePermissionToast(token, "allow", 1_001), "invalid");
+  assert.deepEqual(nextRun.decisions, []);
+});
+
 test("synthetic Git status and diff read only the invented Jardim fixture", () => {
   const fixture = createFixtures();
   const status = fixture.gitStatus("synthetic://Jardim");

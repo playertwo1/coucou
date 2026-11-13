@@ -1,6 +1,6 @@
 # Plano da Fase 2.1 — notificações de permissão
 
-Status: mini-spec aprovada pelo proprietário em 2026-11-12; exceção pontual ao checkout limpo autorizada nesta conversa para a prova sintética 2.1a, preservando alterações locais e sem commit. A exceção não libera a integração 2.1b.
+Status: mini-spec aprovada. Em 2026-11-12, o proprietário autorizou explicitamente a aprovação sintética de 2.1b e a publicação de uma versão de avaliação fora da ordem, apesar de 2.1a ainda não comprovar callback da Shell. A aceitação real fica pendente até o teste do proprietário no aplicativo atualizado.
 
 Spec: `docs/superpowers/specs/2026-11-12-native-permission-notifications-design.md`.
 
@@ -12,6 +12,15 @@ Spec: `docs/superpowers/specs/2026-11-12-native-permission-notifications-design.
 - Pendente: confirmação visual e callback por clique humano, registro/ativação adequados, evento de falha e expiração nativa, NSIS/MSI. A prova não valida instalação. Não avançar para a integração.
 - O proprietário confirmou que a notificação não apareceu. Entrega visual: FAIL. Caminho do Menu Iniciar e sessão interativa conferidos; ainda não há causa conclusiva. Antes de repetir com clique humano, resolver a falha de `Setting` e verificar a ativação desktop necessária.
 - Reteste: Windows aceitando notificações (estado 5), identidade habilitada (`Setting=0`), mas novamente nada apareceu segundo o proprietário. Eventos da plataforma registraram encaminhamento à sessão 1. O erro inicial de `Setting` não explica sozinho a falha. Processo saiu com código 1 sem registrar limpeza; razão desconhecida, sem evento Application Error correspondente. Artefatos próprios removidos com conferência de destino/identidade. Investigar apresentação pela Shell e ciclo de vida antes de novas solicitações de clique; 2.1a continua aberta.
+
+Reteste sintético 2.1a em 2026-11-12: inconclusivo. Os quatro testes Rust passaram; a execução ao vivo retornou estado de notificações 5, `Setting=0`, `Show` bem-sucedido e timeout local após 90 s. A Central de Notificações não abriu pelo Agent Desktop e Coucou não pôde ser trazido ao primeiro plano, então nenhum clique foi executado. Verificação externa confirmou processo, identidade, CLSID e atalho removidos. Não interpretar a ausência de callback sem clique como rejeição da ativação; 2.1a permanece aberta.
+
+## Decisão e avanço para avaliação
+
+- A autorização explícita do proprietário substitui o bloqueio de ordem anterior apenas para a avaliação de 2.1b.
+- A versão de avaliação preserva fallback pelo cartão/terminal: texto genérico, Allow abre o cartão completo, Deny consome só o pedido vinculado.
+- Os testes automatizados usam fixtures sintéticas e não enviam comandos reais a agentes.
+- Não marcar a entrega visual/callback da Shell ou a aceitação real como comprovadas. Próximo desenvolvimento no roadmap: descoberta sintética da 2.2.
 
 ## Próximos passos
 

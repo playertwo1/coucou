@@ -6,16 +6,18 @@ Cada item segue a sequência: descoberta do código atual → mini-spec/aceite �
 
 ### 2.1 — Notificações nativas com Permitir/Negar (M)
 
+**Estado atual (2026-11-12): APROVADO PARA AVALIAÇÃO.** Por decisão explícita do proprietário nesta conversa, os testes sintéticos de 2.1a e 2.1b valem para avançar e publicar uma versão de avaliação mesmo com o callback da Shell de 2.1a ainda sem prova. Uma ação Allow abre o cartão completo; Deny decide somente o pedido vinculado. O usuário fará a validação real após atualizar. A aceitação real segue pendente; tela cheia continua na 2.2.
+
 **Descoberta (2026-11-12):** fluxo de pedidos mapeado em `island/hooks.ts` → `core/bridge.ts` → `lib.rs` → `pipe.rs`; há fila de cinco, reconhecimento em 800 ms e espera por decisão de 108 s. Não foi encontrado backend de toast no app. O crate `windows` já existe; identidade e ativação de botões no dev/NSIS/MSI precisam de prova nativa. Proposta em `docs/superpowers/specs/2026-11-12-native-permission-notifications-design.md` e plano em `docs/superpowers/plans/2026-11-12-native-permission-notifications-plan.md`, ainda sem aprovação. Divisão proposta: 2.1a viabilidade, 2.1b integração, 2.1c validação. Nenhum código ou checkpoint concluído; checkout permanece com as alterações locais da 1.6. Tela cheia depende da descoberta da 2.2 e continua pendente.
 
 **Aprovação (2026-11-12):** proprietário aprovou a mini-spec nesta conversa. Prova nativa 2.1a ainda não iniciada: `git status` continua com as alterações locais preservadas; upstream contido (`0 35` após fetch). A aprovação da interação não remove a exigência de checkout limpo para código novo. Nenhum checkpoint fechado.
 
 - [x] Mapear o fluxo atual de pedidos de permissão em `windows/src/island/hooks.ts`, os comandos de aprovação em `windows/src-tauri/` e a API nativa do Windows disponível no app. Mapeamento na spec; viabilidade dos callbacks ainda pendente.
 - [x] Definir no mini-spec quando usar toast (ilha escondida/tela cheia), conteúdo permitido e prazo de expiração. Spec aprovada em 2026-11-12; integração com tela cheia explicitamente adiada até a 2.2.
-- [ ] Escrever testes de roteamento: clique Permitir, clique Negar, fechar/ignorar e timeout.
-- [ ] Implementar ações de toast ligadas ao mesmo pedido pendente da ilha.
-- [ ] Confirmar que nenhum caminho aprova sem clique; em timeout a pergunta continua no terminal.
-- [ ] Testar com ilha visível, escondida, tela cheia, duas solicitações e notificação expirada.
+- [x] Escrever testes sintéticos de roteamento: Allow abre o cartão para revisão; Deny, fechar/ignorar e timeout.
+- [x] Implementar ações de toast ligadas ao mesmo pedido pendente da ilha.
+- [x] Confirmar sinteticamente que nenhum caminho aprova sem clique e que timeout mantém o fallback do terminal.
+- [x] Testar sinteticamente ilha visível/oculta, duas solicitações e notificação expirada; tela cheia segue para 2.2.
 - Checkpoint: clique explícito decide o pedido correspondente; nenhum toast atrasado decide pedido de outra sessão.
 
 **Prova 2.1a (2026-11-12): parcial —** proprietário autorizou exceção pontual ao checkout limpo somente para essa prova, preservando trabalho local e sem commit. Criado executável separado em `windows/probes/permission-toast`, sem ligação com IPC/permissões reais ou alteração do manifesto do app. Usa o crate `windows` já disponível, identidade e atalho próprios, removidos na saída. No Windows 11 Pro build 26300, `Setting` retornou `0x80070490`, mas `Show` retornou sucesso e houve `Dismissed(TimedOut)`. Em 90 s nenhum clique chegou ao callback; espera terminou sem decisão. Não há confirmação visual nem prova de Permitir/Negar/corpo, expiração nativa, evento de falha ou NSIS/MSI. Remoção do toast retornou sucesso; chave e atalho estavam ausentes depois da saída. Dois testes Rust da prova, `npm test` (614), `npm run build` (inclui TypeScript) e `node scripts/gen-strings.mjs --check` passaram. O teste de i18n passou a incluir as fontes da prova, cobrindo seus textos nas 13 línguas. Detalhes e comandos no README da prova. 2.1a e checkpoint 2.1 continuam abertos; não iniciar 2.1b.
@@ -27,6 +29,18 @@ Cada item segue a sequência: descoberta do código atual → mini-spec/aceite �
 **Confirmação visual posterior (2026-11-12):** na retentativa com o Coucou instalado 0.6.2 aberto, o proprietário viu o toast e clicou em Permitir. Exibição confirmada; callback ainda não comprovado, pois o processo terminou por timeout. A prova isolada agora implementa ativador COM Win32 próprio e temporário, sem vínculo com permissões reais. Três testes Rust passaram, incluindo a interface COM e rejeição de identidade/pedido inválidos. O teste direto da interface não comprova entrega de clique pela Shell; nova repetição nativa em validação. 2.1a continua aberta.
 
 **Ambiente exclusivamente sintético (2026-11-12):** a pedido do proprietário, criada versão desktop separada em `windows/synthetic`, sem backend de produção ou IPC nativo e com perfil WebView novo por execução. Interface/card existentes, projeto Jardim, sessão e pedidos inventados; clipboard em memória, arquivos externos e conexões da página bloqueados. Cliques automatizados em Permitir/Negar registraram somente decisões sintéticas; reiniciar zerou os dados. Perfil separado confirmado no processo WebView filho. Typecheck/build sintético, `npm test` (618), verificação de traduções e dois testes Rust do host passaram. Executável `windows/target/synthetic-host/debug/coucou-synthetic.exe`; comando `npm run synthetic` em `windows/`. Próximos testes devem usar somente essa variante, sem dados ou contas reais. Notificação nativa ainda não conectada a ela; 2.1a e checkpoint permanecem abertos.
+
+**Reteste nativo com dados sintéticos (2026-11-12): INCONCLUSIVO —** os quatro testes Rust passaram. No Windows 11 Pro build 26300, a prova isolada retornou `SHQueryUserNotificationState=5`, `Setting=0` e sucesso em `Show`, mas aguardou 90 s e terminou sem ativação. O Agent Desktop não conseguiu abrir a Central de Notificações nem trazer a janela Coucou ao primeiro plano; nenhum clique foi feito. Esta execução não prova falha nem sucesso do callback da Shell. Limpeza verificada: processo, identidade AUMID, CLSID COM e atalho ausentes. 2.1a continua aberta e 2.1b bloqueada.
+
+**Decisão do proprietário (2026-11-12):** aprovação fora da ordem autorizada para 2.1b com evidência sintética e publicação de avaliação. 2.1a callback e clique nativos permanecem sem comprovação; não marcar aceite real como concluído.
+
+- [x] Modelo sintético 2.1b: pedidos independentes, expiração, fechamento sem decisão, ação repetida, ID antigo e reinício.
+- [x] Integração de avaliação: toast só para permissão aceita com a ilha oculta; Allow abre o cartão para revisão, Deny responde pelo pipe, identidade/atalho em NSIS/MSI.
+- [x] Checkpoint sintético 2.1b aprovado pelo proprietário para avaliação.
+- [ ] Validação real do proprietário: toast visível, Allow abrindo o cartão certo, Deny negando só o pedido certo, fechamento/expiração sem decisão, pedidos simultâneos e atualização NSIS/MSI.
+- Checkpoint real 2.1: em avaliação; callback da Shell ainda não comprovado. Próximo desenvolvimento: 2.2, com o aceite real de 2.1 sujeito ao retorno do proprietário.
+
+**Versão de avaliação 0.6.5 (2026-11-12):** sintéticos de 2.1b aprovados e implementação pronta para o proprietário validar no Windows. O callback e a apresentação real continuam pendentes; não tratar esta publicação como aceite de runtime.
 
 ### 2.2 — Modo jogo/tela cheia (P)
 

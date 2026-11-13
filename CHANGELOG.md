@@ -26,6 +26,10 @@ Fixes:
 - **Mochi reads the memory pressure** as soon as he comes back on screen (#795 by @orrrrli)
 - **iPhone link**: the relay is sturdier (#1035) and no longer retries a bad device token forever (#1036), by @hasnain-amir
 
+## Windows 0.6.5 — November 12, 2026 *(playertwo1 fork; evaluation release)*
+
+- **Permission notifications** — when the island is hidden, a quiet Windows toast opens the matching permission card for review or denies only that request. Synthetic tests pass; real Windows toast activation remains under owner evaluation.
+
 ## Windows 0.6.4 — November 12, 2026 *(playertwo1 fork)*
 
 - **Local Git pill** — see the active project's branch, changed files, local ahead/behind counts and a text diff; Coucou reads the repository without changing it

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <DirectoryRef Id="TARGETDIR">
+      <Component Id="PermissionToastIdentity" Guid="*">
+        <RegistryKey Root="HKCU" Key="Software\Classes\AppUserModelId\fr.louisraille.coucou" Action="createAndRemoveOnUninstall">
+          <RegistryValue Type="string" Name="DisplayName" Value="Coucou" KeyPath="yes" />
+          <RegistryValue Type="string" Name="CustomActivator" Value="{5A0C5EFA-C98F-4FA4-A337-012F9685BED3}" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+  </Fragment>
+</Wix>

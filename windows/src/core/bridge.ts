@@ -371,6 +371,9 @@ export const Bridge = {
 
   approvalDecision: (requestId: string, decision: "allow" | "deny") =>
     call<void>("approval_decision", { requestId, decision }),
+  /** A generic Windows toast is offered only for an accepted hidden-island permission. */
+  permissionToast: (requestId: string, sessionId: string, agentId: string, wasHidden: boolean) =>
+    call<boolean>("permission_toast_show", { requestId, sessionId, agentId, wasHidden }),
   /** "The card is up" — until this lands the relay only waits a moment. */
   approvalAck: (requestId: string) => call<void>("approval_ack", { requestId }),
   /** Answers a question Claude Code asked: question text → chosen label. */

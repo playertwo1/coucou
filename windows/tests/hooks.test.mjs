@@ -66,6 +66,39 @@ test("a paused island hands a permission request straight back to the terminal",
   assert.equal(task().state, "idle");
 });
 
+test("permission toast is offered only for a hidden island and never for questions", () => {
+  hook({ hook_event_name: "PermissionRequest", request_id: "toast-1", session_id: "session-1", tool_name: "Bash" });
+  assert.deepEqual(sent("permission_toast_show"), [{
+    requestId: "toast-1", sessionId: "session-1", agentId: CLAUDE, wasHidden: true,
+  }]);
+
+  calls.length = 0;
+  State.mode = "expanded";
+  hook({ hook_event_name: "PermissionRequest", request_id: "visible-1", session_id: "session-1", tool_name: "Bash" });
+  hook({
+    hook_event_name: "PermissionRequest", request_id: "question-1", session_id: "session-1",
+    tool_name: "AskUserQuestion", tool_input: { questions: [{
+      question: "Continue?", options: [{ label: "Yes", description: "" }], multiSelect: false,
+    }] },
+  });
+  assert.deepEqual(sent("permission_toast_show"), []);
+});
+
+test("opening a queued toast shows that exact request and preserves the displaced card", () => {
+  const current = { requestId: "r1", sessionId: "s1", pillId: CLAUDE, tool: "Bash", command: "first" };
+  const queued = { requestId: "r2", sessionId: "s2", pillId: CLAUDE, tool: "Bash", command: "second" };
+  State.beginApproval(current);
+  State.approvalQueue.push(queued);
+  emit("permission-toast-open", "r2");
+  assert.equal(State.pendingApproval.requestId, "r2");
+  assert.deepEqual(State.approvalQueue.map((x) => x.requestId), ["r1"]);
+  assert.deepEqual(asked, ["alert:approval"]);
+
+  emit("approval-decided", "r2");
+  assert.equal(State.pendingApproval.requestId, "r1");
+  assert.deepEqual(State.approvalQueue, []);
+});
+
 test("a paused island ignores every other event", () => {
   State.paused = true;
   hook({ hook_event_name: "SessionStart", cwd: "C:\\Users\\me\\proj" });

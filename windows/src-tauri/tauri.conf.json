@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Coucou",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "identifier": "fr.louisraille.coucou",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -58,6 +58,10 @@
         "installMode": "currentUser",
         "languages": ["English", "French"],
         "installerHooks": "nsis/hooks.nsh"
+      },
+      "wix": {
+        "fragmentPaths": ["./windows/fragments/permission-toast.wxs"],
+        "componentRefs": ["PermissionToastIdentity"]
       }
     }
   }

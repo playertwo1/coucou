@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.5",
+      "items": [
+        {
+          "icon": "shield",
+          "title": {
+            "en": "Permission notifications",
+            "zh-Hans": "权限通知",
+            "hi": "अनुमति सूचनाएँ",
+            "es": "Avisos de permisos",
+            "ar": "إشعارات الأذونات",
+            "fr": "Notifications d’autorisation",
+            "bn": "অনুমতির বিজ্ঞপ্তি",
+            "pt-BR": "Notificações de permissão",
+            "ru": "Уведомления о разрешениях",
+            "id": "Notifikasi izin",
+            "de": "Berechtigungsbenachrichtigungen",
+            "tr": "İzin bildirimleri",
+            "ko": "권한 알림",
+            "ja": "権限通知"
+          },
+          "detail": {
+            "en": "When the island is hidden, a quiet toast opens the matching permission card or denies only that request.",
+            "zh-Hans": "岛屿隐藏时，静默通知可打开对应的权限卡片，或仅拒绝该请求。",
+            "hi": "आइलैंड छिपा होने पर, शांत सूचना सही अनुमति कार्ड खोलती है या केवल उसी अनुरोध को अस्वीकार करती है।",
+            "es": "Con la isla oculta, un aviso silencioso abre la tarjeta de permiso correcta o rechaza solo esa solicitud.",
+            "ar": "عندما تكون الجزيرة مخفية، يفتح إشعار هادئ بطاقة الإذن المطابقة أو يرفض هذا الطلب فقط.",
+            "fr": "Île masquée : une notification discrète ouvre la carte d’autorisation ou refuse cette demande.",
+            "bn": "আইল্যান্ড লুকানো থাকলে, নীরব বিজ্ঞপ্তি সঠিক অনুমতির কার্ড খোলে বা শুধু সেই অনুরোধটি প্রত্যাখ্যান করে।",
+            "pt-BR": "Com a ilha oculta, uma notificação silenciosa abre o cartão de permissão certo ou nega apenas aquele pedido.",
+            "ru": "Когда остров скрыт, тихое уведомление открывает нужную карточку разрешения или отклоняет только этот запрос.",
+            "id": "Saat pulau tersembunyi, notifikasi senyap membuka kartu izin yang tepat atau menolak permintaan itu saja.",
+            "de": "Bei verborgener Insel öffnet die Meldung die passende Karte oder lehnt nur diese Anfrage ab.",
+            "tr": "Ada gizliyken sessiz bildirim doğru izin kartını açar veya yalnızca o isteği reddeder.",
+            "ko": "아일랜드가 숨겨져 있을 때 조용한 알림이 해당 권한 카드를 열거나 그 요청만 거부해요.",
+            "ja": "アイランドが非表示のとき、静かな通知から該当する許可カードを開くか、そのリクエストだけを拒否できます。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.4",
       "items": [
         {

@@ -11,7 +11,15 @@
 ; printing anything, so a leftover entry costs nothing beyond a dead path.
 
 !macro NSIS_HOOK_PREUNINSTALL
+  ReadRegStr $0 HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou" "CustomActivator"
+  StrCmp $0 "{5A0C5EFA-C98F-4FA4-A337-012F9685BED3}" 0 +2
+  DeleteRegKey HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou"
   RMDir /r "$LOCALAPPDATA\Coucou\bin"
   RMDir /r "$LOCALAPPDATA\Coucou\inbox"
   Delete "$LOCALAPPDATA\Coucou\coucou.log"
+!macroend
+
+!macro NSIS_HOOK_POSTINSTALL
+  WriteRegStr HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou" "DisplayName" "Coucou"
+  WriteRegStr HKCU "Software\Classes\AppUserModelId\fr.louisraille.coucou" "CustomActivator" "{5A0C5EFA-C98F-4FA4-A337-012F9685BED3}"
 !macroend

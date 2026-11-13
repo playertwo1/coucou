@@ -25,6 +25,36 @@
       "ko": "알림 테스트",
       "ja": "通知テスト"
     },
+    "Permission request": {
+      "zh-Hans": "权限请求",
+      "hi": "अनुमति अनुरोध",
+      "es": "Solicitud de permiso",
+      "ar": "طلب إذن",
+      "fr": "Demande d’autorisation",
+      "bn": "অনুমতির অনুরোধ",
+      "pt-BR": "Pedido de permissão",
+      "ru": "Запрос разрешения",
+      "id": "Permintaan izin",
+      "de": "Berechtigungsanfrage",
+      "tr": "İzin isteği",
+      "ko": "권한 요청",
+      "ja": "権限のリクエスト"
+    },
+    "Review this permission in Coucou.": {
+      "zh-Hans": "请在 Coucou 中查看此权限请求。",
+      "hi": "इस अनुमति अनुरोध की Coucou में समीक्षा करें।",
+      "es": "Revisa este permiso en Coucou.",
+      "ar": "راجع طلب الإذن هذا في Coucou.",
+      "fr": "Examinez cette autorisation dans Coucou.",
+      "bn": "Coucou-তে এই অনুমতির অনুরোধটি পর্যালোচনা করুন।",
+      "pt-BR": "Revise esta permissão no Coucou.",
+      "ru": "Проверьте этот запрос разрешения в Coucou.",
+      "id": "Tinjau permintaan izin ini di Coucou.",
+      "de": "Prüfe diese Berechtigung in Coucou.",
+      "tr": "Bu izni Coucou'da inceleyin.",
+      "ko": "Coucou에서 이 권한 요청을 검토하세요.",
+      "ja": "このアクセス許可をCoucouで確認してください。"
+    },
     "Synthetic request. No command will run.": {
       "zh-Hans": "模拟请求。不会运行任何命令。",
       "hi": "नकली अनुरोध। कोई कमांड नहीं चलेगी।",

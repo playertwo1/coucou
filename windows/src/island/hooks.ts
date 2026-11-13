@@ -361,6 +361,30 @@ export function registerHookHandlers(island: Island) {
     if (State.pendingApproval?.requestId !== requestId) return;
     dropPendingCard(island);
   });
+  void onEvent<string>("approval-decided", (requestId) => {
+    dropQueued((x) => x.requestId === requestId);
+    if (State.pendingApproval?.requestId === requestId) dropPendingCard(island);
+  });
+  void onEvent<string>("permission-toast-open", (requestId) => {
+    if (State.paused) return;
+    if (State.pendingApproval?.requestId === requestId) {
+      island.alert(State.pendingApproval.questions ? "question" : "approval");
+      return;
+    }
+    const index = State.approvalQueue.findIndex((x) => x.requestId === requestId);
+    if (index < 0) return;
+    const [target] = State.approvalQueue.splice(index, 1);
+    const current = State.pendingApproval;
+    if (current) {
+      State.approvalQueue.unshift(current);
+      State.setPillBadge(current.pillId, "approval");
+    }
+    State.beginApproval(target);
+    const view = target.questions ? "question" : "approval";
+    State.updateTask(target.pillId, view);
+    island.alert(view);
+    State.notify();
+  });
 }
 
 function handleHook(island: Island, payload: HookPayload) {
@@ -653,6 +677,12 @@ function handleHook(island: Island, payload: HookPayload) {
         command: approvalTarget(tool, input),
         ...(questions ? { questions } : {}),
       };
+      const wasHidden = State.mode === "hidden";
+      const offerToast = () => {
+        if (wasHidden && !questions && tool !== "AskUserQuestion" && requestId) {
+          void Bridge.permissionToast(requestId, sessionId, agentId, wasHidden);
+        }
+      };
 
       // Coucou answers within 108 s or not at all; after that the terminal has
       // taken over and the card would be lying.
@@ -664,6 +694,7 @@ function handleHook(island: Island, payload: HookPayload) {
         State.approvalQueue.push(info);
         State.setPillBadge(agentId, "approval");
         if (requestId) void Bridge.approvalAck(requestId);
+        offerToast();
         break;
       }
       // The card always comes up, even over another pill or an island that is
@@ -673,6 +704,7 @@ function handleHook(island: Island, payload: HookPayload) {
       // The relay's short ack window closes in 800 ms; everything below this
       // line is synchronous, so the card really is up by the time it lands.
       if (requestId) void Bridge.approvalAck(requestId);
+      offerToast();
       State.updateTask(agentId, view);
       // Any agent's card (Claude Code, Codex, Copilot CLI, Muse Code) comes up
       // the same way: beginApproval brought its pill to the front.

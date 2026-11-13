@@ -1,28 +1,80 @@
 // Invented data only. This module has no filesystem, network or native bridge.
-export function createFixtures() {
+export function createFixtures(instanceId = crypto.randomUUID()) {
   const decisions: Array<{ requestId: string; decision: string }> = [];
+  const openedFromToast: string[] = [];
   const gitStatusReads: string[] = [];
   const gitDiffReads: string[] = [];
   let next = 0;
-  const pending = new Set<string>();
+  let nextToast = 0;
+  const pending = new Map<string, number>();
+  const toasts = new Map<string, { requestId: string; expiresAt: number }>();
+  const clearToasts = (requestId: string) => {
+    for (const [token, toast] of toasts) if (toast.requestId === requestId) toasts.delete(token);
+  };
+  const consume = (requestId: string, decision: string, now: number) => {
+    const expiresAt = pending.get(requestId);
+    if (expiresAt === undefined || !["allow", "deny"].includes(decision)) return false;
+    if (now >= expiresAt) {
+      pending.delete(requestId);
+      clearToasts(requestId);
+      return false;
+    }
+    pending.delete(requestId);
+    clearToasts(requestId);
+    decisions.push({ requestId, decision });
+    return true;
+  };
   return {
     decisions,
+    openedFromToast,
     gitStatusReads,
     gitDiffReads,
-    permission() {
+    permission(sessionId = "synthetic-session", now = Date.now(), timeoutMs = 108_000) {
       const requestId = `synthetic-request-${++next}`;
-      pending.add(requestId);
+      pending.set(requestId, now + timeoutMs);
       return {
         hook_event_name: "PermissionRequest", request_id: requestId,
-        session_id: "synthetic-session", cwd: "synthetic://Jardim",
+        session_id: sessionId, cwd: "synthetic://Jardim",
         tool_name: "Bash", tool_input: { command: 'echo "synthetic only"' },
       };
     },
-    decide({ requestId, decision }: { requestId: string; decision: string }) {
-      if (!pending.has(requestId) || !["allow", "deny"].includes(decision)) return false;
-      pending.delete(requestId);
-      decisions.push({ requestId, decision });
-      return true;
+    decide({ requestId, decision, now = Date.now() }: { requestId: string; decision: string; now?: number }) {
+      return consume(requestId, decision, now);
+    },
+    createPermissionToast(requestId: string, { islandVisible, kind = "permission", now = Date.now() }: { islandVisible: boolean; kind?: string; now?: number }) {
+      const requestExpiresAt = pending.get(requestId);
+      if (kind !== "permission" || islandVisible || requestExpiresAt === undefined || now >= requestExpiresAt) return null;
+      const token = `synthetic-toast-${instanceId}-${++nextToast}`;
+      toasts.set(token, { requestId, expiresAt: Math.min(now + 30_000, requestExpiresAt) });
+      return token;
+    },
+    toastExpiry(token: string | null) {
+      return token ? toasts.get(token)?.expiresAt ?? null : null;
+    },
+    activatePermissionToast(token: string | null, action: string, now = Date.now()) {
+      const toast = token ? toasts.get(token) : undefined;
+      if (!token || !toast) return "invalid";
+      const requestExpiresAt = pending.get(toast.requestId);
+      if (requestExpiresAt === undefined) {
+        toasts.delete(token);
+        return "resolved";
+      }
+      if (now >= toast.expiresAt || now >= requestExpiresAt) {
+        if (now >= requestExpiresAt) pending.delete(toast.requestId);
+        clearToasts(toast.requestId);
+        return "expired";
+      }
+      if (action === "close" || action === "timeout") {
+        toasts.delete(token);
+        return action === "close" ? "dismissed" : "expired";
+      }
+      if (action === "open" || action === "allow") {
+        toasts.delete(token);
+        openedFromToast.push(toast.requestId);
+        return "opened";
+      }
+      if (action !== "deny") return "invalid";
+      return consume(toast.requestId, action, now) ? "denied" : "resolved";
     },
     gitStatus(path: string) {
       gitStatusReads.push(path);

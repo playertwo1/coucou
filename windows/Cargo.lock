@@ -804,7 +804,7 @@ dependencies = [
 
 [[package]]
 name = "coucou"
-version = "0.6.4"
+version = "0.6.5"
 dependencies = [
  "arboard",
  "cpal",
@@ -835,13 +835,14 @@ dependencies = [
  "webpki-roots 1.0.9",
  "webview2-com",
  "windows 0.61.3",
+ "windows-core 0.61.2",
  "windows-core 0.62.2",
  "x11rb",
 ]
 
 [[package]]
 name = "coucou-hook"
-version = "0.6.4"
+version = "0.6.5"
 dependencies = [
  "libc",
  "serde_json",

@@ -26,7 +26,7 @@
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde_json::{json, Value};
 use tauri::{AppHandle, Emitter, Manager};
@@ -61,7 +61,12 @@ pub enum Reply {
 
 /// Permission requests the island has been told about.
 #[derive(Default)]
-pub struct Pending(pub Mutex<HashMap<String, mpsc::Sender<Reply>>>);
+pub struct Pending(Mutex<HashMap<String, PendingReply>>);
+
+struct PendingReply {
+    sender: mpsc::Sender<Reply>,
+    deadline: Instant,
+}
 
 static COUNTER: AtomicU64 = AtomicU64::new(1);
 
@@ -245,7 +250,10 @@ async fn handle(app: AppHandle, mut pipe: impl Relay) {
     let (tx, mut rx) = mpsc::channel::<Reply>(4);
     {
         let pending = app.state::<Pending>();
-        pending.0.lock().unwrap().insert(id.clone(), tx);
+        pending.0.lock().unwrap().insert(id.clone(), PendingReply {
+            sender: tx,
+            deadline: Instant::now() + ACK_TIMEOUT + DECISION_TIMEOUT,
+        });
     }
     crate::recap::note_request(&app, &id, &payload);
     payload["request_id"] = json!(id);
@@ -264,6 +272,10 @@ async fn handle(app: AppHandle, mut pipe: impl Relay) {
         }
     };
     app.state::<Pending>().0.lock().unwrap().remove(&id);
+    #[cfg(windows)]
+    if let Some(toasts) = app.try_state::<crate::permission_notifications::PermissionToasts>() {
+        crate::permission_notifications::clear(&toasts, &id);
+    }
 
     // No decision: say nothing at all. coucou-hook then writes nothing to stdout
     // and Claude Code asks in the terminal, exactly as if Coucou were closed.
@@ -301,7 +313,10 @@ async fn agy_pre_tool(app: AppHandle, mut pipe: impl Relay, payload: Value) {
 
     let id = format!("{}-{}", std::process::id(), COUNTER.fetch_add(1, Ordering::Relaxed));
     let (tx, mut rx) = mpsc::channel::<Reply>(4);
-    app.state::<Pending>().0.lock().unwrap().insert(id.clone(), tx);
+    app.state::<Pending>().0.lock().unwrap().insert(id.clone(), PendingReply {
+        sender: tx,
+        deadline: Instant::now() + ACK_TIMEOUT + gate.wait,
+    });
     crate::recap::note_request(&app, &id, &payload);
     let mut card = payload;
     card["hook_event_name"] = json!("PermissionRequest");
@@ -342,6 +357,10 @@ async fn agy_pre_tool(app: AppHandle, mut pipe: impl Relay, payload: Value) {
         Some(Reply::Decline) | None => None,
     };
     app.state::<Pending>().0.lock().unwrap().remove(&id);
+    #[cfg(windows)]
+    if let Some(toasts) = app.try_state::<crate::permission_notifications::PermissionToasts>() {
+        crate::permission_notifications::clear(&toasts, &id);
+    }
     // Only a click on Allow or Deny is a decision; `ask` hands the command back to
     // Antigravity's own prompt, where its Always allow lives.
     let word = match decision.as_deref() {
@@ -362,6 +381,10 @@ async fn agy_pre_tool(app: AppHandle, mut pipe: impl Relay, payload: Value) {
 fn agy_settled(app: &AppHandle, id: &str, why: &str) {
     log::line(format!("hook id={id} {why}"));
     app.state::<Pending>().0.lock().unwrap().remove(id);
+    #[cfg(windows)]
+    if let Some(toasts) = app.try_state::<crate::permission_notifications::PermissionToasts>() {
+        crate::permission_notifications::clear(&toasts, id);
+    }
     crate::recap::forget_request(app, id);
     let _ = app.emit_to(WINDOW_LABEL, "approval-expired", id);
 }
@@ -448,40 +471,60 @@ fn loggable(decision: &str) -> &str {
     if decision.starts_with('{') { "a question" } else { decision }
 }
 
-fn send(app: &AppHandle, request_id: &str, reply: Reply, keep: bool) {
-    let sender = {
-        let pending = app.state::<Pending>();
-        let mut map = pending.0.lock().unwrap();
-        if keep { map.get(request_id).cloned() } else { map.remove(request_id) }
+fn send(app: &AppHandle, request_id: &str, reply: Reply, keep: bool) -> bool {
+    let pending = app.state::<Pending>();
+    let mut map = pending.0.lock().unwrap();
+    let Some(entry) = map.get(request_id) else {
+        log::line(format!("reply for id={request_id} — no pending request"));
+        return false;
     };
-    match sender {
-        Some(tx) => {
-            let _ = tx.try_send(reply);
-        }
-        None => log::line(format!("reply for id={request_id} — no pending request")),
+    if entry.sender.try_send(reply).is_err() {
+        log::line(format!("reply for id={request_id} — channel is full"));
+        return false;
     }
+    if !keep { map.remove(request_id); }
+    true
+}
+
+/// Remaining relay time. Toast actions expire no later than the request itself.
+pub fn remaining(app: &AppHandle, request_id: &str) -> Option<Duration> {
+    app.state::<Pending>().0.lock().unwrap().get(request_id)
+        .map(|entry| entry.deadline.saturating_duration_since(Instant::now()))
+        .filter(|remaining| !remaining.is_zero())
 }
 
 /// The island has the card on screen; the long wait may begin.
 pub fn acknowledge(app: &AppHandle, request_id: &str) {
-    send(app, request_id, Reply::Ack, true);
+    let _ = send(app, request_id, Reply::Ack, true);
 }
 
 /// Nobody can act on this one — paused, or another card already holds the view.
 pub fn decline(app: &AppHandle, request_id: &str) {
     log::line(format!("decline id={request_id}"));
-    send(app, request_id, Reply::Decline, false);
+    let _ = send(app, request_id, Reply::Decline, false);
+    #[cfg(windows)]
+    if let Some(toasts) = app.try_state::<crate::permission_notifications::PermissionToasts>() {
+        crate::permission_notifications::clear(&toasts, request_id);
+    }
 }
 
 /// Called by the island's Allow / Deny buttons. Only ever a bare word: turning
 /// it into Claude Code's JSON is coucou-hook's job.
-pub fn answer(app: &AppHandle, request_id: &str, decision: &str) {
+pub fn answer(app: &AppHandle, request_id: &str, decision: &str) -> bool {
     let word = match decision {
         "allow" | "always" => "allow",
         _ => "deny",
     };
     log::line(format!("decision id={request_id} {word}"));
-    send(app, request_id, Reply::Decision(word.to_string()), false);
+    let accepted = send(app, request_id, Reply::Decision(word.to_string()), false);
+    if accepted {
+        #[cfg(windows)]
+        if let Some(toasts) = app.try_state::<crate::permission_notifications::PermissionToasts>() {
+            crate::permission_notifications::clear(&toasts, request_id);
+        }
+        let _ = app.emit_to(WINDOW_LABEL, "approval-decided", request_id);
+    }
+    accepted
 }
 
 /// Called when an option is picked for a question Claude Code asked. `answers`
@@ -491,7 +534,12 @@ pub fn answer_question(app: &AppHandle, request_id: &str, answers: &HashMap<Stri
     log::line(format!("decision id={request_id} answered a question"));
     // One line: the relay reads up to the first newline.
     let line = json!({ "answers": answers }).to_string();
-    send(app, request_id, Reply::Decision(line), false);
+    if send(app, request_id, Reply::Decision(line), false) {
+        #[cfg(windows)]
+        if let Some(toasts) = app.try_state::<crate::permission_notifications::PermissionToasts>() {
+            crate::permission_notifications::clear(&toasts, request_id);
+        }
+    }
 }
 
 #[cfg(test)]
