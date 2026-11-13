@@ -10,6 +10,7 @@ Regras desta fase:
 - O Agent Desktop roda em processo separado; o app o chama com argumentos, nunca com texto concatenado em shell.
 - Só age em aplicativos da lista autorizada pelo proprietário.
 - Os testes usam aplicativos de teste (Bloco de Notas, Calculadora), não dados reais.
+- (QwenPaw) Se a M0.1 escolher o helper Rust do QwenPaw no lugar do Agent Desktop, ele também roda em processo separado, recebe do app uma permissão de curta duração por *named pipe* e pede aprovação pela ilha. As subfases abaixo valem igual, trocando "Agent Desktop" por "helper".
 
 ### M5.1 — Adaptador e diagnóstico
 

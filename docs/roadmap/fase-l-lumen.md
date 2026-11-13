@@ -40,16 +40,25 @@ Os relatos gerais do proprietário nas fases 0 e 2 ficam registrados como relato
 - [x] L1.2 Nome `Lumen`, `identifier` `app.segundamente.lumen` e `mainBinaryName` `lumen`; plano de migração registrado em `docs/superpowers/specs/2026-11-13-lumen-identidade-migracao.md` e `docs/superpowers/plans/2026-11-13-lumen-identidade-migracao.md`.
   - As pastas `%APPDATA%\\Coucou` e `%LOCALAPPDATA%\\Coucou`, o caminho do hook `bin\\coucou-hook.exe`, AUMID/CLSID de notificações e o serviço do Credential Manager ficam estáveis para preservar settings, hooks e permissões. O UpgradeCode MSI continua igual; NSIS instala Lumen ao lado do Coucou, sem remover a instalação antiga. O atualizador passa a usar assets `Lumen-Windows-*` de `playertwo1/coucou` e leva releases antigas à página de releases.
 - [x] L1.3 Teste sintético de upgrade MSI/NSIS: CI Windows `43424866776` e CI da release `43428181413` passaram no build/empacotamento e instalaram sobre o Coucou 0.6.11 com marcadores sintéticos, confirmando preservação dos dados; também confirmaram instalação NSIS lado a lado. A release `windows-v0.6.13` foi publicada. Microsoft Defender examinou os artefatos de preflight e os instaladores finais, sem detecções (assinaturas `1.463.281.0`, eventos 1001). Nenhum teste foi executado no perfil real do proprietário.
-- Checkpoint L1: identidade visual/sons originais e migração sintética passaram antes da publicação. Lumen 0.6.13 está publicada; a instalação e o uso real ficam **em avaliação do proprietário**; os testes sintéticos não substituem esse aceite.
+- **Decisão do proprietário (2026-11-13, depois de instalar a 0.6.13):** a Bússola de papel fica **só como ícone do app**. Na ilha e nas pílulas voltam os personagens, agora um por agente (Claude Code, Codex, ChatGPT, Antigravity, Gemini CLI, OpenCode e um genérico), todos originais. O Mochi não volta (`LICENSE-ASSETS.md`), e os personagens não usam logos nem mascotes oficiais das empresas. Sprites e desenho em código serão testados lado a lado; a regra herdada "personagem desenhado em código" fica suspensa só para essa comparação, até a decisão da L1.4c.
+- [ ] L1.4 Personagens por agente (referência dos estados: [pesquisa QwenPaw](../research/qwenpaw.md)):
+  - [ ] L1.4a Imagens de referência geradas pelo Codex, com os 7 estados (parado, trabalhando, aguardando aprovação, concluído, erro, cansado/dormindo, sobrecarregado), uma prancha por agente e um teste a 22 px.
+  - [ ] L1.4b Protótipo comparativo fora do app publicado: o mesmo personagem como sprite e como Canvas, medindo legibilidade a 22 px e 96 px, CPU com a ilha escondida (meta 0 %), memória e tamanho do instalador.
+  - [ ] L1.4c O proprietário escolhe sprite ou código com base no protótipo; registrar a escolha e o motivo.
+  - [ ] L1.4d Implementar a opção escolhida na ilha e nas pílulas, com testes sintéticos; a Bússola sai do personagem e fica no ícone.
+  - Checkpoint L1.4: cada agente aparece com o próprio personagem nos 7 estados, 0 % de CPU com a ilha escondida, e o proprietário aprova no uso real.
+- **Avaliação real da 0.6.13 (2026-11-13):** o proprietário relatou que "aparece tudo" (nome, ícone e identidade visíveis após instalar). Registrado como relato do cenário de identidade, que levou à decisão acima. Sem resultado ainda: tipo de instalação usado (MSI ou NSIS), settings preservados, hooks, permissões (permitir, negar, sem clique) e atualizador.
+- Checkpoint L1: identidade visual/sons originais e migração sintética passaram antes da publicação. Lumen 0.6.13 está publicada; a instalação e o uso real ficam **em avaliação do proprietário**; os testes sintéticos não substituem esse aceite. A L1 fecha com o aceite real dos cenários de migração (L1.3) e o Checkpoint L1.4.
 
 ### L2 — Login OAuth do ChatGPT no Lumen (M)
 - [ ] L2.1 Portar o login OAuth do ChatGPT da Segunda Mente (`lib/data/services/openai_auth_service.dart`) para o chat do Lumen, com o token guardado no cofre do Windows. Isso cobre o item "Cérebro" das regras M.
+- [ ] (QwenPaw) Conferir o fluxo portado com `providers/oauth/chatgpt.py` do QwenPaw (PKCE, callback em `127.0.0.1`, renovação do token). Não copiar a gravação do token em disco. O fluxo deles chama `api.openai.com`; confirmar se o nosso dispensa chave paga antes de fechar a L2.2.
 - [ ] L2.2 O chat usa esse login, sem chave de API paga obrigatória.
 - Checkpoint L2: o chat responde pelo login OAuth no notebook do dono.
 
 ### L3 — Anotador de pensamentos e ideias (M)
 - [ ] L3.1 O Notetaker deixa de ser gravador de reunião e passa a ser **anotador**: ditado ou captura rápida vira nota.
-- [ ] L3.2 Comentários das personas com as mesmas regras do celular. Até o sync existir (L6), os comentários usam as personas importadas manualmente.
+- [ ] L3.2 Comentários das personas com as mesmas regras do celular. Até o sync existir (L6), os comentários usam as personas importadas manualmente. (QwenPaw) Formato de referência para a persona importada: identidade e estilo, perfil do usuário e regras em partes separadas.
 - Checkpoint L3: uma nota ditada gera um comentário de persona, sem duplicar.
 
 ### L4 — Tarefas no Lumen (M)
@@ -57,7 +66,7 @@ Depende de: F11-01 da Segunda Mente (modelo de tarefa fixado).
 - [ ] L4.1 Lista única com Hoje, Próximas e Atrasadas, prioridade, subtarefas e busca.
 - [ ] L4.2 Atalhos de dia e hora: Hoje, Amanhã, Daqui a 3 dias, Semana que vem; 9h, 14h, 20h; alerta de 20 min.
 - [ ] L4.3 Captura por atalho ou ditado gera um cartão de confirmação.
-- [ ] L4.4 Aviso do Windows com Adiar, Concluir e Abrir.
+- [ ] L4.4 Aviso do Windows com Adiar, Concluir e Abrir. (QwenPaw) Referência em Rust: `console/src-tauri/src/notification_delivery/windows.rs` (toast com AUMID e ativação COM). Manter o AUMID atual do app (L1.2).
 - Checkpoint L4: a tarefa criada por voz avisa no horário certo no notebook.
 
 ### L5 — E-mail pessoal (M)
@@ -70,7 +79,7 @@ Depende de: F12-01 da Segunda Mente (contrato de sync).
 - [ ] L6.1 Caixa de correio persistente no relay (`relay/`, Worker com Durable Objects/SQLite): mensagem cifrada fica guardada até o outro lado buscar. Uso medido contra o plano Free.
 - [ ] L6.2 Pareamento com a Segunda Mente Android pelo protocolo existente (`docs/ANDROID_LINK.md`, `docs/RELAY_LINK.md`), com revogação.
 - [ ] L6.3 Outbox, aplicação idempotente e status "salvo neste PC" separado de "sincronizado".
-- [ ] L6.4 Escopo: tarefas, notas, conversas e comentários, personas, preferências e memória resumida. Concluir ou adiar num aparelho cancela o aviso no outro.
+- [ ] L6.4 Escopo: tarefas, notas, conversas e comentários, personas, preferências e memória resumida. Concluir ou adiar num aparelho cancela o aviso no outro. (QwenPaw) A memória resumida atualiza cada conclusão por uma de quatro ações (criar, corroborar, refinar, corrigir), em vez de acumular notas repetidas; o formato é fixado com a Segunda Mente no contrato F12-01.
 - Checkpoint L6: com o celular desligado, a tarefa criada no PC chega ao celular uma vez quando ele reconecta, e o alarme dele toca.
 
 ### L7 — Google no Lumen (M)
@@ -81,4 +90,4 @@ Depende de: F13-02 da Segunda Mente (login Google próprio).
 - Checkpoint L7: o backup é restaurado e o evento é criado só com confirmação.
 
 ### Depois desta fase
-O plano M0–M10 continua como **"Lumen assistente"**, com as mesmas regras M. O modo "mais ativo" (resumos, cobranças e sugestões) é a F14 da Segunda Mente e roda nos dois aparelhos.
+O plano M0–M10 continua como **"Lumen assistente"**, com as mesmas regras M. O modo "mais ativo" (resumos, cobranças e sugestões) é a F14 da Segunda Mente e roda nos dois aparelhos. (QwenPaw) Referência para a F14: o heartbeat, que roda perguntas fixas por intervalo e só dentro de uma janela de horário ativo.

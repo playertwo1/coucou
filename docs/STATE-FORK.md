@@ -1,6 +1,6 @@
 # STATE do fork — ponto de retomada
 
-**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.13`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.13) (Lumen, 2026-11-13; avaliação real pendente) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; L1.1 escolhida (B); L1.2 implementada; L1.3 sintética aprovada
+**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.13`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.13) (Lumen, 2026-11-13; avaliação real pendente) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; L1.1 escolhida (B); L1.2 implementada; L1.3 sintética aprovada; L1.4 (personagens por agente) aberta
 
 Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e evidências ficam nos arquivos de `docs/roadmap/`, e a ordem fica no [ROADMAP-FORK](ROADMAP-FORK.md).
 
@@ -9,7 +9,7 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 | Fase | Estado |
 |---|---|
 | 0, 1, 2 | Pausadas (D-053); ver inventário L0 na Fase L |
-| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; Lumen 0.6.13 publicada; avaliação real pendente → L2 a L7 |
+| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; Lumen 0.6.13 publicada; avaliação real parcial (identidade visível; migração sem resultado); L1.4 aberta → L2 a L7 |
 | 2B, 2C | Pausadas (decisão do dono, 2026-11-13) |
 | M0–M10 | Viram "Lumen assistente"; começam depois do Checkpoint L7 |
 | 3 (identidade) | Incorporada à L1 |
@@ -25,10 +25,13 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 
 ## Próxima ação
 
-1. O proprietário atualiza o app com Lumen 0.6.13 e verifica instalação, identidade, settings, hooks, permissões e atualizador no uso real.
-2. Registrar o resultado do proprietário; manter L1 em avaliação até esse aceite. Depois, seguir para L2.
+1. O proprietário já relatou que a identidade da 0.6.13 aparece ("aparece tudo"). Faltam os resultados por cenário de instalação (MSI ou NSIS), settings, hooks, permissões e atualizador.
+2. **L1.4:** o Codex gera as imagens de referência dos personagens por agente; depois, protótipo comparativo sprite × código e escolha do proprietário (ver [Fase L](roadmap/fase-l-lumen.md)).
+3. A L1 fecha com o aceite real da migração e o Checkpoint L1.4. Só então começa a L2.
+4. Achados do QwenPaw registrados em [research/qwenpaw.md](research/qwenpaw.md) e marcados "(QwenPaw)" em L2, L3, L4, L6, M0, M1, M5, M8 e M9.
 
 ## Pendências do dono
 
-- A direção visual B foi escolhida. Falta avaliar a versão instalada no uso real após a publicação.
+- A direção visual B foi escolhida; depois de instalar, o proprietário decidiu manter a Bússola só como ícone e voltar a ter personagens por agente (L1.4). Faltam os resultados dos cenários de migração da 0.6.13.
+- Aprovar as imagens de referência e escolher sprite ou código (L1.4c).
 - Validações reais abertas nas fases 0, 1 e 2 (ver inventário da L0 na Fase L).

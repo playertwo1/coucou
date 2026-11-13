@@ -32,7 +32,7 @@ Depende de: Checkpoint M2. Rotinas podem incluir ferramentas de M3, M5 e M6 quan
 ### M8.4 — Disparar
 
 - [ ] Disparo pelo chat, por voz e pelo celular, pelo nome da rotina.
-- [ ] Agendamento por horário fica fora desta fase; só entra com pedido explícito e spec própria.
+- [ ] Agendamento por horário fica fora desta fase; só entra com pedido explícito e spec própria. (QwenPaw) Se entrar, a referência é o heartbeat: intervalo ou cron e janela de horário ativo.
 - Checkpoint M8.4: "modo programar" funciona pelas três entradas.
 
 ### M8.5 — Fechamento

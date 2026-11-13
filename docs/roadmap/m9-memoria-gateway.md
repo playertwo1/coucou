@@ -22,6 +22,7 @@ Regras desta fase:
 
 - [ ] Para cada um: licença, o que precisa ficar rodando, RAM/CPU em repouso, onde os dados ficam e se funciona sem serviço externo.
 - [ ] Testar as 10 perguntas da M9.1 em uma cópia de teste do cofre.
+- [ ] (QwenPaw) Comparar também com a consolidação sem dependência nova: cada conclusão durável atualizada por criar, corroborar, refinar ou corrigir (a mesma da memória resumida da L6.4).
 - [ ] Escolher um, ou nenhum.
 - Checkpoint M9.2: tabela comparativa e decisão do proprietário registradas.
 

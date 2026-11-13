@@ -22,6 +22,7 @@ Antes de M1.1: escrever spec e plano em `docs/superpowers/`, fixando nomes de m�
 - [ ] Implementar os três níveis de risco e a regra de clique do índice.
 - [ ] Decidir e registrar onde ficam as permissões "sempre permitir" (arquivo de settings atual ou outro).
 - [ ] Testar: baixo executa; médio pede na primeira vez e respeita "sempre permitir"; alto pede sempre; revogar volta a pedir; sem resposta não executa.
+- [ ] (QwenPaw) Configuração de permissões ausente, corrompida ou com valor desconhecido nega tudo (falha fechada). O QwenPaw cai em `AUTO` nesse caso; não repetir. Testar com arquivo inválido.
 - Checkpoint M1.2: não existe caminho de código que execute médio ou alto sem decisão registrada.
 
 ### M1.3 — Cartão de confirmação
