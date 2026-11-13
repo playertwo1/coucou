@@ -241,6 +241,8 @@ Checkpoint sintético 2B.6: PASS; libera o desenvolvimento sintético da Fase 2.
 
 **Evidência sintética 2B.6 (2026-11-13):** `cargo test --offline --locked --workspace --quiet` passou (641 app + 36 relay; 8 ignorados), incluindo o processo nativo fictício que conferiu argv literal para os quatro agentes; `npm test` (643), `npx tsc --noEmit`, `npm run build`, `npm run synthetic:build`, `node scripts/gen-strings.mjs --check`, validador What's New (14 línguas) e `git diff --check` passaram. Um teste preexistente da área de transferência falhou na primeira execução: ele chama `EmptyClipboard` antes de publicar um PNG e pode apagar dados reais se a publicação falhar. O clipboard foi encontrado vazio pelo Agent Desktop; o teste foi marcado para execução manual e ignorado por padrão. O callback/console/CLI real permanece sem verificação.
 
+**Versão sintética 0.6.7 (2026-11-13):** publicada em [Windows 0.6.7](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.7), tag no commit `2ad3b0ee93e1376ee0b81a0f8b6a974fd72c4dae`. Preflight do branch (`43368165722`) e workflow do tag (`43368933494`) concluíram com sucesso; a release foi publicada e `windows-latest` atualizado. SHA-256 dos assets publicados conferidos com os digests do GitHub. Microsoft Defender examinou a pasta com os dois instaladores exatos; evento 1001 do exame `{AFB93B5A-525E-4B31-A537-2C07F6DE71D5}` (2026-11-13 02:12 local), sem evento de detecção 1116. Setup (12.156.853 bytes): `03ff847e0539f1bf4c3f8fd702d71c58563aa42299e1452399a469272101a23d`. MSI (15.761.408 bytes): `dc60980127d81eaf052c11c35d75dd6ce45c480a057b4534c32cd878b531bd71`. A validação real dos quatro CLIs permanece pendente.
+
 ### 2B.7A — herdr como ambiente (M)
 
 #### 2B.7A.1 — Criar painel e iniciar agente
