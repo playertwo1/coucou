@@ -353,7 +353,7 @@ fn open_in_vscode(path: Option<String>) -> bool {
 /// folder in VS Code, as before. A session in herdr also gets its pane selected,
 /// and never falls back to VS Code.
 #[tauri::command]
-fn open_session(session_id: Option<String>, path: Option<String>) -> bool {
+async fn open_session(session_id: Option<String>, path: Option<String>) -> bool {
     let in_herdr = session_id.as_deref().is_some_and(herdr::focus);
     let Some(owners) = session_id.as_deref().and_then(session_window::lookup) else {
         return in_herdr || open_in_vscode(path);
@@ -361,7 +361,10 @@ fn open_session(session_id: Option<String>, path: Option<String>) -> bool {
     let folder = path.as_deref().map(session_window::folder_name).unwrap_or_default().to_string();
     #[cfg(windows)]
     {
-        if platform::focus_session_window(&owners, &folder) || in_herdr {
+        let focused = tauri::async_runtime::spawn_blocking(move || platform::focus_session_window(&owners, &folder))
+            .await
+            .unwrap_or(false);
+        if focused || in_herdr {
             return true;
         }
         open_in_vscode(path)

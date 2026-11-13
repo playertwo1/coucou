@@ -422,10 +422,22 @@ pub async fn drop_into_session(session_id: String, path: Option<String>, paths: 
     let folder = path.as_deref().map(session_window::folder_name).unwrap_or_default().to_string();
     tauri::async_runtime::spawn_blocking(move || {
         let in_herdr = herdr::focus(&session_id);
-        let focused = session_window::lookup(&session_id)
-            .is_some_and(|owners| platform::focus_session_window(&owners, &folder))
-            || in_herdr;
-        crate::log::line(format!("drop: {} file(s) into a session, window found: {focused}", paths.len()));
+        let owners = session_window::lookup(&session_id);
+        #[cfg(windows)]
+        let focused = match owners.as_deref() {
+            Some(owners) => {
+                let terminal_focus = platform::focus_session_window_for_drop(owners, &folder);
+                if terminal_focus == platform::DropSessionFocus::NotWindowsTerminal {
+                    platform::focus_session_window(owners, &folder) || in_herdr
+                } else {
+                    terminal_focus.safe_to_paste()
+                }
+            }
+            None => in_herdr,
+        };
+        #[cfg(not(windows))]
+        let focused = owners.as_deref().is_some_and(|owners| platform::focus_session_window(owners, &folder)) || in_herdr;
+        crate::log::line(format!("drop: {} file(s) into a session, target selected: {focused}", paths.len()));
         if !focused {
             return if flow::paste::copy(&text) { "copied" } else { "failed" }.to_string();
         }

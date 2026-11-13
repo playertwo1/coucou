@@ -552,7 +552,103 @@ pub fn focus_process_window(pid: u32, folder: &str) -> bool {
 
 /// Brings forward the window a session remembered (`window_owners`).
 pub fn focus_session_window(owners: &[u32], folder: &str) -> bool {
-    owners.first().is_some_and(|pid| focus_process_window(*pid, folder))
+    let Some(pid) = owners.first().copied() else { return false };
+    let windows = top_windows();
+    if process_table().get(&pid).is_some_and(|proc| proc.exe.eq_ignore_ascii_case("WindowsTerminal.exe")) {
+        let terminal_windows: Vec<isize> = windows
+            .iter()
+            .filter(|(_, owner, _)| *owner == pid)
+            .map(|(hwnd, _, _)| *hwnd)
+            .collect();
+        if focus_terminal_tab(&terminal_windows, folder) {
+            return true;
+        }
+    }
+    focus_process_window(pid, folder)
+}
+
+/// File drops may target a Windows Terminal session only after a unique tab was selected.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DropSessionFocus {
+    NotWindowsTerminal,
+    ExactTab,
+    WindowOnly,
+}
+
+impl DropSessionFocus {
+    pub fn safe_to_paste(self) -> bool {
+        matches!(self, Self::ExactTab)
+    }
+}
+
+pub fn focus_session_window_for_drop(owners: &[u32], folder: &str) -> DropSessionFocus {
+    let Some(pid) = owners.first().copied() else { return DropSessionFocus::NotWindowsTerminal };
+    if !process_table().get(&pid).is_some_and(|proc| proc.exe.eq_ignore_ascii_case("WindowsTerminal.exe")) {
+        return DropSessionFocus::NotWindowsTerminal;
+    }
+    let windows = top_windows();
+    let terminal_windows: Vec<isize> = windows
+        .iter()
+        .filter(|(_, owner, _)| *owner == pid)
+        .map(|(hwnd, _, _)| *hwnd)
+        .collect();
+    if focus_terminal_tab(&terminal_windows, folder) {
+        return DropSessionFocus::ExactTab;
+    }
+    let _ = focus_process_window(pid, folder);
+    DropSessionFocus::WindowOnly
+}
+
+/// Select a uniquely named Windows Terminal tab; ambiguity keeps the old window-only fallback.
+fn focus_terminal_tab(windows: &[isize], folder: &str) -> bool {
+    use windows::core::Interface;
+    use windows::Win32::System::Com::{CoCreateInstance, CoInitializeEx, CoUninitialize, CLSCTX_INPROC_SERVER, COINIT_MULTITHREADED};
+    use windows::Win32::System::Variant::VARIANT;
+    use windows::Win32::UI::Accessibility::{
+        CUIAutomation, IUIAutomation, IUIAutomationSelectionItemPattern, TreeScope_Descendants,
+        UIA_ControlTypePropertyId, UIA_NamePropertyId, UIA_SelectionItemPatternId, UIA_TabItemControlTypeId,
+    };
+
+    if folder.is_empty() || windows.is_empty() {
+        return false;
+    }
+    let initialized = unsafe { CoInitializeEx(None, COINIT_MULTITHREADED) };
+    if initialized.is_err() && initialized != RPC_E_CHANGED_MODE {
+        return false;
+    }
+    let selected = unsafe {
+        (|| {
+            let uia: IUIAutomation = CoCreateInstance(&CUIAutomation, None, CLSCTX_INPROC_SERVER).ok()?;
+            let tab_type = VARIANT::from(UIA_TabItemControlTypeId.0);
+            let is_tab = uia.CreatePropertyCondition(UIA_ControlTypePropertyId, &tab_type).ok()?;
+            let mut tabs = Vec::new();
+            for raw in windows {
+                let hwnd = HWND(*raw as *mut _);
+                let root = uia.ElementFromHandle(hwnd).ok()?;
+                let items = root.FindAll(TreeScope_Descendants, &is_tab).ok()?;
+                let count = items.Length().ok()?;
+                for index in 0..count {
+                    let item = items.GetElement(index).ok()?;
+                    let name = item.GetCurrentPropertyValue(UIA_NamePropertyId).ok()?.to_string();
+                    tabs.push(((*raw, index), name, item));
+                }
+            }
+            let choices: Vec<((isize, i32), String)> = tabs.iter().map(|((hwnd, index), name, _)| ((*hwnd, *index), name.clone())).collect();
+            let &(raw, index) = session_window::pick_tab(&choices, folder)?;
+            let (_, _, item) = tabs.iter().find(|((candidate, n), _, _)| *candidate == raw && *n == index)?;
+            if !bring_forward(raw) {
+                return Some(false);
+            }
+            let pattern = item.GetCurrentPattern(UIA_SelectionItemPatternId).ok()?;
+            let pattern: IUIAutomationSelectionItemPattern = pattern.cast().ok()?;
+            pattern.Select().ok()?;
+            Some(true)
+        })()
+    };
+    if initialized.is_ok() {
+        unsafe { CoUninitialize() };
+    }
+    selected.unwrap_or(false)
 }
 
 /// Brings forward the window of a running app, by executable name.
@@ -712,6 +808,18 @@ mod claude_launch_tests {
             assert_eq!(result, expected);
             assert_eq!(seen.into_inner(), calls);
         }
+    }
+}
+
+#[cfg(test)]
+mod terminal_drop_tests {
+    use super::DropSessionFocus;
+
+    #[test]
+    fn only_a_uniquely_selected_terminal_tab_is_a_drop_target() {
+        assert!(DropSessionFocus::ExactTab.safe_to_paste());
+        assert!(!DropSessionFocus::WindowOnly.safe_to_paste());
+        assert!(!DropSessionFocus::NotWindowsTerminal.safe_to_paste());
     }
 }
 

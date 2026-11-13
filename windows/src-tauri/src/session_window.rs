@@ -147,6 +147,17 @@ pub fn pick_window<'a, W>(windows: &'a [(W, String)], folder: &str) -> Option<&'
     named.or_else(|| windows.first()).map(|(w, _)| w)
 }
 
+/// A tab is safe to select only when its title matches the session folder uniquely.
+pub fn pick_tab<'a, W>(tabs: &'a [(W, String)], folder: &str) -> Option<&'a W> {
+    let folder = folder.to_lowercase();
+    if folder.is_empty() {
+        return None;
+    }
+    let mut matches = tabs.iter().filter(|(_, title)| title.to_lowercase().contains(&folder));
+    let selected = matches.next()?;
+    matches.next().is_none().then_some(&selected.0)
+}
+
 /// The last folder name of a path, either separator.
 pub fn folder_name(path: &str) -> &str {
     path.trim_end_matches(['/', '\\']).rsplit(['/', '\\']).next().unwrap_or_default()
@@ -373,6 +384,27 @@ mod tests {
         assert_eq!(pick_window::<i32>(&[], "x"), None);
         assert_eq!(folder_name(r"C:\Users\me\coucou\"), "coucou");
         assert_eq!(folder_name("/home/me/proj"), "proj");
+    }
+
+    #[test]
+    fn a_terminal_tab_is_selected_only_when_the_folder_match_is_unique() {
+        let tabs = vec![
+            (1, "PowerShell".to_string()),
+            (2, "coucou — PowerShell".to_string()),
+            (3, "notes — PowerShell".to_string()),
+        ];
+        assert_eq!(pick_tab(&tabs, "Coucou"), Some(&2));
+        assert_eq!(pick_tab(&tabs, "missing"), None);
+        assert_eq!(pick_tab(&tabs, ""), None);
+        assert_eq!(pick_tab::<i32>(&[], "coucou"), None);
+
+        let duplicate_titles = vec![(1, "coucou".to_string()), (2, "coucou".to_string())];
+        assert_eq!(pick_tab(&duplicate_titles, "coucou"), None);
+        let overlapping_titles = vec![(1, "my-project".to_string()), (2, "my-project-old".to_string())];
+        assert_eq!(pick_tab(&overlapping_titles, "project"), None);
+        let split_pane_tab = vec![(7, "coucou — PowerShell".to_string())];
+        assert_eq!(pick_tab(&split_pane_tab, "coucou"), Some(&7));
+        assert_eq!(pick_window(&[(7, "coucou — Windows Terminal".into())], "coucou"), Some(&7));
     }
 
     #[test]

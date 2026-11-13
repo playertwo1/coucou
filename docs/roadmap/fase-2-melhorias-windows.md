@@ -99,11 +99,17 @@ Jogo/vídeo real, Alt+Tab e troca física de monitor continuam pendentes para o 
 
 ### 2.5 — Focar a aba exata do Windows Terminal (M)
 
-- [ ] Descobrir identificadores de janela/tab/pane disponíveis para a sessão e APIs suportadas pela versão instalada do Windows Terminal.
-- [ ] Definir fallback: se não houver identificação inequívoca, focar a janela do Terminal como hoje e não uma aba arbitrária.
-- [ ] Testar duas abas com o mesmo título, painel dividido, sessão encerrada e Terminal ausente.
-- [ ] Implementar foco pela identidade da sessão; nunca executar texto/comando como efeito de foco.
-- Checkpoint: cada sessão focada corresponde à aba correta; ambiguidade usa o fallback registrado.
+- [x] Descobrir identificadores de janela/tab/pane disponíveis para a sessão e APIs suportadas pela versão instalada do Windows Terminal.
+- [x] Definir fallback: se não houver identificação inequívoca, focar a janela do Terminal como hoje e não uma aba arbitrária.
+- [x] Testar duas abas com o mesmo título, painel dividido, sessão encerrada e Terminal ausente.
+- [x] Implementar foco pela identidade da sessão; nunca executar texto/comando como efeito de foco.
+- Checkpoint sintético: PASS; aceite de runtime pelo proprietário pendente.
+
+**Verificação sintética (2026-11-13):** mini-spec em [Windows Terminal tab focus](../superpowers/specs/2026-11-13-windows-terminal-tab-focus-design.md). A seleção usa nomes UI Automation de `TabItem`, reavalia a ordem em cada solicitação e só seleciona uma correspondência única com o nome da pasta. Títulos duplicados, ausência de correspondência, UIA indisponível, sessão encerrada ou Terminal ausente mantêm o fallback de foco da janela; arrastar arquivos em uma aba ambígua copia os caminhos sem colá-los em uma aba incerta. Não lê o buffer nem executa texto/comandos.
+
+O Windows Terminal sintético apresentou duas abas `Synthetic Duplicate` com o mesmo título e recusou a seleção ambígua; outra instância sintética apresentou uma aba `Synthetic Split` com dois painéis, sem tratar painel como aba extra. Os processos sintéticos foram encerrados. `npm test` (644), `cargo test --offline --locked --workspace --quiet` (647 testes do app e 36 do relay aprovados; 8 ignorados), `npm run build`, `npm run synthetic:build`, build do host sintético, verificação das traduções/What's New em 14 idiomas e `git diff --check` passaram.
+
+**Limites:** esta comprovação usa títulos e sessões inventados. O foco da aba de sessões reais e o comportamento em uma instalação do proprietário ainda aguardam avaliação após atualizar.
 
 ### 2.6 — Histórico e busca de sessões (M)
 

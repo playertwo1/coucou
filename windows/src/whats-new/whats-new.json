@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.9",
+      "items": [
+        {
+          "icon": "terminal",
+          "title": {
+            "en": "Right Terminal tab",
+            "zh-Hans": "定位正确的终端标签",
+            "hi": "सही Terminal टैब",
+            "es": "Pestaña correcta de Terminal",
+            "ar": "علامة تبويب Terminal الصحيحة",
+            "fr": "Bon onglet Terminal",
+            "bn": "সঠিক Terminal ট্যাব",
+            "pt-BR": "Aba certa do Terminal",
+            "ru": "Нужная вкладка Terminal",
+            "id": "Tab Terminal yang tepat",
+            "de": "Richtiger Terminal-Tab",
+            "tr": "Doğru Terminal sekmesi",
+            "ko": "올바른 Terminal 탭",
+            "ja": "正しい Terminal タブ"
+          },
+          "detail": {
+            "en": "Select a uniquely matching tab; ambiguous titles keep window focus.",
+            "zh-Hans": "仅在标题唯一匹配时选择标签；标题不明确时只聚焦窗口。",
+            "hi": "केवल एक स्पष्ट मेल वाला टैब चुनें; अस्पष्ट शीर्षक पर सिर्फ़ विंडो फ़ोकस होती है।",
+            "es": "Selecciona una pestaña con coincidencia única; si hay ambigüedad, solo enfoca la ventana.",
+            "ar": "يُحدَّد تبويب واحد مطابق بوضوح؛ وعند غموض العناوين تُركَّز النافذة فقط.",
+            "fr": "Sélectionne un onglet correspondant sans ambiguïté ; sinon, seule la fenêtre est activée.",
+            "bn": "শুধু একটিমাত্র মিলে যাওয়া ট্যাব নির্বাচন করুন; শিরোনাম অস্পষ্ট হলে শুধু উইন্ডোটি ফোকাস হয়।",
+            "pt-BR": "Seleciona uma aba com correspondência única; se houver dúvida, foca apenas a janela.",
+            "ru": "Выбирает вкладку с единственным совпадением; при неоднозначности фокусируется только окно.",
+            "id": "Pilih tab yang cocok secara unik; judul ambigu hanya memfokuskan jendela.",
+            "de": "Wählt einen eindeutig passenden Tab; bei unklaren Titeln wird nur das Fenster fokussiert.",
+            "tr": "Yalnızca tekil eşleşen sekme seçilir; belirsiz başlıklarda sadece pencere odaklanır.",
+            "ko": "고유하게 일치하는 탭만 선택하며, 제목이 모호하면 창에만 포커스합니다.",
+            "ja": "一意に一致するタブを選択し、曖昧な場合はウィンドウだけにフォーカスします。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.8",
       "items": [
         {
