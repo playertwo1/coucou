@@ -26,13 +26,17 @@ Fixes:
 - **Mochi reads the memory pressure** as soon as he comes back on screen (#795 by @orrrrli)
 - **iPhone link**: the relay is sturdier (#1035) and no longer retries a bad device token forever (#1036), by @hasnain-amir
 
-## Windows 0.6.5 — November 12, 2026 *(playertwo1 fork; evaluation release)*
+## Windows 0.6.12 — November 13, 2026 *(playertwo1 fork; evaluation release)*
 
-- **Permission notifications** — when the island is hidden, a quiet Windows toast opens the matching permission card for review or denies only that request. Synthetic tests pass; real Windows toast activation remains under owner evaluation.
+- **Local test and build results** — see whether `npm test` or `cargo build` succeeded in the calling working folder. Synthetic tests pass; real-agent hook behavior remains under owner evaluation.
 
 ## Windows 0.6.6 — November 13, 2026 *(playertwo1 fork; evaluation release)*
 
 - **Full-screen island behavior** — the island hides when a visible foreground app covers its monitor and reappears for a pending permission or question. Synthetic tests pass; games, video, Alt+Tab and physical monitor behavior remain under owner evaluation.
+
+## Windows 0.6.5 — November 12, 2026 *(playertwo1 fork; evaluation release)*
+
+- **Permission notifications** — when the island is hidden, a quiet Windows toast opens the matching permission card for review or denies only that request. Synthetic tests pass; real Windows toast activation remains under owner evaluation.
 
 ## Windows 0.6.4 — November 12, 2026 *(playertwo1 fork)*
 

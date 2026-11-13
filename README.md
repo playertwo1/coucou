@@ -182,6 +182,7 @@ Windows and Linux are released together, under the `windows-v*` and `linux-v*` t
 
 | Windows & Linux | Date | Highlights |
 |---------|------|------------|
+| 0.6.12 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.12) | Nov 13, 2026 | Fork: local `npm test` and `cargo build` results shown with the calling working folder; real-agent hook behavior under owner evaluation |
 | 0.6.6 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.6) | Nov 13, 2026 | Fork: hides the island over a foreground app covering its monitor; pending permissions and questions keep it visible (real fullscreen evaluation pending) |
 | 0.6.5 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.5) | Nov 12, 2026 | Fork: permission notifications when the island is hidden; real Windows toast activation under owner evaluation |
 | 0.6.4 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.4) | Nov 12, 2026 | Fork: local Git pill with active-project branch, changed files, ahead/behind and read-only text diff |
