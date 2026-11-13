@@ -299,7 +299,10 @@ fn local_run_status(event: &str, map: &Map<String, Value>) -> Option<u8> {
     if !["Bash", "PowerShell", "shell", "run_command"].contains(&tool) {
         return None;
     }
-    let command = map.get("tool_input")?.get("command")?.as_str()?;
+    let command = map.get("tool_input")?.get("command")?.as_str()?.trim();
+    if command.contains('\n') || command.contains('\r') {
+        return None;
+    }
     let command = command.split_whitespace().collect::<Vec<_>>().join(" ");
     if command != "npm test" && command != "cargo build" {
         return None;
@@ -669,6 +672,13 @@ mod tests {
             "",
         );
         assert!(unsupported.get("coucou_run_status").is_none());
+
+        let (multiline, _) = run(
+            r#"{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"npm\ntest"},"tool_use_id":"call-6","tool_response":{"exit_code":0}}"#,
+            "codex",
+            "",
+        );
+        assert!(multiline.get("coucou_run_status").is_none());
     }
 
     #[test]

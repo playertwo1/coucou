@@ -31,6 +31,7 @@ test("only simple supported shell commands with a cwd and stable call ID are obs
   const watcher = createLocalRunWatcher();
   for (const payload of [
     pre("1", "npm test && cargo build", "C:\\repo"),
+    pre("1b", "npm\ntest", "C:\\repo"),
     pre("2", "cargo build --release", "C:\\repo"),
     pre(undefined, "npm test", "C:\\repo"),
     pre("4", "npm test", ""),

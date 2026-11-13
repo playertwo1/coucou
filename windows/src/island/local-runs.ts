@@ -21,7 +21,7 @@ function commandLabel(payload: Hook): Run["label"] | null {
   if (!SHELL_TOOLS.has(payload.tool_name ?? "")) return null;
   const command = payload.tool_input?.command;
   if (typeof command !== "string") return null;
-  const exact = command.trim().replace(/\s+/g, " ");
+  const exact = command.trim().replace(/[ \t]+/g, " ");
   return exact === "npm test" || exact === "cargo build" ? exact : null;
 }
 
