@@ -127,6 +127,10 @@ O Windows Terminal sintético apresentou duas abas `Synthetic Duplicate` com o m
 **Verificação sintética (2026-11-13):** `npm test` (646 aprovados), `cargo test --offline --locked --workspace --quiet` (649 testes do app e 36 do hook relay aprovados; 8 ignorados), `npm run build`, `npm run synthetic:build`, build do host sintético, `node scripts/gen-strings.mjs --check`, `python scripts/test-whats-new.py` e `git diff --check` passaram. No Agent Desktop, a variante sintética exibiu as sessões inventadas Jardim/Oficina; as buscas por “Jardim” e “Oficina” deixaram apenas a sessão correspondente, e os botões de abertura sintéticos apareceram. O callback sintético aceita somente IDs de fixture; nenhum processo Codex foi iniciado.
 
 **Limites:** só o layout local documentado do Codex é suportado; não há indexação de conteúdo de conversa. A confirmação com sessões reais e a abertura de uma sessão pelo proprietário ficam pendentes após atualizar.
+**Versão sintética de avaliação 0.6.10 (2026-11-13):** publicada em [Windows 0.6.10](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.10), tag no commit `7ac0ad2451a8caeceab7b2216d14d712f2e7d2fb`. O preflight (`43382716887`) e o workflow manual do tag (`43383864762`) passaram; `windows-latest` foi atualizado.
+
+**Instaladores 0.6.10:** baixei os dois assets finais; tamanho e SHA-256 conferem com os digests do GitHub. Exame personalizado do Microsoft Defender no diretório contendo somente os dois instaladores terminou em 2026-11-13 04:40 (evento 1001, `{C83FE64B-7FD6-42A2-945C-E3128B931EA2}`), sem detecção 1116. Setup (12.189.239 bytes): `396d880aa0a809dd100255430e12a316ea00643a712c411c644e8fedfceffab8`. MSI (15.806.464 bytes): `4b22633a2b5b194674f4767cd148fd71e181a8748db1d39b4eac2687a7953bb6`.
+
 
 ### 2.7 — Lançador rápido (P; depende da Etapa 2B.6)
 
