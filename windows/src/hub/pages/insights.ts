@@ -4,6 +4,8 @@
 import { h, clear } from "../../views/dom";
 import { t } from "../../i18n/i18n";
 import { FlowBridge, type FlowStats, type Totals } from "../../core/flow";
+import { Bridge } from "../../core/bridge";
+import type { AgentUsageSnapshot } from "../../core/agent-usage";
 import type { HubContext } from "../shell";
 import { emptyState } from "../hero";
 import { number, segmented, shortCount } from "../ui";
@@ -17,7 +19,10 @@ function duration(minutes: number): string {
 }
 
 export async function insightsPage(page: HTMLElement, ctx: HubContext) {
-  const stats: FlowStats | null = await FlowBridge.stats();
+  const [stats, agentUsage]: [FlowStats | null, AgentUsageSnapshot | null] = await Promise.all([
+    FlowBridge.stats(),
+    Bridge.agentUsageRead(),
+  ] as const);
   let period: Period = "month";
   const body = h("div", { style: "display:flex;flex-direction:column;gap:14px" });
   body.dataset.anchor = "flow.insights";
@@ -73,7 +78,47 @@ export async function insightsPage(page: HTMLElement, ctx: HubContext) {
       }
     }
     body.append(h("div", { class: "hub-chart-row" }, chart, appsCard));
+    body.append(agentUsageCard(agentUsage));
     body.append(h("div", { class: "hub-note", text: t("Counted on this computer, never sent anywhere.") }));
   }
   draw();
+}
+
+export function agentUsageCard(usage: AgentUsageSnapshot | null): HTMLElement {
+  const card = h("div", { class: "hub-card" },
+    h("div", { class: "title", style: "font:700 14px var(--font)", text: t("Agent usage") }),
+    h("div", { class: "hub-note", text: t("Cost unavailable") }),
+  );
+  if (usage?.partial) card.append(h("div", { class: "hub-note", text: t("Incomplete local history; totals may be missing.") }));
+  if (!usage?.sourceAvailable || usage.sessions.length === 0) {
+    card.append(emptyState(t("No Codex usage records found."), "idle"));
+  } else {
+    const row = (label: string, value: string) => h("div", { class: "hub-app-bar" },
+      h("div", { class: "top" }, h("b", { text: label, style: "font-weight:500" }), h("span", { text: value })),
+    );
+    const daily = h("div", { class: "hub-chart-row" },
+      h("div", { class: "hub-card" },
+        h("div", { class: "title", style: "font:700 13px var(--font)", text: t("By day") }),
+        ...usage.daily.slice(-7).map((day) => row(day.date, number(day.tokens) + " " + t("Tokens"))),
+      ),
+      h("div", { class: "hub-card" },
+        h("div", { class: "title", style: "font:700 13px var(--font)", text: t("By project") }),
+        ...usage.projects.slice(0, 8).map((project) => row(project.project, number(project.tokens) + " " + t("Tokens"))),
+      ),
+    );
+    const sessions = h("div", { class: "hub-card" },
+      h("div", { class: "title", style: "font:700 13px var(--font)", text: t("Recent sessions") }),
+      ...usage.sessions.slice(0, 8).map((session) => row(
+        session.date + " · " + (session.project ?? t("Unknown project")),
+        number(session.tokens) + " " + t("Tokens") + " · " + t("Cost unavailable"),
+      )),
+    );
+    card.append(daily, sessions);
+  }
+  for (const agent of ["Claude", "Antigravity", "Hermes"]) {
+    card.append(h("div", { class: "hub-app-bar" },
+      h("div", { class: "top" }, h("b", { text: agent, style: "font-weight:500" }), h("span", { text: t("Unavailable") })),
+    ));
+  }
+  return card;
 }

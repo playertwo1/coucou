@@ -7911,6 +7911,36 @@
     },
     "Opens your terminal in the project with the selected agent.": {
       "zh-Hans": "在项目目录中打开终端并启动所选代理。", "hi": "चुने गए एजेंट के साथ प्रोजेक्ट फ़ोल्डर में टर्मिनल खोलें।", "es": "Abre el terminal en el proyecto con el agente seleccionado.", "ar": "يفتح الطرفية داخل المشروع باستخدام الوكيل المحدد.", "fr": "Ouvre le terminal dans le projet avec l’agent sélectionné.", "bn": "নির্বাচিত এজেন্টসহ প্রকল্পে টার্মিনাল খোলে।", "pt-BR": "Abre o terminal no projeto com o agente selecionado.", "ru": "Открывает терминал в проекте с выбранным агентом.", "id": "Membuka terminal di proyek dengan agen yang dipilih.", "de": "Öffnet das Terminal im Projekt mit dem ausgewählten Agenten.", "tr": "Seçilen ajanla terminali proje klasöründe açar.", "ko": "선택한 에이전트와 함께 프로젝트에서 터미널을 엽니다.", "ja": "選択したエージェントでプロジェクト内のターミナルを開きます。"
+    },
+    "Agent usage": {
+      "zh-Hans": "代理用量", "hi": "एजेंट उपयोग", "es": "Uso de agentes", "ar": "استخدام الوكلاء", "fr": "Utilisation des agents", "bn": "এজেন্ট ব্যবহার", "pt-BR": "Uso dos agentes", "ru": "Использование агентов", "id": "Penggunaan agen", "de": "Agentennutzung", "tr": "Ajan kullanımı", "ko": "에이전트 사용량", "ja": "エージェント使用量"
+    },
+    "By day": {
+      "zh-Hans": "按天", "hi": "दिन के अनुसार", "es": "Por día", "ar": "حسب اليوم", "fr": "Par jour", "bn": "দিন অনুযায়ী", "pt-BR": "Por dia", "ru": "По дням", "id": "Per hari", "de": "Nach Tag", "tr": "Güne göre", "ko": "일별", "ja": "日別"
+    },
+    "By project": {
+      "zh-Hans": "按项目", "hi": "प्रोजेक्ट के अनुसार", "es": "Por proyecto", "ar": "حسب المشروع", "fr": "Par projet", "bn": "প্রকল্প অনুযায়ী", "pt-BR": "Por projeto", "ru": "По проектам", "id": "Per proyek", "de": "Nach Projekt", "tr": "Projeye göre", "ko": "프로젝트별", "ja": "プロジェクト別"
+    },
+    "Cost unavailable": {
+      "zh-Hans": "费用不可用", "hi": "लागत उपलब्ध नहीं", "es": "Coste no disponible", "ar": "التكلفة غير متاحة", "fr": "Coût indisponible", "bn": "খরচের তথ্য নেই", "pt-BR": "Custo indisponível", "ru": "Стоимость недоступна", "id": "Biaya tidak tersedia", "de": "Kosten nicht verfügbar", "tr": "Maliyet bilgisi yok", "ko": "비용을 알 수 없음", "ja": "費用は取得できません"
+    },
+    "Incomplete local history; totals may be missing.": {
+      "zh-Hans": "本地历史记录不完整，部分总数可能缺失。", "hi": "स्थानीय इतिहास अधूरा है; कुछ कुल आँकड़े छूट सकते हैं।", "es": "El historial local está incompleto; pueden faltar totales.", "ar": "السجل المحلي غير مكتمل؛ قد تكون بعض الإجماليات مفقودة.", "fr": "L’historique local est incomplet ; des totaux peuvent manquer.", "bn": "স্থানীয় ইতিহাস অসম্পূর্ণ; কিছু মোট হিসাব বাদ পড়তে পারে।", "pt-BR": "O histórico local está incompleto; alguns totais podem faltar.", "ru": "Локальная история неполна; некоторые итоги могут отсутствовать.", "id": "Riwayat lokal tidak lengkap; beberapa total mungkin hilang.", "de": "Der lokale Verlauf ist unvollständig; Summen können fehlen.", "tr": "Yerel geçmiş eksik; bazı toplamlar bulunmayabilir.", "ko": "로컬 기록이 불완전하여 일부 합계가 누락될 수 있습니다.", "ja": "ローカル履歴が不完全なため、一部の合計が欠けている可能性があります。"
+    },
+    "No Codex usage records found.": {
+      "zh-Hans": "未找到 Codex 用量记录。", "hi": "Codex उपयोग रिकॉर्ड नहीं मिले।", "es": "No se encontraron registros de uso de Codex.", "ar": "لم يتم العثور على سجلات استخدام Codex.", "fr": "Aucun relevé d’utilisation de Codex trouvé.", "bn": "Codex ব্যবহারের কোনো রেকর্ড পাওয়া যায়নি।", "pt-BR": "Nenhum registro de uso do Codex foi encontrado.", "ru": "Записи об использовании Codex не найдены.", "id": "Catatan penggunaan Codex tidak ditemukan.", "de": "Keine Codex-Nutzungsdaten gefunden.", "tr": "Codex kullanım kaydı bulunamadı.", "ko": "Codex 사용 기록을 찾을 수 없습니다.", "ja": "Codex の使用記録が見つかりません。"
+    },
+    "Recent sessions": {
+      "zh-Hans": "最近的会话", "hi": "हाल के सत्र", "es": "Sesiones recientes", "ar": "الجلسات الأخيرة", "fr": "Sessions récentes", "bn": "সাম্প্রতিক সেশন", "pt-BR": "Sessões recentes", "ru": "Недавние сессии", "id": "Sesi terbaru", "de": "Letzte Sitzungen", "tr": "Son oturumlar", "ko": "최근 세션", "ja": "最近のセッション"
+    },
+    "Unknown project": {
+      "zh-Hans": "未知项目", "hi": "अज्ञात प्रोजेक्ट", "es": "Proyecto desconocido", "ar": "مشروع غير معروف", "fr": "Projet inconnu", "bn": "অজানা প্রকল্প", "pt-BR": "Projeto desconhecido", "ru": "Неизвестный проект", "id": "Proyek tidak diketahui", "de": "Unbekanntes Projekt", "tr": "Bilinmeyen proje", "ko": "알 수 없는 프로젝트", "ja": "不明なプロジェクト"
+    },
+    "Tokens": {
+      "zh-Hans": "令牌", "hi": "टोकन", "es": "Tokens", "ar": "رموز", "fr": "Jetons", "bn": "টোকেন", "pt-BR": "Tokens", "ru": "Токены", "id": "Token", "de": "Tokens", "tr": "Token", "ko": "토큰", "ja": "トークン"
+    },
+    "Unavailable": {
+      "zh-Hans": "不可用", "hi": "उपलब्ध नहीं", "es": "No disponible", "ar": "غير متاح", "fr": "Indisponible", "bn": "উপলভ্য নয়", "pt-BR": "Indisponível", "ru": "Недоступно", "id": "Tidak tersedia", "de": "Nicht verfügbar", "tr": "Kullanılamıyor", "ko": "사용할 수 없음", "ja": "利用できません"
     }
   }
 }

@@ -2,6 +2,7 @@ import { createFixtures } from "./fixtures";
 import { syncSyntheticFullscreenVisibility } from "./fullscreen";
 import { installIsolation } from "./isolation";
 import "../src/style.css";
+import "../src/hub/hub.css";
 import "./style.css";
 
 installIsolation();
@@ -30,6 +31,8 @@ const { Island } = await import("../src/island/island");
 const { Sound } = await import("../src/core/sound");
 const { registerHookHandlers } = await import("../src/island/hooks");
 const { setLanguage, t } = await import("../src/i18n/i18n");
+const { agentUsageCard } = await import("../src/hub/pages/insights");
+const { syntheticAgentUsage } = await import("../src/core/agent-usage");
 
 setLanguage("pt-BR");
 State.settings = { ...DEFAULT_SETTINGS, language: "pt-BR", activeIntegrations: ["integration_git"], soundEnabled: false, autostart: false, hooksInstalled: false };
@@ -84,6 +87,15 @@ controls.append(label, button(t("Test permission"), request), button(t("Test Git
   sessionStorage.clear();
   location.reload();
 }), status, fullscreenStatus);
+const usagePanel = document.createElement("div");
+usagePanel.hidden = true;
+usagePanel.id = "synthetic-agent-usage";
+usagePanel.append(agentUsageCard(syntheticAgentUsage()));
+const usageButton = button(t("Agent usage"), () => {
+  usagePanel.hidden = !usagePanel.hidden;
+});
+controls.append(usageButton);
+document.body.append(usagePanel);
 State.subscribe(() => {
   syncFullscreen();
   const last = fixtures.decisions.at(-1);

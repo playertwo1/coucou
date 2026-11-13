@@ -1,6 +1,7 @@
 // Coucou for Windows — app wiring and the commands the island calls.
 
 mod agent_hooks;
+mod agent_usage;
 mod agents;
 mod agy_approvals;
 mod agy_rules;
@@ -538,6 +539,12 @@ async fn codex_plan_usage() -> Option<serde_json::Value> {
     tauri::async_runtime::spawn_blocking(codex_plan::read).await.ok().flatten()
 }
 
+/// Read-only token totals from the local Codex rollout history.
+#[tauri::command]
+async fn agent_usage_read() -> agent_usage::Snapshot {
+    tauri::async_runtime::spawn_blocking(agent_usage::read).await.unwrap_or_default()
+}
+
 #[tauri::command]
 fn approval_decision(app: AppHandle, request_id: String, decision: String) {
     resolve_approval(&app, &request_id, &decision);
@@ -1051,6 +1058,7 @@ pub fn run() {
             status_line_preview,
             status_line_apply,
             codex_plan_usage,
+            agent_usage_read,
             approval_decision,
             #[cfg(windows)]
             permission_toast_show,

@@ -11,6 +11,7 @@ import type { SpotifyState } from "./spotify";
 import type { UpdateStatus } from "./update";
 import type { WaIslandView, WaSettingsView, WaTestResult } from "./whatsapp";
 import type { LaunchAgent, LaunchAgentStatus, LaunchResult } from "./launch";
+import { syntheticAgentUsage, type AgentUsageSnapshot } from "./agent-usage";
 
 export const IS_TAURI =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -377,6 +378,11 @@ export const Bridge = {
    * is missing, not signed in or slow (15 s).
    */
   codexPlanUsage: () => call<unknown>("codex_plan_usage"),
+  /** Local Codex token counts only; no prompt text or estimated cost. */
+  agentUsageRead: async (): Promise<AgentUsageSnapshot | null> => {
+    if (IS_SYNTHETIC) return syntheticAgentUsage();
+    return call<AgentUsageSnapshot>("agent_usage_read");
+  },
 
   approvalDecision: (requestId: string, decision: "allow" | "deny") =>
     call<void>("approval_decision", { requestId, decision }),

@@ -67,12 +67,16 @@ Jogo/vídeo real, Alt+Tab e troca física de monitor continuam pendentes para o 
 
 ### 2.3 — Custo e tokens por sessão (M; depende da paridade de agentes)
 
-- [ ] Depois da Etapa 2B.6, inventariar a fonte local de uso para Claude, Codex, Antigravity e Hermes; marcar explicitamente fonte inexistente.
-- [ ] Definir no mini-spec quais unidades/custos são confiáveis, período dia/semana e agrupamento por projeto; não estimar preço/modelo ausente.
-- [ ] Criar fixtures locais sanitizadas e testes para JSONL truncado, modelo sem preço, sessão duplicada e projeto ausente.
-- [ ] Ler apenas dados locais de cada agente; não fazer upload nem adicionar telemetria.
-- [ ] Testar soma por sessão/projeto/dia e estado “indisponível” quando faltar fonte confiável.
-- Checkpoint: totais reproduzíveis a partir das fixtures; dado desconhecido nunca aparece como zero confirmado.
+- [x] Depois da Etapa 2B.6, inventariar a fonte local de uso para Claude, Codex, Antigravity e Hermes; fontes sem formato local documentado ficam explicitamente indisponíveis.
+- [x] Definir no [mini-spec](../superpowers/specs/2026-11-13-windows-agent-usage-design.md) unidades/custos confiáveis, períodos e agrupamento; preço ausente não é estimado.
+- [x] Criar fixtures sintéticas e testes para JSONL truncado, modelo sem preço, sessão duplicada e projeto ausente.
+- [x] Implementar leitura somente local do histórico Codex suportado, sem upload nem telemetria; os demais agentes continuam indisponíveis.
+- [x] Testar soma por sessão/projeto/dia e estado “indisponível” quando faltar fonte confiável.
+- Checkpoint sintético: PASS; totais reproduzíveis e dado desconhecido nunca aparece como zero confirmado. UI sintética conferida pelo Agent Desktop com registros inventados; app sintético encerrado após a inspeção.
+
+**Verificação sintética (2026-11-13):** `npm test` (644 aprovados), `cargo test --offline --locked --workspace --quiet` (645 testes do app e 36 do relay aprovados; 8 ignorados), `npm run build`, `npm run synthetic:build`, build do host sintético, `node scripts/gen-strings.mjs --check` e `git diff --check` passaram. A interface sintética exibiu os valores fictícios: 80/150 tokens por dia, Jardim/Oficina por projeto e custo indisponível. O leitor limita arquivos e bytes, ignora symlinks e conteúdo de prompts, deduplica eventos/sessões e marca histórico incompleto.
+
+**Limites:** somente o formato local documentado do Codex é lido; Claude, Antigravity e Hermes aparecem como indisponíveis. Custos ficam indisponíveis porque tokens/modelo não comprovam valor faturado. A validação com o histórico real do proprietário fica pendente após atualizar.
 
 ### 2.4 — Pílula do Git (P)
 

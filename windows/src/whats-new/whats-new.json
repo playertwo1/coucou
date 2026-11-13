@@ -2,6 +2,46 @@
   "about": "What's new, shown once in the island after Coucou updates itself (src/whats-new/). Every Windows and Linux release adds its entry here, in the 14 languages: 1 to 4 items, a short title and one line each, an icon from scripts/test-whats-new.py. python3 scripts/test-whats-new.py checks it.",
   "releases": [
     {
+      "version": "0.6.8",
+      "items": [
+        {
+          "icon": "bolt",
+          "title": {
+            "en": "Local agent usage",
+            "zh-Hans": "本地代理用量",
+            "hi": "स्थानीय एजेंट उपयोग",
+            "es": "Uso local de agentes",
+            "ar": "استخدام الوكلاء محليًا",
+            "fr": "Utilisation locale des agents",
+            "bn": "স্থানীয় এজেন্ট ব্যবহার",
+            "pt-BR": "Uso local dos agentes",
+            "ru": "Локальное использование агентов",
+            "id": "Penggunaan agen lokal",
+            "de": "Lokale Agentennutzung",
+            "tr": "Yerel ajan kullanımı",
+            "ko": "로컬 에이전트 사용량",
+            "ja": "ローカルエージェント使用量"
+          },
+          "detail": {
+            "en": "See Codex tokens by session, project and day. Costs are not estimated.",
+            "zh-Hans": "按会话、项目和日期查看 Codex 令牌数，不估算费用。",
+            "hi": "Codex टोकन को सत्र, प्रोजेक्ट और दिन के अनुसार देखें। लागत का अनुमान नहीं लगाया जाता।",
+            "es": "Consulta los tokens de Codex por sesión, proyecto y día. No estimamos el coste.",
+            "ar": "اطّلع على رموز Codex حسب الجلسة والمشروع واليوم. لا نقدّر التكلفة.",
+            "fr": "Consultez les jetons Codex par session, projet et jour. Aucun coût n’est estimé.",
+            "bn": "সেশন, প্রকল্প ও দিন অনুযায়ী Codex টোকেন দেখুন। খরচের অনুমান করা হয় না।",
+            "pt-BR": "Veja tokens do Codex por sessão, projeto e dia. Custos não são estimados.",
+            "ru": "Просматривайте токены Codex по сеансам, проектам и дням. Стоимость не оценивается.",
+            "id": "Lihat token Codex per sesi, proyek, dan hari. Biaya tidak diperkirakan.",
+            "de": "Codex-Tokens nach Sitzung, Projekt und Tag anzeigen. Kosten werden nicht geschätzt.",
+            "tr": "Codex tokenlarını oturum, proje ve güne göre görün. Maliyet tahmini yapılmaz.",
+            "ko": "Codex 토큰을 세션, 프로젝트, 날짜별로 확인하세요. 비용은 추정하지 않습니다.",
+            "ja": "Codex のトークン数をセッション・プロジェクト・日ごとに表示。費用は推定しません。"
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.7",
       "items": [
         {
