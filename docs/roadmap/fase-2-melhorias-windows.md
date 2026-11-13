@@ -78,6 +78,10 @@ Jogo/vídeo real, Alt+Tab e troca física de monitor continuam pendentes para o 
 
 **Limites:** somente o formato local documentado do Codex é lido; Claude, Antigravity e Hermes aparecem como indisponíveis. Custos ficam indisponíveis porque tokens/modelo não comprovam valor faturado. A validação com o histórico real do proprietário fica pendente após atualizar.
 
+**Versão sintética de avaliação 0.6.8 (2026-11-13):** publicada em [Windows 0.6.8](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.8), tag no commit `067f007538999bf7f3b448375bf31b3b98521a83`. O preflight (`43373366547`) e o workflow do tag (`43374598888`) passaram; `windows-latest` foi atualizado.
+
+**Instaladores 0.6.8:** os assets finais foram baixados e os SHA-256 conferiram com os digests do GitHub. Exame personalizado do Microsoft Defender no diretório contendo somente os dois instaladores terminou em 2026-11-13 03:02 (evento 1001, `{A96B58EF-6ED6-49F0-A5D6-8AE03BC8C8C9}`), sem detecção 1116. Setup (12.179.178 bytes): `f6d0805b9581a26f7ab307b8a816aa445c56847b950e954e3f02bc25baa93c8b`. MSI (15.794.176 bytes): `0f54a2efcafd4d41ff98dab7a72f0765b807ec33a96efcac81bb5e4a0ba45dc5`.
+
 ### 2.4 — Pílula do Git (P)
 
 - [x] Localizar a pasta do projeto da última sessão de workspace em foco e confirmar que `integration_git` é um ID novo.
