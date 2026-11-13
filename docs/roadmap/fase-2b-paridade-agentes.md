@@ -1,5 +1,7 @@
 > Parte do roadmap do fork. Índice, regras gerais e ordem das fases: [ROADMAP-FORK.md](../ROADMAP-FORK.md).
 
+**Estado: Pausada (D-053, 2026-11-13).** Etapas, dependências, checklists e evidências permanecem preservados; não iniciar trabalho até nova decisão do proprietário.
+
 ## Fase 2B — Paridade entre agentes e ambientes
 
 Objetivo: Claude, Codex, Antigravity e Hermes devem compartilhar as funções de agente; herdr e Orca são ambientes de execução. Executar na ordem abaixo e fechar cada checkpoint antes da etapa seguinte.

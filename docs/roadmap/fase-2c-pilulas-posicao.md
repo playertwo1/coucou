@@ -1,5 +1,7 @@
 > Parte do roadmap do fork. Índice, regras gerais e ordem das fases: [ROADMAP-FORK.md](../ROADMAP-FORK.md).
 
+**Estado: Pausada (D-053, 2026-11-13).** Etapas, dependências, checklists e evidências permanecem preservados; não iniciar trabalho até nova decisão do proprietário.
+
 ## Fase 2C — Pílulas configuráveis e posição livre da ilha (M)
 
 Objetivo: escolher pílulas visíveis, adicionar Grok Bot como agente e permitir arrastar a ilha horizontalmente no topo. Resend/n8n/Vercel continuam disponíveis, desligados por padrão; desativar não apaga credenciais. Claude Code permanece principal; limite de quatro pílulas secundárias. A posição livre muda só X, preservando centro e quatro cantos.

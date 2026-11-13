@@ -1,5 +1,7 @@
 > Parte do roadmap do fork. Índice, regras gerais e ordem das fases: [ROADMAP-FORK.md](../ROADMAP-FORK.md).
 
+**Estado após a L0 (2026-11-13): Pausada (D-053).** Os PASS sintéticos permanecem separados do aceite real do proprietário. A última release publicada é `windows-v0.6.11`; a tag `windows-v0.6.12` existe sem GitHub Release. O preflight `43402455643` foi cancelado, e os assets finais de 0.6.12 não foram gerados nem examinados. Ver o [inventário L0](fase-l-lumen.md). Checklists e evidências anteriores foram preservados.
+
 ## Fase 2 — Melhorias próprias do Windows
 
 Cada item segue a sequência: descoberta do código atual → mini-spec/aceite → testes da lógica → implementação → teste manual → checkpoint. As referências a arquivos abaixo são pontos de entrada; registrar no mini-spec os arquivos exatos depois da descoberta.
@@ -165,7 +167,7 @@ O Windows Terminal sintético apresentou duas abas `Synthetic Duplicate` com o m
 
 **Verificações sintéticas (2026-11-13):** `npm test` passou (656/656); `cargo test --offline --locked -p coucou-hook` passou (37/37); `npx tsc --noEmit`, `node scripts/gen-strings.mjs --check`, `python scripts/test-whats-new.py`, `npm run build`, `npm run synthetic:build`, build do host sintético e `git diff --check` passaram.
 
-**Limites:** a observação depende dos hooks dos agentes suportados e não rastreia processos arbitrários de terminal. Sem ID estável, pasta ou evento final, não é possível atribuir um resultado; chamada sem conclusão expira sem estado final. O status real dos hooks e a experiência do proprietário aguardam avaliação na versão 0.6.12.
+**Limites:** a observação depende dos hooks dos agentes suportados e não rastreia processos arbitrários de terminal. Sem ID estável, pasta ou evento final, não é possível atribuir um resultado; chamada sem conclusão expira sem estado final. O status real dos hooks e a experiência do proprietário aguardam a publicação de 0.6.12 e a avaliação do proprietário; por enquanto há somente uma tag, sem release.
 
 #### 2.8b — CI remoto
 
