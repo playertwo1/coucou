@@ -1,4 +1,4 @@
-# Fork playertwo1/coucou (futuro Lumen) — guia para agentes de código
+# Lumen (playertwo1/lumen, antes fork playertwo1/coucou) — guia para agentes de código
 
 Este arquivo é a porta de entrada para qualquer agente (Codex, Claude Code, Gemini) que trabalhe **neste fork**. O `CLAUDE.md` da raiz vem do projeto original. As regras de código dele continuam valendo, e este arquivo acrescenta as do fork. Se os dois conflitarem num ponto do fork, vale este.
 
@@ -53,7 +53,7 @@ Este arquivo é a porta de entrada para qualquer agente (Codex, Claude Code, Gem
 
 ## Git e releases
 
-- `origin` = `playertwo1/coucou` é o único destino de push. `upstream` = `Louis-CFM/coucou` serve só para `fetch`/`merge`; nunca enviar para ele.
+- `origin` = `playertwo1/lumen`, o repositório próprio do Lumen desde a 0.6.18, é o único destino de push. `fork` = `playertwo1/coucou`, o fork antigo: os apps até a 0.6.17 procuram atualização lá, então ele só recebe a release ponte 0.6.18. `upstream` = `Louis-CFM/coucou` serve só para `fetch`/`merge`; nunca enviar para ele.
 - Antes de cada subfase de código: árvore limpa, `git fetch upstream` e `git merge upstream/main`. Resolver conflitos num commit próprio.
 - Trabalhe numa branch (`codex/…`, `feat/…`, `docs/…`) ou numa worktree, e integre na `main` com merge depois dos testes.
 - Releases `windows-vX.Y.Z` seguem a autorização recorrente e o checklist descritos no ROADMAP-FORK (`docs/roadmap/release-checklist.md`). Nenhuma release usa o nome ou os assets do Coucou depois da L1.

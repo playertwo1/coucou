@@ -1,5 +1,10 @@
 # Changelog
 
+## Windows 0.6.18 — 14 de novembro de 2026 *(Lumen; validação real pendente)*
+
+- **Personagens sem corte vertical e versão mini/compacta (`L1.4`)** — os personagens Canvas não são mais cortados no alto da ilha e ganham uma versão reduzida para a ilha compacta.
+- **Repositório próprio** — o Lumen sai do fork e passa a ser publicado em [playertwo1/lumen](https://github.com/playertwo1/lumen). O atualizador procura as próximas versões lá; esta versão também sai no fork antigo, para que os apps instalados a encontrem.
+
 ## Windows 0.6.17 — 14 de novembro de 2026 *(Lumen; validação real pendente)*
 
 - **Chat com internet e localização** — o Plano ChatGPT passa a pedir a busca web do provedor, para perguntas atuais como o clima de amanhã; se o plano recusar a ferramenta, o chat repete a pergunta sem web. O prompt também leva a data de hoje e, se você quiser, a cidade salva em Configurações → Chat → Sua localização (opcional, apagável ali mesmo). Testes sintéticos passaram; teste com conta real pendente.

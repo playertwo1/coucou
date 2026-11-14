@@ -33,5 +33,5 @@ Windows and Linux: `cd windows && npm install && npm run tauri dev`
 - Every release adds its CHANGELOG.md section, a row in the README Versions table, and commits the regenerated Info.plist with the new version.
 - Every release also adds its What's new, shown once in the notch or the island after Coucou updates itself: an entry for the new version in `NotchBuddy/Resources/whats-new.json` (Mac, the 16 languages) or `windows/src/whats-new/whats-new.json` (Windows and Linux, the 14 languages). 1 to 4 items picked from the CHANGELOG section, each with an icon from `scripts/test-whats-new.py`, a short title and one line, translated in every language. `python3 scripts/test-whats-new.py` checks it; CI and `release.sh` fail without it.
 
-## Fork playertwo1/coucou (Lumen)
-This checkout is the owner's fork. Before working on it, read [AGENTS.md](AGENTS.md) (fork rules, in Portuguese), then `docs/STATE-FORK.md` and `docs/ROADMAP-FORK.md`. Push only to `origin` (`playertwo1/coucou`), never to `upstream`.
+## Lumen (playertwo1/lumen)
+This checkout is the owner's fork. Before working on it, read [AGENTS.md](AGENTS.md) (fork rules, in Portuguese), then `docs/STATE-FORK.md` and `docs/ROADMAP-FORK.md`. Push only to `origin` (`playertwo1/lumen`, the Lumen repository since 0.6.18; the old fork `playertwo1/coucou` is the `fork` remote), never to `upstream`.

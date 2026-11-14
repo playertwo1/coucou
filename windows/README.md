@@ -19,11 +19,11 @@ Revise permissões do Claude Code, acompanhe sessões, anexe arquivos, converse 
 
 ## Instalar
 
-Baixe **[Lumen-Windows.msi](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows.msi)**
-ou **[Lumen-Windows-setup.exe](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows-setup.exe)**,
+Baixe **[Lumen-Windows.msi](https://github.com/playertwo1/lumen/releases/download/windows-latest/Lumen-Windows.msi)**
+ou **[Lumen-Windows-setup.exe](https://github.com/playertwo1/lumen/releases/download/windows-latest/Lumen-Windows-setup.exe)**,
 sempre a versão mais recente, e execute. O `.exe` instala somente para o usuário atual, sem pedir acesso de administrador; o `.msi` pode pedir esse acesso.
 
-Os instaladores não têm assinatura Authenticode, então o SmartScreen pode informar que o editor é desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.16 foram examinados pelo Microsoft Defender em 14/11/2026, sem ameaças detectadas. Esse resultado vale para os arquivos desta versão. Também é possível [compilar pelo código-fonte](#build-it-yourself).
+Os instaladores não têm assinatura Authenticode, então o SmartScreen pode informar que o editor é desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.18 foram examinados pelo Microsoft Defender em 14/11/2026, sem ameaças detectadas. Esse resultado vale para os arquivos desta versão. Também é possível [compilar pelo código-fonte](#build-it-yourself).
 
 ## Usar o Lumen
 
@@ -31,7 +31,7 @@ Os instaladores não têm assinatura Authenticode, então o SmartScreen pode inf
 
 Em **Ajustes → Chat → Usar seu plano ChatGPT**, escolha **Continuar com ChatGPT** e conclua a autorização no navegador. O Lumen não recebe sua senha; os tokens ficam no cofre do Windows. Depois de conectar uma conta com plano ativo, escolha **Usar no chat** (ou selecione **ChatGPT** / **Plano ChatGPT** no chat) para listar modelos e conversar sem chave de API paga, mantendo o provedor `openai` independente.
 
-> A tabela de interações herdada abaixo ainda pode mostrar nomes e detalhes visuais da versão original; eles não foram validados no Lumen instalado. A identidade, os links de instalação e o atualizador acima correspondem à versão 0.6.16.
+> A tabela de interações herdada abaixo ainda pode mostrar nomes e detalhes visuais da versão original; eles não foram validados no Lumen instalado. A identidade, os links de instalação e o atualizador acima correspondem à versão 0.6.18.
 
 | What you do | What happens |
 |---|---|
@@ -394,7 +394,7 @@ API key), and change the port of Coucou's webhook (47823).
 
 O Lumen avisa quando uma nova versão está disponível e, no Windows, pode instalar a atualização em um clique. Nenhuma consulta é feita ao GitHub antes da sua autorização. Cerca de 30 segundos após a abertura, o app pergunta se pode avisar sobre novas versões; se você não responder, pergunta novamente no máximo uma vez por dia, sem cobrir uma permissão ou pergunta pendente. O mesmo controle e a opção **Verificar agora** ficam em **Ajustes → Geral → Atualizações**.
 
-Depois da autorização, o Lumen consulta na abertura e a cada seis horas `GET https://api.github.com/repos/playertwo1/coucou/releases?per_page=30`, sem autenticação, cookies ou dados sobre você. No Windows, considera somente releases publicadas `windows-vX.Y.Z`, sem drafts, pré-lançamentos ou a tag móvel `windows-latest`. Se encontrar uma versão mais recente, mostra a primeira linha das notas e as opções para atualizar, ler as notas ou adiar. O menu da bandeja também oferece a atualização enquanto ela estiver disponível.
+Depois da autorização, o Lumen consulta na abertura e a cada seis horas `GET https://api.github.com/repos/playertwo1/lumen/releases?per_page=30`, sem autenticação, cookies ou dados sobre você. No Windows, considera somente releases publicadas `windows-vX.Y.Z`, sem drafts, pré-lançamentos ou a tag móvel `windows-latest`. Se encontrar uma versão mais recente, mostra a primeira linha das notas e as opções para atualizar, ler as notas ou adiar. O menu da bandeja também oferece a atualização enquanto ela estiver disponível.
 
 **Atualizar agora** usa o instalador desta cópia:
 

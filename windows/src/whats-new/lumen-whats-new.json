@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "0.6.18",
+      "items": [
+        {
+          "icon": "sparkles",
+          "title": { "pt-BR": "Personagens sem cortes" },
+          "detail": { "pt-BR": "Os personagens não são mais cortados no alto da ilha e ganham uma versão mini para a ilha compacta." }
+        },
+        {
+          "icon": "update",
+          "title": { "pt-BR": "Lumen tem repositório próprio" },
+          "detail": { "pt-BR": "As próximas atualizações chegam de github.com/playertwo1/lumen." }
+        }
+      ]
+    },
+    {
       "version": "0.6.17",
       "items": [
         {
