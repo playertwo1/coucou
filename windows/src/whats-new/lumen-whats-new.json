@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "0.6.16",
+      "items": [
+        {
+          "icon": "chat",
+          "title": { "pt-BR": "Login com ChatGPT corrigido" },
+          "detail": { "pt-BR": "No Windows, a conexão não falha mais ao gravar as credenciais no cofre do sistema." }
+        }
+      ]
+    },
+    {
       "version": "0.6.15",
       "items": [
         {

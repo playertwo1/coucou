@@ -1,5 +1,9 @@
 # Changelog
 
+## Windows 0.6.16 — 14 de novembro de 2026 *(Lumen; validação real em avaliação)*
+
+- **Login com ChatGPT corrigido** — o Credential Manager do Windows recusa valores acima de 2560 bytes e os tokens OAuth passavam disso, então a conexão falhava com “Não foi possível gravar no cofre do sistema”. Valores longos agora são divididos em partes e remontados na leitura; valores curtos e credenciais já salvas não mudam.
+
 ## Windows 0.6.15 — 14 de novembro de 2026 *(Lumen; validação real em avaliação)*
 
 - **Chat com o login do ChatGPT (`L2.2`)** — seletor `Plano ChatGPT` no chat lista modelos do plano, transmite respostas em streaming (`store: false`) e renova tokens OAuth de forma serializada, sem chave de API paga e mantendo `openai` independente. Testes sintéticos com mocks passaram; validação em conta real do proprietário pendente.
