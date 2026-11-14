@@ -10,7 +10,7 @@ export interface Badge { kind: BadgeKind; color: RGB }
 export type TweenKey = readonly [target: number, durationMs: number, ease: (t: number) => number];
 export type LumenCharacter = "claude" | "codex" | "chatgpt" | "antigravity" | "gemini" | "opencode" | "generic";
 
-type MouthShape = "smile" | "wideSmile" | "frown" | "o" | "flat";
+type MouthShape = "smile" | "wideSmile" | "frown" | "o" | "flat" | "pant" | "sleep";
 interface StateConfig { color: RGB; badge: Badge | null; eyes: EyeShape; mouth: MouthShape; tilt: number; gaze: readonly [number, number] }
 interface FaceLayout { eyeLeftX: number; eyeRightX: number; eyeY: number; mouthX: number; mouthY: number }
 
@@ -21,8 +21,12 @@ const TEAL: RGB = [0.176, 0.831, 0.749];
 const CHATGPT_GREEN: RGB = [0.063, 0.639, 0.498];
 const ANTIGRAVITY_MAGENTA: RGB = [0.91, 0.475, 0.976];
 const LIGHT_BLUE: RGB = [0.541, 0.706, 0.973];
+const GLASS_TINT: RGB = [0.859, 0.925, 0.996];
 const OPENCODE_GREEN: RGB = [0.29, 0.871, 0.502];
 const BLUSH: RGB = [0.91, 0.57, 0.63];
+const APPROVAL_AMBER: RGB = [0.984, 0.749, 0.141];
+const ERROR_RED: RGB = [0.937, 0.306, 0.349];
+const DONE_GREEN: RGB = [0.165, 0.788, 0.459];
 const NEUTRAL: MochiMood = { busy: 0, hot: 0, full: 0, tired: 0, asleep: false };
 
 const AGENT_CHARACTER_MAP: Record<string, LumenCharacter> = {
@@ -68,14 +72,14 @@ const EMOTE_EYE: Record<BotEmoteName, EyeShape> = {
 export const BOT_STATES: Record<BotStateName, StateConfig> = {
   idle: { color: SAND, badge: null, eyes: "pill", mouth: "smile", tilt: 0, gaze: [0, 0] },
   working: { color: TEAL, badge: null, eyes: "pill", mouth: "smile", tilt: 0.055, gaze: [0, 1.5] },
-  thinking: { color: TEAL, badge: { kind: "dots", color: SAND }, eyes: "pill", mouth: "smile", tilt: 0, gaze: [1.5, -1.5] },
-  searching: { color: TEAL, badge: { kind: "dots", color: SAND }, eyes: "pill", mouth: "smile", tilt: 0, gaze: [2.8, -0.5] },
-  approval: { color: TEAL, badge: { kind: "bang", color: SAND }, eyes: "wide", mouth: "smile", tilt: 0, gaze: [0, 0] },
-  question: { color: TEAL, badge: { kind: "question", color: SAND }, eyes: "pill", mouth: "o", tilt: -0.04, gaze: [0, 0] },
-  error: { color: TEAL, badge: { kind: "dot", color: BLUSH }, eyes: "flat", mouth: "frown", tilt: 0, gaze: [0, 2] },
-  finished: { color: TEAL, badge: { kind: "dot", color: SAND }, eyes: "happy", mouth: "wideSmile", tilt: 0, gaze: [0, 0] },
-  ratelimit: { color: TEAL, badge: { kind: "dot", color: LIGHT_BLUE }, eyes: "tired", mouth: "flat", tilt: 0, gaze: [0, 1] },
-  sleeping: { color: TEAL, badge: null, eyes: "closed", mouth: "smile", tilt: 0, gaze: [0, 0] },
+  thinking: { color: TEAL, badge: { kind: "dots", color: SAND }, eyes: "pill", mouth: "flat", tilt: 0, gaze: [1.8, -2.5] },
+  searching: { color: TEAL, badge: { kind: "dots", color: GLASS_TINT }, eyes: "pill", mouth: "smile", tilt: 0, gaze: [3, -0.5] },
+  approval: { color: TEAL, badge: { kind: "bang", color: APPROVAL_AMBER }, eyes: "wide", mouth: "smile", tilt: 0, gaze: [0.5, -1] },
+  question: { color: TEAL, badge: { kind: "question", color: SAND }, eyes: "pill", mouth: "o", tilt: -0.05, gaze: [1.5, -1.5] },
+  error: { color: TEAL, badge: { kind: "bang", color: ERROR_RED }, eyes: "flat", mouth: "frown", tilt: 0, gaze: [0, 1.5] },
+  finished: { color: TEAL, badge: { kind: "dot", color: DONE_GREEN }, eyes: "happy", mouth: "wideSmile", tilt: 0, gaze: [0, 0] },
+  ratelimit: { color: TEAL, badge: { kind: "dot", color: LIGHT_BLUE }, eyes: "tired", mouth: "pant", tilt: -0.045, gaze: [0, 2] },
+  sleeping: { color: TEAL, badge: null, eyes: "closed", mouth: "sleep", tilt: 0.03, gaze: [0, 0] },
   dizzy: { color: TEAL, badge: null, eyes: "spiral", mouth: "frown", tilt: 0.05, gaze: [0, 0] },
 };
 
@@ -568,11 +572,12 @@ export class CompassEngine {
         continue;
       }
       if (eye === "line" || eye === "flat") {
-        curve(ctx, x - 5, y, x, y + (eye === "line" ? 0.5 : 1.5), x + 5, y, 3.4);
+        curve(ctx, x - 5, y, x, y + (eye === "line" ? 0.5 : 1.5), x + 5, y, 3.3);
+        if (eye === "flat") curve(ctx, x + 5 * side, y - 6.5, x, y - 4.5, x - 4 * side, y - 3, 2.3);
         continue;
       }
       const rx = eye === "wide" ? 6.3 : eye === "dot" ? 4.2 : 5.5;
-      const ry = eye === "tired" ? 3.4 : eye === "wide" ? 8 : 7.5;
+      const ry = eye === "tired" ? 3.2 : eye === "wide" ? 8 : 7.5;
       ctx.beginPath();
       ctx.ellipse(x + gx, y, rx, ry, 0, 0, Math.PI * 2);
       ctx.fillStyle = rgbCss(INK);
@@ -583,7 +588,8 @@ export class CompassEngine {
         ctx.fillStyle = rgbCss(SAND);
         ctx.fill();
       } else {
-        curve(ctx, x - 5.5, y - 2, x, y - 4.5, x + 5.5, y - 2, 2.5);
+        curve(ctx, x + 5.5 * side, y - 2.2, x, y - 4, x - 4.5 * side, y - 5.8, 2.5);
+        curve(ctx, x - 4.5, y + 4.8, x, y + 6.3, x + 4.5, y + 4.8, 1.8);
       }
     }
   }
@@ -598,10 +604,19 @@ export class CompassEngine {
       ctx.fill();
       return;
     }
-    if (shape === "o") {
+    if (shape === "o" || shape === "sleep") {
       ctx.beginPath();
-      ctx.ellipse(mx, y, 3.5, 4.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(mx, y, shape === "sleep" ? 2.4 : 3.5, shape === "sleep" ? 2.6 : 4.5, 0, 0, Math.PI * 2);
       ctx.fillStyle = rgbCss(INK);
+      ctx.fill();
+    } else if (shape === "pant") {
+      ctx.beginPath();
+      ctx.ellipse(mx, y + 1.5, 5.4, 4.1, 0, 0, Math.PI * 2);
+      ctx.fillStyle = rgbCss(INK);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(mx, y + 3.2, 2.8, 1.4, 0, 0, Math.PI * 2);
+      ctx.fillStyle = rgbCss(BLUSH);
       ctx.fill();
     } else if (shape === "frown") {
       curve(ctx, mx - 7, y + 3, mx, y - 4, mx + 7, y + 3, 3.2);
@@ -614,13 +629,55 @@ export class CompassEngine {
     }
   }
 
-  private drawSweat(ctx: CanvasRenderingContext2D) {
+  private drawSweatDrop(ctx: CanvasRenderingContext2D, tipX: number, tipY: number, scale = 1) {
     ctx.beginPath();
-    ctx.moveTo(81, 17);
-    ctx.quadraticCurveTo(75, 26, 81, 29);
-    ctx.quadraticCurveTo(87, 26, 81, 17);
+    ctx.moveTo(tipX, tipY);
+    ctx.quadraticCurveTo(tipX - 6 * scale, tipY + 9 * scale, tipX, tipY + 12 * scale);
+    ctx.quadraticCurveTo(tipX + 6 * scale, tipY + 9 * scale, tipX, tipY);
+    ctx.closePath();
     ctx.fillStyle = rgbCss(LIGHT_BLUE);
     ctx.fill();
+    ctx.strokeStyle = rgbCss(INK);
+    ctx.lineWidth = Math.max(1.5, 1.8 * scale);
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  }
+
+  private drawSweat(ctx: CanvasRenderingContext2D, multiple = false) {
+    const drops: ReadonlyArray<readonly [number, number, number]> = multiple
+      ? [[81, 17, 0.95], [65, 9, 0.8], [24, 21, 0.85], [34, 9, 0.7]]
+      : [[81, 17, 1]];
+    for (const [x, y, scale] of drops) this.drawSweatDrop(ctx, x, y, scale);
+  }
+
+  private drawExclamation(ctx: CanvasRenderingContext2D, x: number, topY: number, dotY: number, color: RGB) {
+    ctx.beginPath();
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x, dotY - 4.3);
+    ctx.strokeStyle = rgbCss(color);
+    ctx.lineWidth = 3.1;
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(x, dotY, 1.7, 0, Math.PI * 2);
+    ctx.fillStyle = rgbCss(color);
+    ctx.fill();
+  }
+
+  private drawSleepZ(ctx: CanvasRenderingContext2D, cx: number, cy: number, size: number) {
+    const h = size * 0.5;
+    for (const [color, width] of [[INK, size * 0.5], [LIGHT_BLUE, size * 0.24]] as const) {
+      ctx.beginPath();
+      ctx.moveTo(cx - h, cy - h);
+      ctx.lineTo(cx + h, cy - h);
+      ctx.lineTo(cx - h, cy + h);
+      ctx.lineTo(cx + h, cy + h);
+      ctx.strokeStyle = rgbCss(color);
+      ctx.lineWidth = Math.max(1.6, width);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
   }
 
   private drawStateAccent(ctx: CanvasRenderingContext2D) {
@@ -635,32 +692,83 @@ export class CompassEngine {
       return;
     }
     switch (this.state) {
-      case "thinking":
-      case "searching":
-        ctx.beginPath(); ctx.arc(82, 13, 4.2, 0, Math.PI * 2); ctx.arc(74, 3.5, 2.4, 0, Math.PI * 2);
-        ctx.fillStyle = rgbCss(SAND); ctx.fill(); ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 1.8; ctx.stroke();
+      case "thinking": {
+        roundedRect(ctx, 66, 5, 27, 16, 8);
+        ctx.fillStyle = rgbCss(SAND);
+        ctx.fill();
+        ctx.strokeStyle = rgbCss(INK);
+        ctx.lineWidth = 2.4;
+        ctx.stroke();
+        for (const dx of [73.5, 79.5, 85.5]) {
+          ctx.beginPath(); ctx.arc(dx, 13, 1.4, 0, Math.PI * 2); ctx.fillStyle = rgbCss(INK); ctx.fill();
+        }
+        for (const [x, y, r] of [[65, 24, 2.4], [59.5, 29.5, 1.5]] as const) {
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fillStyle = rgbCss(SAND); ctx.fill(); ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 1.8; ctx.stroke();
+        }
         break;
-      case "approval":
-        // Opposing side arcs read as a soft attention mark, never stacked Wi-Fi waves.
-        curve(ctx, 76, 9, 69, 14, 76, 20, 2.4);
-        curve(ctx, 89, 9, 96, 14, 89, 20, 2.4);
-        ctx.beginPath(); ctx.arc(82.5, 14.5, 3.5, 0, Math.PI * 2);
-        ctx.fillStyle = rgbCss(SAND); ctx.fill(); ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 1.8; ctx.stroke();
+      }
+      case "searching": {
+        for (const [color, width] of [[INK, 5.2], [SAND, 2.4]] as const) {
+          ctx.beginPath(); ctx.moveTo(83.5, 20); ctx.lineTo(91.5, 28);
+          ctx.strokeStyle = rgbCss(color); ctx.lineWidth = width; ctx.lineCap = "round"; ctx.stroke();
+        }
+        ctx.beginPath(); ctx.arc(77, 13.5, 9, 0, Math.PI * 2);
+        ctx.fillStyle = rgbCss(GLASS_TINT); ctx.fill();
+        ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.8; ctx.stroke();
+        ctx.beginPath(); ctx.arc(77, 13.5, 5.5, -Math.PI * 0.85, -Math.PI * 0.25);
+        ctx.strokeStyle = rgbCss(CLAUDE_WHITE); ctx.lineWidth = 1.9; ctx.lineCap = "round"; ctx.stroke();
+        break;
+      }
+      case "approval": {
+        for (const [ax, cx] of [[64.5, 60.5], [91.5, 95]] as const) curve(ctx, ax, 8.5, cx, 15.5, ax, 22.5, 2.6);
+        for (const [x1, y1, x2, y2] of [[68, 5, 70.5, 8], [88, 5, 85.5, 8]] as const) {
+          ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+          ctx.strokeStyle = rgbCss(APPROVAL_AMBER); ctx.lineWidth = 2.6; ctx.lineCap = "round"; ctx.stroke();
+        }
+        ctx.beginPath(); ctx.arc(78, 16, 11.5, 0, Math.PI * 2);
+        ctx.fillStyle = rgbCss(APPROVAL_AMBER); ctx.fill();
+        ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.6; ctx.stroke();
+        this.drawExclamation(ctx, 78, 9.5, 21.5, INK);
+        break;
+      }
+      case "question": {
+        ctx.beginPath(); ctx.arc(79, 15, 10.8, 0, Math.PI * 2);
+        ctx.fillStyle = rgbCss(SAND); ctx.fill();
+        ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.6; ctx.stroke();
+        ctx.beginPath(); ctx.arc(79, 11.8, 3.2, -Math.PI * 0.95, Math.PI * 0.35); ctx.lineTo(79, 16.5);
+        ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.7; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke();
+        ctx.beginPath(); ctx.arc(79, 20.8, 1.6, 0, Math.PI * 2); ctx.fillStyle = rgbCss(INK); ctx.fill();
+        break;
+      }
+      case "error": {
+        ctx.beginPath();
+        ctx.moveTo(79, 4.5);
+        ctx.lineTo(91.5, 25.5);
+        ctx.lineTo(66.5, 25.5);
+        ctx.closePath();
+        ctx.fillStyle = rgbCss(ERROR_RED); ctx.fill();
+        ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.6; ctx.lineJoin = "round"; ctx.stroke();
+        this.drawExclamation(ctx, 79, 11, 21.8, CLAUDE_WHITE);
+        break;
+      }
+      case "finished": {
+        ctx.beginPath(); ctx.arc(79, 15.5, 10.5, 0, Math.PI * 2);
+        ctx.fillStyle = rgbCss(DONE_GREEN); ctx.fill();
+        ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.6; ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(73.5, 15.8); ctx.lineTo(77.3, 19.6); ctx.lineTo(84.8, 11.4);
+        ctx.strokeStyle = rgbCss(CLAUDE_WHITE); ctx.lineWidth = 3; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke();
+        star(ctx, 64, 7.5, 3.4, SAND);
+        star(ctx, 90, 28, 2.8, SAND);
+        break;
+      }
+      case "ratelimit":
+        this.drawSweat(ctx, true);
         break;
       case "sleeping":
-        ctx.beginPath(); ctx.arc(82, 13, 4, 0, Math.PI * 2); ctx.arc(73.5, 3, 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = rgbCss(INK); ctx.fill();
-        break;
-      case "finished":
-        ctx.beginPath(); ctx.arc(82, 13, 3.3, 0, Math.PI * 2); ctx.arc(73.5, 3.5, 2, 0, Math.PI * 2);
-        ctx.fillStyle = rgbCss(SAND); ctx.fill();
-        break;
-      case "error":
-        ctx.beginPath(); ctx.arc(82, 14, 3.2, 0, Math.PI * 2);
-        ctx.fillStyle = rgbCss(BLUSH); ctx.fill();
-        break;
-      case "ratelimit":
-        this.drawSweat(ctx);
+        for (const [cx, cy, size] of [[68, 25.5, 5.2], [76.5, 16, 7.2], [86.5, 6.5, 9]] as const) {
+          this.drawSleepZ(ctx, cx, cy, size);
+        }
         break;
     }
   }
