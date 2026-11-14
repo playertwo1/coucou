@@ -190,3 +190,116 @@ test("engine não cria timers nem agenda um loop de quadros próprio", async () 
   const source = await readFile(resolve(windowsRoot, "src/lumen/compass-engine.ts"), "utf8");
   assert.doesNotMatch(source, /requestAnimationFrame|setInterval|setTimeout/);
 });
+
+test("animações P1 de transição e loop contínuo respeitam tempo e voltam ao repouso em idle", () => {
+  const engine = new BotEngine();
+  engine.setAgent("agent_codex");
+
+  // Entrada em finished gira 1x, emite sparks após 0,45 s e depois retorna ao repouso.
+  engine.setState("finished");
+  assert.equal(engine.busy, true);
+  engine.update(0.1);
+  engine.update(0.1);
+  assert.ok(engine.roll > 0.5 && engine.roll < Math.PI * 2, "finished deve girar na entrada");
+  for (let i = 0; i < 10; i++) engine.update(0.05); // chega a 0,70 s -> sparks já disparados
+  assert.ok(engine.busy, "sparks de finished mantêm busy durante a celebração");
+  for (let i = 0; i < 40; i++) engine.update(0.05); // +2,0 s -> reação encerrada
+  assert.equal(engine.roll, 0);
+  assert.equal(engine.busy, false, "após o fim de finished, busy volta a false");
+
+  // Entrada em error treme horizontalmente (ox) e depois assenta.
+  engine.setState("error");
+  engine.update(0.05);
+  assert.ok(engine.ox > 0.02, "error deve aplicar tremor horizontal positivo no início");
+  engine.update(0.07);
+  assert.ok(engine.ox < -0.02, "error deve oscilar para o lado oposto");
+  for (let i = 0; i < 10; i++) engine.update(0.05);
+  assert.equal(engine.ox, 0);
+  assert.equal(engine.busy, false, "após tremor de error, busy volta a false");
+
+  // Estados contínuos P1 animam e mantêm busy=true enquanto ativos.
+  for (const state of ["working", "thinking", "approval", "ratelimit", "sleeping"]) {
+    engine.setState(state);
+    assert.equal(engine.busy, true, `${state} deve manter laço P1 ativo`);
+    const p0 = canvasProbe();
+    engine.draw(p0.ctx, 96, 96);
+    engine.update(0.1);
+    engine.update(0.1);
+    const p1 = canvasProbe();
+    engine.draw(p1.ctx, 96, 96);
+    assert.notDeepEqual(p0.ops, p1.ops, `${state} deve mudar os quadros ao avançar dt`);
+  }
+
+  // Retornar a idle zera movimento contínuo após assentar.
+  engine.setState("idle");
+  for (let i = 0; i < 30; i++) engine.update(0.05);
+  assert.equal(engine.busy, false);
+});
+
+test("gestos P1 blink, squash, gulp, slap e greet respondem via update(dt) sem timers", () => {
+  const engine = new BotEngine();
+  engine.setAgent("integration_claude");
+  engine.setState("idle", true);
+
+  // blink fecha a pálpebra suavemente e reabre.
+  engine.blink();
+  engine.update(0.07);
+  const bProbe = canvasProbe();
+  engine.draw(bProbe.ctx, 96, 96);
+  assert.ok(!bProbe.ops.some((o) => o.op === "ellipse"), "no auge da piscada os olhos fecham em arco");
+  for (let i = 0; i < 6; i++) engine.update(0.05);
+  assert.equal(engine.busy, false);
+
+  // gulp abre a boca, mastiga após 0,46 s e encerra em 1,26 s.
+  engine.gulp();
+  engine.update(0.1);
+  engine.update(0.1);
+  assert.ok(engine.slotH > 0.25 && !engine.isChewing);
+  for (let i = 0; i < 7; i++) engine.update(0.05); // total 0,55 s
+  assert.equal(engine.isChewing, true);
+  for (let i = 0; i < 20; i++) engine.update(0.05);
+  assert.equal(engine.isChewing, false);
+  assert.equal(engine.busy, false);
+
+  // greet e love/proud emitem partículas animadas.
+  engine.greet();
+  engine.update(0.1);
+  assert.ok(engine.oy < -0.02);
+  assert.equal(engine.busy, true);
+  engine.interruptGreet();
+  for (let i = 0; i < 40; i++) engine.update(0.05);
+
+  // 3 tapas em menos de 1,7 s acionam onDizzy.
+  let dizzyCalls = 0;
+  engine.onDizzy = () => { dizzyCalls += 1; };
+  engine.slap();
+  engine.update(0.1);
+  engine.update(0.1);
+  engine.slap();
+  engine.update(0.1);
+  engine.update(0.1);
+  engine.slap();
+  assert.equal(dizzyCalls, 1);
+});
+
+test("prefers-reduced-motion suprime também os laços e gestos P1", () => {
+  const previousWindow = globalThis.window;
+  globalThis.window = { matchMedia: () => ({ matches: true }) };
+  try {
+    const engine = new BotEngine();
+    engine.setAgent("ai_openai");
+    engine.setState("approval");
+    engine.gulp();
+    engine.slap();
+    engine.triggerEmote("love");
+    engine.update(0.2);
+    assert.equal(engine.busy, false);
+    assert.equal(engine.ox, 0);
+    assert.equal(engine.oy, 0);
+    assert.equal(engine.roll, 0);
+    assert.equal(engine.isChewing, false);
+  } finally {
+    if (previousWindow === undefined) delete globalThis.window;
+    else globalThis.window = previousWindow;
+  }
+});

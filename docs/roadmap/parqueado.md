@@ -37,11 +37,12 @@ Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (ideias gerais de
 
 - [x] d1 (base da família e Codex em 11 estados) tem implementação e testes sintéticos concluídos; o proprietário aprovou a subetapa em 2026-11-13.
 - [x] d2 (outros seis personagens nos 11 estados e reforço dos símbolos/expressões) tem implementação, testes sintéticos e aprovação visual do proprietário concluídos em 2026-11-13.
-- [ ] d3 (animações P1) e d4 (animações P2) aguardam início após d2.
+- [x] d3 (animações P1) tem implementação e testes sintéticos concluídos; aguarda revisão visual do proprietário antes de iniciar d4.
+- [ ] d4 (animações P2) aguarda aprovação de d3.
 
 **Histórico do escopo anterior enquanto o estudo estava parqueado:** a proposta inicial era gerar imagens de um agente nos quatro estados `idle`, `thinking`, `working` e `sleeping`; a L1.4a ampliou as referências para sete agentes e oito estados visuais.
 
-Checkpoint atual: a seleção do Canvas e os aceites visuais de d1 e d2 estão registrados; d3 é a próxima subetapa. Nada aqui fecha o aceite real da L1.4.
+Checkpoint atual: a seleção do Canvas e os aceites visuais de d1 e d2 estão registrados; d3 aguarda revisão visual antes de d4. Nada aqui fecha o aceite real da L1.4.
 
 ### Conectores externos do pacote Mochi
 
