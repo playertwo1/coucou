@@ -401,3 +401,41 @@ test("estado working desenha monitor com linhas de código e mini teclado à fre
   const idx1 = p1.ops.findIndex((o) => o.op === "moveTo" && o.args[0] === 66.5 && o.args[1] === 10.5);
   assert.notEqual(p1.ops[idx1 + 1].args[0], endAt0.args[0], "linhas de código no monitor devem animar durante working");
 });
+
+test("particleOverhang centraliza verticalmente e versão mini/compacta desenha dentro da barra reduzida", () => {
+  const closed = new BotEngine();
+  closed.setAgent("agent_codex");
+  closed.setState("working", true);
+  closed.particleOverhang = 40;
+  // Modo fechado da ilha: diameter=18 -> w=30, h=30+40=70.
+  const closedProbe = canvasProbe();
+  closed.draw(closedProbe.ctx, 30, 70);
+  const firstTranslate = closedProbe.ops.find((o) => o.op === "translate");
+  assert.deepEqual(firstTranslate?.args, [0, 40], "originY deve somar particleOverhang ao centro vertical");
+
+  // Em barra compacta/fechada e mini grid, eyes e accent compacto mantêm proporção legível sem chamar o monitor alto (y=4).
+  for (const agent of ["agent_codex", "integration_claude", "agent_claude-desktop", "integration_youtubemusic", "integration_mail"]) {
+    for (const state of ["idle", "working", "thinking", "searching", "approval", "question", "error", "finished", "ratelimit", "sleeping", "dizzy"]) {
+      const e = new BotEngine();
+      e.setAgent(agent);
+      e.setState(state, true);
+      e.particleOverhang = 40;
+      const pClosed = canvasProbe();
+      e.draw(pClosed.ctx, 30, 70);
+      assert.ok(pClosed.ops.length > 0, `${agent}/${state} em barra fechada deve desenhar`);
+      assert.ok(
+        !pClosed.ops.some((o) => o.op === "moveTo" && o.args[0] === 66.5 && o.args[1] === 10.5),
+        `${agent}/${state} compacto não deve usar o monitor full-size`,
+      );
+    }
+  }
+
+  const mini = new BotEngine();
+  mini.isMini = true;
+  mini.setAgent("agent_codex");
+  mini.setState("working", true);
+  const miniProbe = canvasProbe();
+  mini.draw(miniProbe.ctx, 22, 22);
+  const firstMiniTranslate = miniProbe.ops.find((o) => o.op === "translate");
+  assert.deepEqual(firstMiniTranslate?.args, [0, 0], "mini grid sem overhang mantém origem em (0, 0)");
+});
