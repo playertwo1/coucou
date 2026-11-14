@@ -113,14 +113,37 @@ impl Chat {
 
 /// Mochi's instructions. Greets the user by their first name when the account
 /// has one worth using (identity.rs), and only claims web search where the
-/// provider runs it (Claude).
+/// provider runs it (Claude). Adds today's date, and the user's location when
+/// they have saved one in Settings → Chat.
 pub fn system_prompt(web_search: bool) -> String {
-    let base = system_prompt_for(crate::identity::first_name(), web_search);
+    let today = crate::platform::local_time();
+    let location = location_line(&crate::settings::load().chat_location);
+    let base = with_date_and_location(
+        system_prompt_for(crate::identity::first_name(), web_search),
+        today.year,
+        today.month,
+        today.day,
+        location.as_deref(),
+    );
     // The chat's Mail switch is on for this turn: how to write a mail plan.
     if crate::mail::MAIL_TURN.load(std::sync::atomic::Ordering::Relaxed) {
         return base + crate::mail::plan::INSTRUCTIONS;
     }
     base
+}
+
+fn with_date_and_location(base: String, year: u32, month: u32, day: u32, location: Option<&str>) -> String {
+    let mut prompt = format!("{base} Today's date: {year:04}-{month:02}-{day:02}.");
+    if let Some(location) = location {
+        prompt.push_str(&format!(" The user's location: {location}."));
+    }
+    prompt
+}
+
+/// The saved location as one short line, so it cannot break out of the prompt.
+fn location_line(raw: &str) -> Option<String> {
+    let line: String = raw.replace(['\r', '\n'], " ").trim().chars().take(120).collect();
+    (!line.is_empty()).then_some(line)
 }
 
 fn system_prompt_for(first_name: Option<&str>, web_search: bool) -> String {
@@ -360,6 +383,25 @@ mod tests {
         assert!(p.starts_with("You are Mochi, a personal AI assistant living at the top of the user's screen."));
         assert!(!p.contains("web search"));
         assert!(p.contains("no web access"));
+    }
+
+    #[test]
+    fn the_location_is_one_short_line_or_none() {
+        assert_eq!(location_line(""), None);
+        assert_eq!(location_line(" \r\n\t "), None);
+        assert_eq!(location_line(" Cidade Exemplo, EX\n"), Some("Cidade Exemplo, EX".into()));
+        assert_eq!(location_line("Cidade\r\nExemplo"), Some("Cidade  Exemplo".into()));
+        assert_eq!(location_line(&"á".repeat(200)).unwrap().chars().count(), 120);
+    }
+
+    #[test]
+    fn the_prompt_carries_today_and_the_location_only_when_there_is_one() {
+        let base = system_prompt_for(None, true);
+        assert_eq!(
+            with_date_and_location(base.clone(), 2026, 1, 2, Some("Cidade Exemplo, EX")),
+            format!("{base} Today's date: 2026-01-02. The user's location: Cidade Exemplo, EX.")
+        );
+        assert_eq!(with_date_and_location(base.clone(), 2026, 11, 14, None), format!("{base} Today's date: 2026-11-14."));
     }
 
     #[test]

@@ -142,6 +142,8 @@ export interface Settings {
   ollamaUrl: string;
   lmstudioUrl: string;
   customUrl: string;
+  /** The user's city ("Cidade, UF") sent to the chat provider with each question; empty = not sent. */
+  chatLocation: string;
   /** Global shortcuts the user changed, by action id (see core/shortcuts.ts). */
   shortcuts: Bindings;
   /**
@@ -207,6 +209,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ollamaUrl: "",
   lmstudioUrl: "",
   customUrl: "",
+  chatLocation: "",
   shortcuts: {},
   mochiOutfit: DEFAULT_OUTFIT,
   pillColors: {},

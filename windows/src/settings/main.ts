@@ -783,6 +783,53 @@ function chatGptAccountSection(initial: ChatGptAccountStatus | null, initialErro
   return section;
 }
 
+function chatLocationSection(): HTMLElement {
+  const input = h("input", {
+    type: "text",
+    placeholder: "Cidade, UF",
+    maxLength: 120,
+    spellcheck: "false",
+    autocomplete: "off",
+    style: "flex:1 1 auto;min-width:0",
+  }) as HTMLInputElement;
+  input.value = settings.chatLocation;
+  const saveBtn = h("button", { class: "primary", text: "Salvar" });
+  const clearBtn = h("button", { text: "Apagar" }) as HTMLButtonElement;
+  const note = h("div", { class: "hint" });
+  const refresh = () => {
+    clearBtn.disabled = !settings.chatLocation;
+  };
+  async function store(value: string, done: string) {
+    try {
+      settings.chatLocation = value;
+      await save();
+      note.className = "hint";
+      note.textContent = done;
+    } catch (err) {
+      note.className = "notice err";
+      note.textContent = String(err).replace(/^Error:\s*/, "");
+    }
+    refresh();
+  }
+  saveBtn.addEventListener("click", () => void store(input.value.trim(), "Salvo."));
+  clearBtn.addEventListener("click", () => {
+    input.value = "";
+    void store("", "Apagado.");
+  });
+  refresh();
+  return h(
+    "section",
+    {},
+    h("h2", {}, h("span", { text: "Sua localização" })),
+    h("div", {
+      class: "hint",
+      text: "Opcional. Se você preencher, a cidade é enviada ao provedor do chat junto com cada pergunta, para respostas locais como clima e lugares. Apague para parar de enviar.",
+    }),
+    h("div", { class: "row" }, input, saveBtn, clearBtn),
+    note,
+  );
+}
+
 const CHAT_STRINGS = {
   get providersTitle() { return t("Chat providers"); },
   get providersHint() { return t("Chat with Google AI, OpenAI or OpenRouter instead of Claude: add a key here, then click the model name above the chat box to switch provider and model. Keys stay in the system keychain. These providers get no web search and no tools: they can answer, never act on this computer."); },
@@ -1778,7 +1825,7 @@ async function render() {
     general: () => [generalSection()],
     pills: () => [activePillsSection(connected)],
     agents: () => [claudeSection(status), agentsSection(agents), planSection(status)],
-    chat: () => [subscriptionsSection(), apiSection(hasKey, claudeRelay), ...(LUMEN_WINDOWS ? [chatGptAccountSection(chatGptStatus, chatGptError)] : []), chatProvidersSection(chatKeys, keyChanged), localSection(customKey)],
+    chat: () => [subscriptionsSection(), apiSection(hasKey, claudeRelay), ...(LUMEN_WINDOWS ? [chatGptAccountSection(chatGptStatus, chatGptError), chatLocationSection()] : []), chatProvidersSection(chatKeys, keyChanged), localSection(customKey)],
     integrations: () => [integrationsSection(present), ...whatsappSections()],
     phone: () => [phoneSection(settings.phoneLink ?? false, toggle, settings)],
     shortcuts: () => [shortcutsSection(shortcutReport)],

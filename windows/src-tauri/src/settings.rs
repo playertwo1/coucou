@@ -52,6 +52,9 @@ pub struct Settings {
     /// that can answer through its own terminal tool (cli_relay.rs). A
     /// provider not in it was never switched: see cli_relay::uses_subscription.
     pub chat_subscriptions: BTreeMap<String, bool>,
+    /// Settings → Chat → Sua localização: free text such as "City, ST", added to the
+    /// chat prompt (chat::system_prompt). Empty means none is sent.
+    pub chat_location: String,
     /// Addresses of the model servers once connected; empty means not connected.
     pub ollama_url: String,
     pub lmstudio_url: String,
@@ -176,6 +179,7 @@ impl Default for Settings {
             chat_provider: crate::chat::ANTHROPIC.into(),
             chat_models: BTreeMap::new(),
             chat_subscriptions: BTreeMap::new(),
+            chat_location: String::new(),
             ollama_url: String::new(),
             lmstudio_url: String::new(),
             custom_url: String::new(),
@@ -481,6 +485,7 @@ mod tests {
   "chatProvider": "ollama",
   "chatModels": { "ollama": "llama3.2", "openai": "gpt-x" },
   "chatSubscriptions": { "google": true, "anthropic": false },
+  "chatLocation": "Cidade Exemplo, EX",
   "ollamaUrl": "http://127.0.0.1:11434",
   "lmstudioUrl": "http://127.0.0.1:1234",
   "customUrl": "https://llm.example.com",
@@ -592,6 +597,12 @@ mod tests {
         let mut expected = custom();
         expected["model"] = json!(crate::claude::DEFAULT_MODEL);
         assert_eq!(loaded, expected);
+    }
+
+    #[test]
+    fn the_chat_location_is_kept_and_a_file_without_it_has_none() {
+        assert_eq!(parse(CUSTOM.as_bytes()).unwrap().chat_location, "Cidade Exemplo, EX");
+        assert_eq!(parse(&custom_with("chatLocation", None)).unwrap().chat_location, "");
     }
 
     #[test]
@@ -1013,6 +1024,7 @@ mod tests {
                 "chatProvider",
                 "chatModels",
                 "chatSubscriptions",
+                "chatLocation",
                 "ollamaUrl",
                 "lmstudioUrl",
                 "customUrl",

@@ -1538,16 +1538,20 @@ fn history_item_to_responses(item: &Value) -> Value {
     })
 }
 
-fn build_responses_body(model: &str, system: &str, history: &[Value], user: &Value) -> Value {
+fn build_responses_body(model: &str, system: &str, history: &[Value], user: &Value, web: bool) -> Value {
     let mut input: Vec<Value> = history.iter().map(history_item_to_responses).collect();
     input.push(user.clone());
-    json!({
+    let mut body = json!({
         "model": model,
         "store": false,
         "stream": true,
         "instructions": system,
         "input": input,
-    })
+    });
+    if web {
+        body["tools"] = json!([{ "type": "web_search" }]);
+    }
+    body
 }
 
 enum SseEvent {
@@ -1635,15 +1639,18 @@ async fn send_with_endpoints(
         ensure_access_token_with(store, meta_client, token_url, None).await?;
     let turn = chat.begin("chatgpt");
     let user = user_message(turn.first, context.as_ref(), &query);
-    let body = build_responses_body(
+    // A plan that refuses the web search tool (400) gets the turn once more without it.
+    let mut web = true;
+    let mut body = build_responses_body(
         &resolved_model,
-        &chat::system_prompt(false),
+        &chat::system_prompt(web),
         &turn.history,
         &user,
+        web,
     );
 
-    let mut reply = None;
-    for attempt in 0..2 {
+    let mut refreshed = false;
+    let mut reply = loop {
         let response = stream_client
             .post(responses_url)
             .bearer_auth(&access)
@@ -1652,9 +1659,21 @@ async fn send_with_endpoints(
             .await
             .map_err(|e| format!("Erro de rede ao falar com o ChatGPT: {e}"))?;
         let status = response.status();
-        if status.as_u16() == 401 && attempt == 0 {
+        if status.as_u16() == 401 && !refreshed {
+            refreshed = true;
             (access, generation) =
                 ensure_access_token_with(store, meta_client, token_url, Some(&generation)).await?;
+            continue;
+        }
+        if status.as_u16() == 400 && web {
+            web = false;
+            body = build_responses_body(
+                &resolved_model,
+                &chat::system_prompt(web),
+                &turn.history,
+                &user,
+                web,
+            );
             continue;
         }
         if !status.is_success() {
@@ -1663,11 +1682,8 @@ async fn send_with_endpoints(
                 .unwrap_or_default();
             return Err(status_error(status.as_u16(), &net::error_detail(&err_body)));
         }
-        reply = Some(response);
-        break;
-    }
-    let mut reply = reply
-        .ok_or_else(|| "Sua sessão ChatGPT expirou. Reconecte a conta em Configurações.".to_string())?;
+        break response;
+    };
 
     let mut accumulated = String::new();
     let mut completed_fallback = String::new();
@@ -2144,7 +2160,7 @@ mod tests {
             json!({ "role": "assistant", "content": "olá" }),
         ];
         let user = user_message(true, None, "tudo bem?");
-        let body = build_responses_body("gpt-5.4", "instruções", &history, &user);
+        let body = build_responses_body("gpt-5.4", "instruções", &history, &user, true);
         assert_eq!(body["model"], "gpt-5.4");
         assert_eq!(body["store"], false);
         assert_eq!(body["stream"], true);
@@ -2171,6 +2187,108 @@ mod tests {
             parse_sse_line("data: {\"type\":\"response.failed\",\"response\":{\"error\":{\"message\":\"quota\"}}}"),
             Some(Err(e)) if e == "quota"
         ));
+        // The web search events carry no text of their own.
+        assert!(parse_sse_line("data: {\"type\":\"response.web_search_call.completed\"}").is_none());
+    }
+
+    #[test]
+    fn responses_body_asks_for_web_search_only_when_web_is_on() {
+        let user = user_message(true, None, "amanhã chove?");
+        let body = build_responses_body("gpt-5.4", "instruções", &[], &user, true);
+        assert_eq!(body["tools"], json!([{ "type": "web_search" }]));
+        assert_eq!(body["store"], false);
+        assert_eq!(body["stream"], true);
+        let plain = build_responses_body("gpt-5.4", "instruções", &[], &user, false);
+        assert!(plain.get("tools").is_none());
+    }
+
+    #[tokio::test]
+    async fn a_plan_that_refuses_web_search_gets_the_turn_once_more_without_it() {
+        use std::sync::Arc;
+
+        let store = MemoryStore::default();
+        save(&store, None, "oaiapp_chat", "subject-1", "fresh", true).unwrap();
+        let sent = Arc::new(Mutex::new(Vec::<String>::new()));
+        let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+
+        let seen = sent.clone();
+        let server = tokio::spawn(async move {
+            for _ in 0..2 {
+                let (mut stream, _) = listener.accept().await.unwrap();
+                let mut buf = Vec::new();
+                let mut tmp = [0u8; 2048];
+                loop {
+                    let n = stream.read(&mut tmp).await.unwrap_or(0);
+                    if n == 0 {
+                        break;
+                    }
+                    buf.extend_from_slice(&tmp[..n]);
+                    if let Some(hdr_end) = buf.windows(4).position(|w| w == b"\r\n\r\n") {
+                        let headers = String::from_utf8_lossy(&buf[..hdr_end]).to_ascii_lowercase();
+                        let content_len = headers
+                            .lines()
+                            .find_map(|l| l.strip_prefix("content-length:"))
+                            .and_then(|v| v.trim().parse::<usize>().ok())
+                            .unwrap_or(0);
+                        if buf.len() >= hdr_end + 4 + content_len {
+                            break;
+                        }
+                    }
+                }
+                let req = String::from_utf8_lossy(&buf).to_string();
+                let body_part = req.split("\r\n\r\n").nth(1).unwrap_or("").to_string();
+                let with_tools = body_part.contains("\"tools\"");
+                seen.lock().unwrap().push(body_part);
+                let (status, ctype, body) = if with_tools {
+                    ("400 Bad Request", "application/json", "{\"error\":{\"message\":\"tools not supported\"}}".to_string())
+                } else {
+                    (
+                        "200 OK",
+                        "text/event-stream",
+                        "data: {\"type\":\"response.web_search_call.completed\"}\n\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\"Olá \"}\n\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\"Lumen!\"}\n\ndata: [DONE]\n\n".to_string(),
+                    )
+                };
+                let reply = format!(
+                    "HTTP/1.1 {status}\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                    body.len()
+                );
+                let _ = stream.write_all(reply.as_bytes()).await;
+                let _ = stream.shutdown().await;
+            }
+        });
+
+        let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build().unwrap();
+        let token_url = format!("http://127.0.0.1:{port}/oauth/token");
+        let models_url = format!("http://127.0.0.1:{port}/v1/models");
+        let responses_url = format!("http://127.0.0.1:{port}/v1/responses");
+        let chat = Chat::default();
+        let reply = send_with_endpoints(
+            &store,
+            &client,
+            &client,
+            &token_url,
+            &models_url,
+            &responses_url,
+            &chat,
+            "gpt-5.4",
+            "Oi!".into(),
+            None,
+            |_| {},
+        )
+        .await
+        .unwrap();
+        assert_eq!(reply.text, "Olá Lumen!");
+        server.await.unwrap();
+
+        let bodies = sent.lock().unwrap().clone();
+        assert_eq!(bodies.len(), 2);
+        let first: Value = serde_json::from_str(&bodies[0]).unwrap();
+        let second: Value = serde_json::from_str(&bodies[1]).unwrap();
+        assert_eq!(first["tools"][0]["type"], "web_search");
+        assert!(second.get("tools").is_none());
+        assert_eq!(second["store"], false);
+        assert_eq!(second["stream"], true);
     }
 
     #[tokio::test]
