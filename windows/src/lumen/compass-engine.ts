@@ -927,7 +927,7 @@ export class CompassEngine {
     const radius = Math.min(width, height) * 0.34;
     const dance = danceTransform(this.elapsed, this.dancingLevel, radius);
     const x = width / 2 + dance.dx;
-    const y = height / 2 + dance.dy;
+    const y = height / 2 + this.particleOverhang / 2 + dance.dy;
     ctx.translate(x, y);
     ctx.rotate(dance.rotate);
     ctx.scale(dance.sx, dance.sy);
@@ -951,14 +951,18 @@ export class CompassEngine {
     const sy = reduced ? 1 : this.animSy;
     const stateTilt = cfg.tilt + (reduced ? 0 : this.animTilt);
 
+    const compact = this.isMini || width <= 42;
+    // Em barra compacta/fechada com overhang, reduz levemente a escala para manter cabeça e destaques dentro do recorte vertical.
+    const barFit = !this.isMini && this.particleOverhang > 0 && width <= 36 ? 0.88 : 1;
+
     ctx.save();
-    ctx.translate((width - 96 * scale) / 2, (height - 96 * scale) / 2);
+    ctx.translate((width - 96 * scale) / 2, (height - 96 * scale + this.particleOverhang) / 2);
     ctx.scale(scale, scale);
 
     ctx.save();
     ctx.translate(48 + (reduced ? 0 : this.ox * 32), 49 + (reduced ? 0 : this.oy * 32));
     ctx.rotate(stateTilt + this.tilt + this.roll);
-    ctx.scale(sx * this.es, sy * this.es);
+    ctx.scale(sx * this.es * barFit, sy * this.es * barFit);
     ctx.translate(-48, -49);
 
     const fill = this.bodyColor ?? CHARACTER_COLOR[this.character];
@@ -982,9 +986,9 @@ export class CompassEngine {
       ctx.arc(48, 52, 30, 0, Math.PI * 2);
       ctx.fill();
     }
-    this.drawEyes(ctx, eyes, gaze, sleepingEyes, face, spiralPhase, eyeOpen);
-    this.drawMouth(ctx, mouth, face);
-    this.drawStateAccent(ctx, motionTime);
+    this.drawEyes(ctx, eyes, gaze, sleepingEyes, face, spiralPhase, eyeOpen, compact);
+    this.drawMouth(ctx, mouth, face, compact);
+    this.drawStateAccent(ctx, motionTime, compact);
     if (!reduced && this.particles.length > 0) this.drawParticles(ctx);
     ctx.restore();
 
@@ -1267,16 +1271,25 @@ export class CompassEngine {
     face: FaceLayout,
     spiralPhase: number,
     eyeOpen = 1,
+    compact = false,
   ) {
     const [gx, gy] = gaze;
+    const eyeScale = compact ? 1.24 : 1;
     for (const side of [-1, 1]) {
       const x = side < 0 ? face.eyeLeftX : face.eyeRightX;
       const y = face.eyeY + gy;
       const eye = shape === "wink" && side > 0 ? "happy" : shape;
-      if (eye === "heart") { heart(ctx, x, y, 5.4, BLUSH); continue; }
-      if (eye === "star") { star(ctx, x, y, 5.3, SAND); continue; }
+      ctx.save();
+      if (eyeScale !== 1) {
+        ctx.translate(x, y);
+        ctx.scale(eyeScale, eyeScale);
+        ctx.translate(-x, -y);
+      }
+      if (eye === "heart") { heart(ctx, x, y, 5.4, BLUSH); ctx.restore(); continue; }
+      if (eye === "star") { star(ctx, x, y, 5.3, SAND); ctx.restore(); continue; }
       if (eye === "closed" || eye === "happy" || (sleeping && eye === "pill") || eyeOpen < 0.16) {
         curve(ctx, x - 5, y, x, y + (eye === "happy" ? -6 : 4), x + 5, y, 3.3);
+        ctx.restore();
         continue;
       }
       if (eye === "spiral") {
@@ -1290,14 +1303,16 @@ export class CompassEngine {
           else ctx.lineTo(px, py);
         }
         ctx.strokeStyle = rgbCss(INK);
-        ctx.lineWidth = 1.8;
+        ctx.lineWidth = compact ? 2.2 : 1.8;
         ctx.lineCap = "round";
         ctx.stroke();
+        ctx.restore();
         continue;
       }
       if (eye === "line" || eye === "flat") {
         curve(ctx, x - 5, y, x, y + (eye === "line" ? 0.5 : 1.5), x + 5, y, 3.3);
         if (eye === "flat") curve(ctx, x + 5 * side, y - 6.5, x, y - 4.5, x - 4 * side, y - 3, 2.3);
+        ctx.restore();
         continue;
       }
       const rx = eye === "wide" ? 6.3 : eye === "dot" ? 4.2 : 5.5;
@@ -1318,12 +1333,14 @@ export class CompassEngine {
         curve(ctx, x + 5.5 * side, y - 2.2, x, y - 4, x - 4.5 * side, y - 5.8, 2.5);
         curve(ctx, x - 4.5, y + 4.8, x, y + 6.3, x + 4.5, y + 4.8, 1.8);
       }
+      ctx.restore();
     }
   }
 
-  private drawMouth(ctx: CanvasRenderingContext2D, shape: MouthShape, face: FaceLayout) {
+  private drawMouth(ctx: CanvasRenderingContext2D, shape: MouthShape, face: FaceLayout, compact = false) {
     const mx = face.mouthX;
     const y = face.mouthY;
+    const strokeBoost = compact ? 1.24 : 1;
     if (this.morph > 0.1 || this.slotH > 0.08) {
       ctx.beginPath();
       ctx.ellipse(mx, y + 2, 7 + 4 * this.morph, 2.5 + this.slotH * 10, 0, 0, Math.PI * 2);
@@ -1341,12 +1358,12 @@ export class CompassEngine {
     }
     if (shape === "o" || shape === "sleep") {
       ctx.beginPath();
-      ctx.ellipse(mx, y, shape === "sleep" ? 2.4 : 3.5, shape === "sleep" ? 2.6 : 4.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(mx, y, (shape === "sleep" ? 2.4 : 3.5) * (compact ? 1.15 : 1), (shape === "sleep" ? 2.6 : 4.5) * (compact ? 1.15 : 1), 0, 0, Math.PI * 2);
       ctx.fillStyle = rgbCss(INK);
       ctx.fill();
     } else if (shape === "pant") {
       ctx.beginPath();
-      ctx.ellipse(mx, y + 1.5, 5.4, 4.1, 0, 0, Math.PI * 2);
+      ctx.ellipse(mx, y + 1.5, 5.4 * (compact ? 1.12 : 1), 4.1 * (compact ? 1.12 : 1), 0, 0, Math.PI * 2);
       ctx.fillStyle = rgbCss(INK);
       ctx.fill();
       ctx.beginPath();
@@ -1354,13 +1371,13 @@ export class CompassEngine {
       ctx.fillStyle = rgbCss(BLUSH);
       ctx.fill();
     } else if (shape === "frown") {
-      curve(ctx, mx - 7, y + 3, mx, y - 4, mx + 7, y + 3, 3.2);
+      curve(ctx, mx - 7, y + 3, mx, y - 4, mx + 7, y + 3, 3.2 * strokeBoost);
     } else if (shape === "flat") {
-      curve(ctx, mx - 5, y, mx, y + 0.5, mx + 5, y, 3);
+      curve(ctx, mx - 5, y, mx, y + 0.5, mx + 5, y, 3 * strokeBoost);
     } else {
       const half = shape === "wideSmile" ? 10 : 7;
       const depth = shape === "wideSmile" ? 10 : 7;
-      curve(ctx, mx - half, y - 1, mx, y + depth, mx + half, y - 1, shape === "wideSmile" ? 3.6 : 3.2);
+      curve(ctx, mx - half, y - 1, mx, y + depth, mx + half, y - 1, (shape === "wideSmile" ? 3.6 : 3.2) * strokeBoost);
     }
   }
 
@@ -1381,10 +1398,16 @@ export class CompassEngine {
     ctx.restore();
   }
 
-  private drawSweat(ctx: CanvasRenderingContext2D, multiple = false, motionTime = 0) {
-    const drops: ReadonlyArray<readonly [number, number, number]> = multiple
+  private drawSweat(
+    ctx: CanvasRenderingContext2D,
+    multiple = false,
+    motionTime = 0,
+    customDrops?: ReadonlyArray<readonly [number, number, number]>,
+    dropTravel = 7,
+  ) {
+    const drops: ReadonlyArray<readonly [number, number, number]> = customDrops ?? (multiple
       ? [[81, 17, 0.95], [65, 9, 0.8], [24, 21, 0.85], [34, 9, 0.7]]
-      : [[81, 17, 1]];
+      : [[81, 17, 1]]);
     drops.forEach(([x, y, scale], idx) => {
       if (motionTime <= 0) {
         this.drawSweatDrop(ctx, x, y, scale);
@@ -1392,20 +1415,28 @@ export class CompassEngine {
       }
       const p = (motionTime * 0.95 + idx * 0.27) % 1;
       const alpha = p < 0.78 ? 1 : 1 - (p - 0.78) / 0.22;
-      this.drawSweatDrop(ctx, x, y + p * 7, scale * (0.9 + p * 0.15), alpha);
+      this.drawSweatDrop(ctx, x, y + p * dropTravel, scale * (0.9 + p * 0.15), alpha);
     });
   }
 
-  private drawExclamation(ctx: CanvasRenderingContext2D, x: number, topY: number, dotY: number, color: RGB) {
+  private drawExclamation(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    topY: number,
+    dotY: number,
+    color: RGB,
+    strokeWidth = 3.1,
+    dotRadius = 1.7,
+  ) {
     ctx.beginPath();
     ctx.moveTo(x, topY);
-    ctx.lineTo(x, dotY - 4.3);
+    ctx.lineTo(x, dotY - (dotRadius + 2.6));
     ctx.strokeStyle = rgbCss(color);
-    ctx.lineWidth = 3.1;
+    ctx.lineWidth = strokeWidth;
     ctx.lineCap = "round";
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(x, dotY, 1.7, 0, Math.PI * 2);
+    ctx.arc(x, dotY, dotRadius, 0, Math.PI * 2);
     ctx.fillStyle = rgbCss(color);
     ctx.fill();
   }
@@ -1507,7 +1538,174 @@ export class CompassEngine {
     }
   }
 
-  private drawStateAccent(ctx: CanvasRenderingContext2D, motionTime = 0) {
+  private drawCompactStateAccent(ctx: CanvasRenderingContext2D, motionTime: number, popScale: number) {
+    if (this.showsUpdateHint) {
+      this.drawScaledAccent(ctx, 82, 20, this.badgeS || 1, () => {
+        roundedRect(ctx, 74, 13, 16, 14, 3.5);
+        ctx.fillStyle = rgbCss(this.updateHint ?? SAND);
+        ctx.fill();
+        ctx.strokeStyle = rgbCss(INK);
+        ctx.lineWidth = 2.4;
+        ctx.stroke();
+        curve(ctx, 82, 15.5, 82, 19.5, 82, 24, 2);
+      });
+      return;
+    }
+    switch (this.state) {
+      case "working": {
+        this.drawScaledAccent(ctx, 74, 22.5, popScale, () => {
+          roundedRect(ctx, 58, 12, 32, 21, 5);
+          ctx.fillStyle = rgbCss(SAND);
+          ctx.fill();
+          ctx.strokeStyle = rgbCss(INK);
+          ctx.lineWidth = 2.8;
+          ctx.stroke();
+          roundedRect(ctx, 61, 15, 26, 15, 2.5);
+          ctx.fillStyle = rgbCss(INK);
+          ctx.fill();
+          const lineW = motionTime > 0 ? 11 + Math.abs(Math.sin(motionTime * 4.5)) * 8 : 15;
+          ctx.lineCap = "round";
+          ctx.lineWidth = 3;
+          ctx.strokeStyle = rgbCss(TEAL);
+          ctx.beginPath(); ctx.moveTo(64, 19.5); ctx.lineTo(64 + lineW, 19.5); ctx.stroke();
+          if (motionTime <= 0 || Math.sin(motionTime * 8) > -0.2) {
+            roundedRect(ctx, 64, 23.8, 9, 3.2, 1.2);
+            ctx.fillStyle = rgbCss(APPROVAL_AMBER);
+            ctx.fill();
+          }
+        });
+        const leftTap = motionTime > 0 ? Math.sin(motionTime * 12) * 1.1 : 0;
+        const rightTap = motionTime > 0 ? -leftTap : 0;
+        roundedRect(ctx, 29, 73, 38, 10, 4);
+        ctx.fillStyle = rgbCss(SAND);
+        ctx.fill();
+        ctx.strokeStyle = rgbCss(INK);
+        ctx.lineWidth = 2.6;
+        ctx.stroke();
+        roundedRect(ctx, 34, 76.4, 28, 3.2, 1.4);
+        ctx.fillStyle = rgbCss(INK);
+        ctx.fill();
+        for (const [hx, dy] of [[26, leftTap], [70, rightTap]] as const) {
+          ctx.beginPath();
+          ctx.arc(hx, 78 + dy, 3.5, 0, Math.PI * 2);
+          ctx.fillStyle = rgbCss(SAND);
+          ctx.fill();
+          ctx.strokeStyle = rgbCss(INK);
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
+        }
+        break;
+      }
+      case "thinking": {
+        this.drawScaledAccent(ctx, 76, 21.5, popScale, () => {
+          roundedRect(ctx, 60, 12, 32, 19, 9.5);
+          ctx.fillStyle = rgbCss(SAND);
+          ctx.fill();
+          ctx.strokeStyle = rgbCss(INK);
+          ctx.lineWidth = 2.8;
+          ctx.stroke();
+          [68, 76, 84].forEach((dx, idx) => {
+            const wave = motionTime > 0 ? Math.max(0, Math.sin(motionTime * 5.2 - idx * 0.9)) : 0;
+            ctx.beginPath();
+            ctx.arc(dx, 21.5 - wave * 2.2, 2.0 + wave * 0.45, 0, Math.PI * 2);
+            ctx.fillStyle = rgbCss(INK);
+            ctx.fill();
+          });
+          ctx.beginPath(); ctx.arc(58, 34.5, 2.6, 0, Math.PI * 2);
+          ctx.fillStyle = rgbCss(SAND); ctx.fill(); ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.1; ctx.stroke();
+        });
+        break;
+      }
+      case "searching": {
+        const dx = motionTime > 0 ? Math.cos(motionTime * 2.6) * 2 : 0;
+        const dy = motionTime > 0 ? Math.sin(motionTime * 5.2) * 0.9 : 0;
+        ctx.save();
+        ctx.translate(dx, dy);
+        for (const [color, width] of [[INK, 5.6], [SAND, 2.6]] as const) {
+          ctx.beginPath(); ctx.moveTo(83, 29); ctx.lineTo(90, 36);
+          ctx.strokeStyle = rgbCss(color); ctx.lineWidth = width; ctx.lineCap = "round"; ctx.stroke();
+        }
+        ctx.beginPath(); ctx.arc(76, 22, 10, 0, Math.PI * 2);
+        ctx.fillStyle = rgbCss(GLASS_TINT); ctx.fill();
+        ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 3.1; ctx.stroke();
+        ctx.beginPath(); ctx.arc(76, 22, 6, -Math.PI * 0.85, -Math.PI * 0.25);
+        ctx.strokeStyle = rgbCss(CLAUDE_WHITE); ctx.lineWidth = 2.2; ctx.lineCap = "round"; ctx.stroke();
+        ctx.restore();
+        break;
+      }
+      case "approval": {
+        const pulse = motionTime > 0 ? 1 + Math.sin(motionTime * 6.5) * 0.08 : 1;
+        this.drawScaledAccent(ctx, 76, 23, popScale * pulse, () => {
+          const arcOut = motionTime > 0 ? (0.5 + 0.5 * Math.sin(motionTime * 6.5)) * 1.4 : 0;
+          for (const [ax, cx] of [[61.5 - arcOut, 57.5 - arcOut], [90.5 + arcOut, 94.5 + arcOut]] as const) {
+            curve(ctx, ax, 15.5, cx, 23, ax, 30.5, 2.8);
+          }
+          ctx.beginPath(); ctx.arc(76, 23, 12, 0, Math.PI * 2);
+          ctx.fillStyle = rgbCss(APPROVAL_AMBER); ctx.fill();
+          ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.9; ctx.stroke();
+          this.drawExclamation(ctx, 76, 16, 29.2, INK, 3.5, 2);
+        });
+        break;
+      }
+      case "question": {
+        this.drawScaledAccent(ctx, 76, 23, popScale, () => {
+          ctx.beginPath(); ctx.arc(76, 23, 12, 0, Math.PI * 2);
+          ctx.fillStyle = rgbCss(SAND); ctx.fill();
+          ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.9; ctx.stroke();
+          ctx.beginPath(); ctx.arc(76, 19.3, 3.6, -Math.PI * 0.95, Math.PI * 0.35); ctx.lineTo(76, 24.4);
+          ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 3.2; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke();
+          ctx.beginPath(); ctx.arc(76, 29.4, 2, 0, Math.PI * 2); ctx.fillStyle = rgbCss(INK); ctx.fill();
+        });
+        break;
+      }
+      case "error": {
+        this.drawScaledAccent(ctx, 76, 24, popScale, () => {
+          ctx.beginPath();
+          ctx.moveTo(76, 11);
+          ctx.lineTo(90, 34);
+          ctx.lineTo(62, 34);
+          ctx.closePath();
+          ctx.fillStyle = rgbCss(ERROR_RED); ctx.fill();
+          ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.9; ctx.lineJoin = "round"; ctx.stroke();
+          this.drawExclamation(ctx, 76, 17.8, 29.8, CLAUDE_WHITE, 3.3, 1.9);
+        });
+        break;
+      }
+      case "finished": {
+        this.drawScaledAccent(ctx, 76, 23, popScale, () => {
+          ctx.beginPath(); ctx.arc(76, 23, 12, 0, Math.PI * 2);
+          ctx.fillStyle = rgbCss(DONE_GREEN); ctx.fill();
+          ctx.strokeStyle = rgbCss(INK); ctx.lineWidth = 2.9; ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(69.5, 23.2); ctx.lineTo(74.2, 27.8); ctx.lineTo(82.8, 18.2);
+          ctx.strokeStyle = rgbCss(CLAUDE_WHITE); ctx.lineWidth = 3.6; ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.stroke();
+        });
+        break;
+      }
+      case "ratelimit":
+        this.drawSweat(ctx, true, motionTime, [[79, 19, 1.1], [63, 13, 0.95], [27, 21, 1]], 5);
+        break;
+      case "sleeping": {
+        const anchors: ReadonlyArray<readonly [number, number, number]> = [[68, 29, 7.2], [80.5, 18, 9.8]];
+        anchors.forEach(([cx, cy, size], idx) => {
+          if (motionTime <= 0) {
+            this.drawSleepZ(ctx, cx, cy, size);
+            return;
+          }
+          const phase = (motionTime * 0.45 + idx * 0.4) % 1;
+          const alpha = phase < 0.15 ? phase / 0.15 : phase > 0.78 ? (1 - phase) / 0.22 : 1;
+          this.drawSleepZ(ctx, cx + phase * 2.5, cy - phase * 3.5, size * (0.9 + phase * 0.18), Math.max(0.25, alpha));
+        });
+        break;
+      }
+    }
+  }
+
+  private drawStateAccent(ctx: CanvasRenderingContext2D, motionTime = 0, compact = false) {
+    const popScale = this.badgeS > 0 ? this.badgeS : 1;
+    if (compact) {
+      this.drawCompactStateAccent(ctx, motionTime, popScale);
+      return;
+    }
     if (this.showsUpdateHint) {
       this.drawScaledAccent(ctx, 83.5, 11.5, this.badgeS || 1, () => {
         roundedRect(ctx, 76, 5, 15, 13, 3);
@@ -1520,7 +1718,6 @@ export class CompassEngine {
       });
       return;
     }
-    const popScale = this.badgeS > 0 ? this.badgeS : 1;
     switch (this.state) {
       case "working": {
         this.drawWorkingDesk(ctx, motionTime, popScale);
