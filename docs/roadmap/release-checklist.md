@@ -12,6 +12,19 @@
 - [x] Comparar os SHA-256 dos instaladores publicados com o preflight. Os hashes diferiram; os assets finais foram baixados, conferidos com os digests do GitHub e examinados diretamente pelo Defender sem detecções (evento 1001, exame `{9AD2DD74-E9E4-4DCE-8E77-D2954870AA9F}`).
 - Nunca executar esta lista de publicação sem o proprietário pedir release.
 
+## Windows 0.6.18 — personagens (L1.4) e repositório próprio (publicação local)
+
+- [x] Pedido do proprietário em 2026-11-14: publicar as correções dos personagens e sair do fork. Repositório novo público `playertwo1/lumen`, com o histórico e as tags do fork. O remote `origin` passa a ser `playertwo1/lumen`; o fork antigo virou o remote `fork`.
+- [x] `update.rs` procura releases em `playertwo1/lumen`; a string antiga não aparece mais no `lumen.exe`. A 0.6.18 também é publicada em `playertwo1/coucou`, como ponte para os apps até a 0.6.17.
+- [x] Validações locais: `python scripts/test-whats-new.py windows`, `npx tsc --noEmit`, `npm test` (674/674), `npm run build`, `cargo test --lib` (670 passaram, 8 ignorados) e `npm run pack`. GitHub Actions desabilitado no fork; build local.
+- [x] Microsoft Defender, assinaturas `1.463.288.0`, examinou os quatro binários: código 0 e `found no threats`.
+- [x] SHA-256:
+  - MSI `Lumen-Windows-0.6.18.msi`: `B3AD2D04B2E8765B1DBC2B0D5CAAA1ADBF85153A38F411C9C66AC363016931A8`.
+  - Setup `Lumen-Windows-0.6.18-setup.exe`: `16C9977BB697DE870BAFABC81E96F42B08C166D579AB4E1CAABF25178EF78FAC`.
+  - App `lumen.exe`: `F1D67C33FC919A120CA9DF48331F4959D3C571A3156864D4683A8A0B32F61FEF`.
+  - Hook `lumen-hook.exe`: `0587AF505AD0A2516522A1312883B72FE35710AD94141B1BD93D20EA7BDC976D`.
+- [ ] Proprietário atualizar uma instalação 0.6.17 pelo atualizador do app (ponte pelo fork) e confirmar que a 0.6.18 procura a próxima versão em `playertwo1/lumen`. Continua **NOT_RUN**.
+
 ## Windows 0.6.17 — chat com internet e localização (publicação local)
 
 - [x] Pedido do proprietário em 2026-11-14 para empacotar e, em seguida, autorização para publicar. Build local (GitHub Actions desabilitado). Os SHA-256 dos instaladores foram conferidos de novo e o Defender reexaminou o MSI e o setup sem ameaças antes da publicação. A tag aponta para o commit empacotado; a `main` recebeu depois um merge com as correções dos personagens (L1.4), ainda fora desta build.
