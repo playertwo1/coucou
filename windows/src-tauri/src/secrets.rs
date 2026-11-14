@@ -170,36 +170,92 @@ pub fn get_internal(key: &str) -> Option<String> {
 
 /// Reads an internal entry while distinguishing an absent value from a locked or unavailable store.
 pub fn read_internal(key: &str) -> Result<Option<String>, String> {
-    match internal_entry(key)?.get_password() {
-        Ok(value) if !value.is_empty() => Ok(Some(value)),
-        Ok(_) | Err(keyring::Error::NoEntry) => Ok(None),
-        Err(e) => Err(e.to_string()),
+    let head = match internal_entry(key)?.get_password() {
+        Ok(value) if !value.is_empty() => value,
+        Ok(_) | Err(keyring::Error::NoEntry) => return Ok(None),
+        Err(e) => return Err(e.to_string()),
+    };
+    let Some(n) = chunk_count(&head) else {
+        return Ok(Some(head));
+    };
+    let mut out = head[head.find('\n').unwrap() + 1..].to_string();
+    for i in 1..n {
+        out.push_str(&chunk_entry(key, i)?.get_password().map_err(|e| e.to_string())?);
     }
+    Ok(Some(out))
 }
 
-pub fn set_internal(key: &str, value: &str) -> Result<(), String> {
-    let entry = internal_entry(key)?;
-    if value.is_empty() {
-        // An empty value means "forget it" (the relay's access key); some keystores refuse an empty password.
-        return match entry.delete_credential() {
-            Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
-            Err(e) => Err(e.to_string()),
-        };
-    }
-    entry.set_password(value).map_err(|e| e.to_string())
+// Windows Credential Manager refuses values over 2560 UTF-16 bytes; OAuth tokens are longer, so a
+// long value is split: the entry itself holds "~chunks:N~\n" + part 0, entries `key#i` hold the rest.
+const CHUNK_CHARS: usize = 800;
+const CHUNK_MARK: &str = "~chunks:";
+
+fn chunk_count(head: &str) -> Option<usize> {
+    head.strip_prefix(CHUNK_MARK)?.split_once("~\n")?.0.parse().ok()
 }
 
-pub fn clear_internal(key: &str) -> Result<(), String> {
-    let entry = internal_entry(key)?;
+fn chunk_entry(key: &str, i: usize) -> Result<Entry, String> {
+    internal_entry(key)?; // validates the key
+    Entry::new(SERVICE, &format!("{key}#{i}")).map_err(|e| e.to_string())
+}
+
+fn delete_quiet(entry: &Entry) -> Result<(), String> {
     match entry.delete_credential() {
         Ok(()) | Err(keyring::Error::NoEntry) => Ok(()),
         Err(e) => Err(e.to_string()),
     }
 }
 
+/// Deletes the extra parts a previous long value left behind.
+fn clear_chunks(key: &str, from: usize) -> Result<(), String> {
+    let old = internal_entry(key)?.get_password().ok().and_then(|h| chunk_count(&h));
+    for i in from..old.unwrap_or(0) {
+        delete_quiet(&chunk_entry(key, i)?)?;
+    }
+    Ok(())
+}
+
+pub fn set_internal(key: &str, value: &str) -> Result<(), String> {
+    let entry = internal_entry(key)?;
+    if value.is_empty() {
+        // An empty value means "forget it" (the relay's access key); some keystores refuse an empty password.
+        return clear_internal(key);
+    }
+    let chars: Vec<char> = value.chars().collect();
+    let parts: Vec<String> = chars.chunks(CHUNK_CHARS).map(|c| c.iter().collect()).collect();
+    clear_chunks(key, parts.len().max(1))?;
+    if parts.len() == 1 {
+        return entry.set_password(value).map_err(|e| e.to_string());
+    }
+    for (i, part) in parts.iter().enumerate().skip(1) {
+        chunk_entry(key, i)?.set_password(part).map_err(|e| e.to_string())?;
+    }
+    let head = format!("{CHUNK_MARK}{}~\n{}", parts.len(), parts[0]);
+    entry.set_password(&head).map_err(|e| e.to_string())
+}
+
+pub fn clear_internal(key: &str) -> Result<(), String> {
+    clear_chunks(key, 1)?;
+    delete_quiet(&internal_entry(key)?)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Windows Credential Manager refuses blobs over 2560 bytes (1280 UTF-16 chars): OAuth tokens are longer.
+    #[cfg(windows)]
+    #[test]
+    fn long_internal_values_round_trip() {
+        let key = "siwc-host-id";
+        let long = "a".repeat(5000);
+        set_internal(key, &long).unwrap();
+        assert_eq!(read_internal(key).unwrap().as_deref(), Some(long.as_str()));
+        set_internal(key, "short").unwrap();
+        assert_eq!(read_internal(key).unwrap().as_deref(), Some("short"));
+        clear_internal(key).unwrap();
+        assert_eq!(read_internal(key).unwrap(), None);
+    }
 
     #[test]
     fn presence_is_answered_from_memory_once_known() {
