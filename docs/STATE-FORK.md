@@ -1,6 +1,6 @@
 # STATE do fork — ponto de retomada
 
-**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.14`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.14) (Lumen; login real em avaliação) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; L1.4a e L1.4d-1/d-2/d-3 aprovadas visualmente; d4 em andamento; protótipo L1.4b entregue; Canvas escolhido na L1.4c; L1.3 real em avaliação; falta validar o login ChatGPT real
+**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.14`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.14) (Lumen; login real em avaliação) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; L1.4a e L1.4d-1/d-2/d-3 aprovadas visualmente; L1.4d-4 concluída sinteticamente (aguardando revisão visual); protótipo L1.4b entregue; Canvas escolhido na L1.4c; L1.3 real em avaliação; falta validar o login ChatGPT real
 
 Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e evidências ficam nos arquivos de `docs/roadmap/`, e a ordem fica no [ROADMAP-FORK](ROADMAP-FORK.md).
 
@@ -9,7 +9,7 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 | Fase | Estado |
 |---|---|
 | 0, 1, 2 | Pausadas (D-053); ver inventário L0 na Fase L |
-| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; avaliação real da migração pendente; L1.4a e L1.4d-1/d-2/d-3 aprovadas visualmente; L1.4d-4 em andamento; L1.4b entregue com limites de medição registrados; Canvas escolhido na L1.4c em 2026-11-13; L2.1 sintética aprovada e release 0.6.14 publicada; login real pendente |
+| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; avaliação real da migração pendente; L1.4a e L1.4d-1/d-2/d-3 aprovadas visualmente; L1.4d-4 concluída sinteticamente e aguardando revisão visual; L1.4b entregue com limites de medição registrados; Canvas escolhido na L1.4c em 2026-11-13; L2.1 sintética aprovada e release 0.6.14 publicada; login real pendente |
 | 2B, 2C | Pausadas (decisão do dono, 2026-11-13) |
 | M0–M10 | Viram "Lumen assistente"; começam depois do Checkpoint L7 |
 | 3 (identidade) | Incorporada à L1 |
@@ -34,5 +34,5 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 
 - Informar os resultados reais pendentes da instalação da 0.6.13 (MSI/NSIS, settings, hooks, permissões e atualizador).
 - Testar o login ChatGPT real depois da publicação da 0.6.14; nenhum teste real do Sign in with ChatGPT foi executado.
-- Avançar e revisar **L1.4d-4** (animações P2) na página de conferência; o aceite real do checkpoint L1.4 continua aberto até validação explícita no uso real.
+- Avaliar visualmente **L1.4d-4** (animações P2) na página de conferência; o aceite real do checkpoint L1.4 continua aberto até validação explícita no uso real.
 - Validações reais abertas nas fases 0, 1 e 2 (ver inventário da L0 na Fase L).
