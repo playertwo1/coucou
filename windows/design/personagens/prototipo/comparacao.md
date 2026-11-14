@@ -24,4 +24,4 @@ Os tamanhos são dos arquivos locais deste protótipo. Sprite decodificado e buf
 - Não foi medido o percentual real de CPU de um processo Tauri com a ilha escondida nem a memória total do app.
 - Não foi medido o delta de tamanho de um instalador; o protótipo não é integrado ao Tauri.
 - Os bytes do PNG e do código Canvas são valores do protótipo e não substituem o tamanho final do instalador.
-- A escolha entre sprite e Canvas continua com o proprietário; a L1.4c não começou.
+- Em 2026-11-13, o proprietário escolheu Canvas com base nesta revisão técnica; a L1.4d-1 está em andamento. Essa escolha não aprova a implementação nem valida o app em uso real.

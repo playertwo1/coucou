@@ -1518,17 +1518,19 @@ export class Island {
     if (!ctx) return;
 
     const focus = State.focusTask;
-    // A new Coucou waits: over an idle or sleeping Mochi, the blue and the arrow
-    // badge (whats-new.ts). Anything Mochi has to say comes first.
+    const lumenEngine = this.engine as typeof this.engine & { setAgent?: (agentId: string | null) => string };
+    const character = lumenEngine.setAgent?.(focus?.id ?? State.mainPillId);
+    // A new Lumen version waits; only the still-used Mochi fallback needs its old colour override.
     this.engine.setUpdateHint(this.updateHintOn() ? UPDATE_BLUE_RGB : null);
-    // While a plan card is open Mochi wears the plan's colour, like its pill.
     this.engine.bodyColor = planCardOpen()
       ? hexToRGB(openPlanColor())
       : this.engine.showsUpdateHint
         ? UPDATE_BLUE_RGB
-        : focus?.isIntegration
-          ? hexToRGB(focus.color)
-          : null;
+        : character === "generic"
+          ? null
+          : focus?.isIntegration
+            ? hexToRGB(focus.color)
+            : null;
     this.engine.particleOverhang = BOT_OVERHANG;
     this.engine.lookX = this.lookX();
     this.engine.lookY = this.lookY();

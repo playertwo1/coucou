@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>L1.4d-1 · conferência Canvas</title>
+  <style>
+    :root { color-scheme: dark; font: 14px/1.45 system-ui, sans-serif; background: #000; color: #f5f6f8; }
+    body { margin: 0; padding: 24px; }
+    main { max-width: 1100px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 1.35rem; }
+    p { margin: 0 0 18px; color: #c7c4d8; }
+    label { display: grid; width: max-content; gap: 5px; margin: 18px 0; color: #dcd9e7; }
+    select { min-height: 36px; padding: 6px 10px; border: 1px solid #514c74; border-radius: 9px; color: #f5f6f8; background: #15131f; font: inherit; }
+    .agent { margin: 18px 0; padding: 14px; border: 1px solid #302c48; border-radius: 14px; background: #08070d; }
+    h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 1rem; }
+    .swatch { width: 10px; height: 10px; border: 1px solid #514c74; border-radius: 50%; }
+    .badge { margin-left: auto; padding: 2px 7px; border: 1px solid #514c74; border-radius: 99px; color: #c7c4d8; font-size: .7rem; font-weight: 500; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th, td { padding: 7px; border-top: 1px solid #302c48; vertical-align: middle; }
+    th { color: #aaa5c0; font-size: .78rem; font-weight: 500; }
+    tbody th { min-width: 150px; color: #f5f6f8; font-size: .86rem; }
+    .samples { display: flex; flex-wrap: wrap; gap: 12px; }
+    figure { display: grid; justify-items: center; gap: 3px; margin: 0; }
+    figcaption { color: #c7c4d8; font-size: .72rem; }
+    canvas { display: block; background: #000; image-rendering: auto; }
+    .missing { color: #aaa5c0; font-size: .82rem; }
+    #status { margin-top: 16px; color: #aaa5c0; }
+    @media (max-width: 620px) {
+      body { padding: 14px; }
+      th, td { padding: 5px 3px; }
+      tbody th { min-width: 105px; }
+      .samples { gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>L1.4d-1 · conferência da família Canvas</h1>
+    <p>Matriz completa: sete personagens × 11 estados. Codex usa o engine Canvas nos 11 estados; os outros seis mostram suas pranchas aprovadas e ficam marcados como pendentes de Canvas em d2.</p>
+    <label for="dpr">DPR do bitmap
+      <select id="dpr">
+        <option value="1">1×</option>
+        <option value="1.5">1,5×</option>
+        <option value="2">2×</option>
+      </select>
+    </label>
+    <div id="matrix"></div>
+    <div id="status" role="status" aria-live="polite">Carregando pranchas aprovadas…</div>
+  </main>
+  <script type="module">
+    import { BotEngine } from "../../../src/lumen/compass-engine.ts";
+
+    const states = [
+      ["idle", "Parado"], ["working", "Trabalhando"], ["thinking", "Pensando"],
+      ["searching", "Procurando"], ["approval", "Aguardando aprovação"], ["question", "Pergunta"],
+      ["error", "Erro"], ["finished", "Concluído"], ["ratelimit", "Limite temporário"],
+      ["sleeping", "Dormindo"], ["dizzy", "Tonto"],
+    ];
+    const referenceStates = ["idle", "thinking", "working", "sleeping", "approval", "question", "error", "finished"];
+    const agents = [
+      { id: "claude", name: "Claude Code", color: "#F5F6F8", sheet: "claude-code-estados-transparente.png" },
+      { id: "codex", name: "Codex", color: "#2DD4BF", sheet: "codex-estados-transparente.png" },
+      { id: "chatgpt", name: "ChatGPT", color: "#10A37F", sheet: "chatgpt-estados-transparente.png" },
+      { id: "antigravity", name: "Antigravity", color: "#E879F9", sheet: "antigravity-estados-transparente.png" },
+      { id: "gemini-cli", name: "Gemini CLI", color: "#8AB4F8", sheet: "gemini-cli-estados-transparente.png" },
+      { id: "opencode", name: "OpenCode", color: "#4ADE80", sheet: "opencode-estados-transparente.png" },
+      { id: "generic", name: "Genérico", color: "#F4E8C9", sheet: "generico-estados-transparente.png" },
+    ];
+    const labels = new Map(states);
+    const dprSelect = document.querySelector("#dpr");
+    const matrix = document.querySelector("#matrix");
+    const status = document.querySelector("#status");
+    const images = new Map();
+
+    async function loadSheets() {
+      await Promise.all(agents.map(({ sheet }) => new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => { images.set(sheet, image); resolve(); };
+        image.onerror = () => reject(new Error(`Não foi possível carregar ${sheet}`));
+        image.src = `../${sheet}`;
+      })));
+    }
+
+    function sample(size, dpr, caption, draw) {
+      const figure = document.createElement("figure");
+      const canvas = document.createElement("canvas");
+      const label = document.createElement("figcaption");
+      canvas.width = Math.round(size * dpr);
+      canvas.height = Math.round(size * dpr);
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      canvas.setAttribute("role", "img");
+      canvas.setAttribute("aria-label", `${caption} · ${size} px · DPR ${dpr}`);
+      label.textContent = `${size} px`;
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw(ctx, size);
+      figure.append(canvas, label);
+      return figure;
+    }
+
+    function samples(description, draw, dpr) {
+      const group = document.createElement("div");
+      group.className = "samples";
+      for (const size of [22, 96]) group.append(sample(size, dpr, description, (ctx, px) => draw(ctx, px)));
+      return group;
+    }
+
+    function reference(agent, state, dpr) {
+      const index = referenceStates.indexOf(state);
+      if (index < 0) {
+        const note = document.createElement("span");
+        note.className = "missing";
+        note.textContent = "Sem prancha aprovada para este estado.";
+        return note;
+      }
+      const image = images.get(agent.sheet);
+      const col = index % 4;
+      const row = Math.floor(index / 4);
+      return samples(`${agent.name} · ${labels.get(state)} · referência`, (ctx, size) => ctx.drawImage(image, col * 512 + 16, row * 590, 480, 480, 0, 0, size, size), dpr);
+    }
+
+    function render() {
+      const dpr = Number(dprSelect.value);
+      matrix.replaceChildren();
+      for (const agent of agents) {
+        const section = document.createElement("section");
+        section.className = "agent";
+        const heading = document.createElement("h2");
+        const swatch = document.createElement("span");
+        const badge = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.background = agent.color;
+        badge.className = "badge";
+        badge.textContent = agent.id === "codex" ? "Canvas implementado em d1" : "Canvas pendente de d2";
+        heading.append(swatch, document.createTextNode(agent.name), badge);
+        const table = document.createElement("table");
+        table.innerHTML = `<thead><tr><th scope="col">Estado</th><th scope="col">Canvas d1/d2</th><th scope="col">Prancha aprovada</th></tr></thead>`;
+        const body = document.createElement("tbody");
+
+        for (const [state, label] of states) {
+          const row = document.createElement("tr");
+          const stateCell = document.createElement("th");
+          const canvasCell = document.createElement("td");
+          const refCell = document.createElement("td");
+          stateCell.scope = "row";
+          stateCell.textContent = label;
+          if (agent.id === "codex") {
+            const engine = new BotEngine();
+            engine.setAgent("agent_codex");
+            engine.setState(state, true);
+            canvasCell.append(samples(`${agent.name} · ${label} · Canvas`, (ctx, size) => engine.draw(ctx, size, size), dpr));
+          } else {
+            const note = document.createElement("span");
+            note.className = "missing";
+            note.textContent = "A implementar em d2.";
+            canvasCell.append(note);
+          }
+          refCell.append(reference(agent, state, dpr));
+          row.append(stateCell, canvasCell, refCell);
+          body.append(row);
+        }
+        table.append(body);
+        section.append(heading, table);
+        matrix.append(section);
+      }
+      status.textContent = `Matriz completa · 7 agentes × 11 estados · 22/96 px · backing store em DPR ${dpr}. Sem loop, timer ou animação CSS.`;
+    }
+
+    try {
+      await loadSheets();
+      render();
+      dprSelect.addEventListener("change", render);
+    } catch (error) {
+      status.textContent = String(error);
+    }
+  </script>
+</body>
+</html>

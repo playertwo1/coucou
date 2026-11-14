@@ -1,6 +1,6 @@
 # Personagens do Lumen — referências visuais L1.4a
 
-Pranchas conceituais geradas em 2026-11-13 e organizadas em PNG para leitura em fundo preto ou transparente. Em 2026-11-13, o proprietário esclareceu que seu comentário se referia à lineup: “falei errado to falando a lineup, gostei deles das imagens que fez das animacoes etc”. O aceite visual cobre a lineup e as pranchas estáticas dos estados visuais que servem de referência para animações da família original. Não escolhe sprite ou Canvas nem integra personagens ao aplicativo. A Bússola continua sendo somente o ícone do Lumen.
+Pranchas conceituais geradas em 2026-11-13 e organizadas em PNG para leitura em fundo preto ou transparente. O proprietário aprovou visualmente a lineup e as pranchas estáticas em 2026-11-13. Na mesma data, escolheu Canvas com base na revisão técnica da L1.4b; a implementação está na L1.4d. A escolha do renderer não representa aceite de código ou validação real. A Bússola continua sendo somente o ícone do Lumen.
 
 ## Família e paleta
 
@@ -39,4 +39,4 @@ As alterações ficam no olhar, na boca, numa inclinação pequena ou em bolinha
 - `teste-22px.png`: os sete personagens em 22 px reais de largura sobre preto; a ordem é a mesma do lineup.
 - `claude-marca-mascote-estudo.png` e `claude-marca-mascote-estudo-transparente.png`: uma variação exploratória isolada, feita depois do lineup a pedido do proprietário. Usa como referências visuais as pinças de um caranguejo e um motivo radial coral; não incorpora um arquivo oficial de logo ou ilustração.
 
-As sete pranchas da família original não incluem logotipos, símbolos ou mascotes oficiais. O estudo pontual do Claude fica separado para comparação e não foi aprovado para o app nem para distribuição. A família original foi aprovada em 2026-11-13; a comparação L1.4b sprite × Canvas está em andamento fora do app.
+As sete pranchas da família original não incluem logotipos, símbolos ou mascotes oficiais. O estudo pontual do Claude fica separado para comparação e não foi aprovado para o app nem para distribuição. A família original tem aceite visual explícito de 2026-11-13. A revisão técnica da L1.4b levou à escolha do Canvas pelo proprietário na mesma data; o protótipo permanece fora do app até a L1.4d.

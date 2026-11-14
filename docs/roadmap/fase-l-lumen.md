@@ -41,18 +41,26 @@ Os relatos gerais do proprietário nas fases 0 e 2 ficam registrados como relato
   - As pastas `%APPDATA%\\Coucou` e `%LOCALAPPDATA%\\Coucou`, o caminho do hook `bin\\coucou-hook.exe`, AUMID/CLSID de notificações e o serviço do Credential Manager ficam estáveis para preservar settings, hooks e permissões. O UpgradeCode MSI continua igual; NSIS instala Lumen ao lado do Coucou, sem remover a instalação antiga. O atualizador passa a usar assets `Lumen-Windows-*` de `playertwo1/coucou` e leva releases antigas à página de releases.
 - [x] L1.3 Teste sintético de upgrade MSI/NSIS: CI Windows `43424866776` e CI da release `43428181413` passaram no build/empacotamento e instalaram sobre o Coucou 0.6.11 com marcadores sintéticos, confirmando preservação dos dados; também confirmaram instalação NSIS lado a lado. A release `windows-v0.6.13` foi publicada. Microsoft Defender examinou os artefatos de preflight e os instaladores finais, sem detecções (assinaturas `1.463.281.0`, eventos 1001). Nenhum teste foi executado no perfil real do proprietário.
 - **Registro histórico — decisão do proprietário (2026-11-13, posteriormente substituída):** manter os personagens atuais do Coucou sem alterações; a Bússola Lumen fica somente como ícone do aplicativo. A L1.4 de personagens por agente foi cancelada. Não gerar imagens nem sprites e não alterar os personagens.
-- **Registro histórico — L1.4 cancelada antes da reabertura:** naquele momento, o plano original abaixo foi substituído pela decisão de cancelamento e ficou suspenso; esta decisão foi revogada em 2026-11-13, conforme o registro atual adiante.
-  - Imagens de referência para Claude Code, Codex, ChatGPT, Antigravity, Gemini CLI, OpenCode e agente genérico, com sete estados e teste a 22 px.
-  - Protótipo comparativo de sprite e Canvas a 22 px e 96 px, CPU com ilha escondida, memória e tamanho do instalador.
-  - Escolha do proprietário entre sprite e código e implementação da alternativa.
--  - Checkpoint proposto no plano anterior: sete estados por agente, 0 % de CPU com ilha escondida e aprovação real. O cancelamento suspendeu esse checkpoint; a L1.4 foi reativada depois, com etapas e estados atualizados abaixo.
-- **Decisão atual do proprietário (2026-11-13; substitui o cancelamento anterior da L1.4):** não há autorização escrita para usar o Mochi. Os personagens serão originais do Lumen; a Bússola continua somente como ícone do aplicativo.
-- [x] **L1.4a — Imagens de referência, sem código do app.** Foram gerados sete personagens originais (Claude Code, Codex, ChatGPT, Antigravity, Gemini CLI, OpenCode e genérico), com oito estados visuais por personagem, lineup de 96 px, teste em 22 px e versões com fundo transparente em `windows/design/personagens/`. O `README.md` registra primitivas, cores e mudanças de estado para futura avaliação em Canvas.
-  - **Aceite do proprietário (2026-11-13):** a mensagem “vamos seguuir entao com as 8, ficou bom pode segir na roadmap” referia-se à lineup. O proprietário esclareceu “falei errado to falando a lineup, gostei deles das imagens que fez das animacoes etc”. Registrado como aprovação visual da lineup e das pranchas estáticas dos estados visuais que servem de referência para animações dos sete personagens. Não escolhe sprite ou Canvas nem autoriza integração ao app.
-- [ ] **L1.4b — Protótipo Codex sprite × Canvas**, em andamento e fora da release. Comparar os oito estados e a legibilidade a 22 e 96 px; registrar carga ociosa com a ilha escondida, memória e bytes dos recursos. A contribuição ao tamanho do instalador Tauri não pode ser medida sem integração e ficará identificada como não medida. A escolha entre sprite e Canvas pertence ao proprietário.
-- [ ] **L1.4c — Implementação da alternativa escolhida.** Bloqueada pela decisão do proprietário na L1.4b; exige spec e plano próprios antes de qualquer código.
-- **Avaliação real da 0.6.13 (2026-11-13):** o proprietário relatou que "aparece tudo" (nome, ícone e identidade visíveis após instalar). Registrado como relato do cenário de identidade, que levou à decisão acima. Sem resultado ainda: tipo de instalação usado (MSI ou NSIS), settings preservados, hooks, permissões (permitir, negar, sem clique) e atualizador.
-- Checkpoint L1: identidade visual/sons originais e migração sintética passaram antes da publicação. Lumen 0.6.13 está publicada; os cenários reais de migração continuam **em avaliação do proprietário**. A L1.4a foi aprovada em 2026-11-13; a L1.4b está em andamento fora do app e aguarda a comparação e a escolha explícita do proprietário. A aprovação visual não marca L1.4b, L1.4c, L1.3 ou L1 como concluídas. Por solicitação explícita do proprietário para avançar no roadmap, a L2.1 pode progredir enquanto a avaliação real da L1.3 continua aberta.
+- **Registro histórico — L1.4 cancelada antes da reabertura:** naquele momento, o plano original abaixo foi substituído pela decisão de cancelamento e ficou suspenso; a decisão foi revogada em 2026-11-13, conforme o registro atual.
+  - Imagens de referência para Claude Code, Codex, ChatGPT, Antigravity, Gemini CLI, OpenCode e agente genérico, com estados e teste a 22 px.
+  - Protótipo comparativo de sprite e Canvas a 22 px e 96 px, carga ociosa, memória e tamanho do instalador.
+  - Escolha do proprietário sobre o renderer e implementação da alternativa.
+  - O plano anterior propunha aprovação real; a L1.4 reaberta define subetapas e não fecha o aceite visual nem real sem evidência.
+- **Decisão atual do proprietário (2026-11-13):** sem autorização escrita para usar o Mochi, os personagens serão originais do Lumen; a Bússola continua somente como ícone do aplicativo.
+- [x] **L1.4a — Imagens de referência, sem código do app.** Foram gerados sete personagens originais (Claude Code, Codex, ChatGPT, Antigravity, Gemini CLI, OpenCode e genérico), com oito estados visuais por personagem, lineup de 96 px, teste em 22 px e versões com fundo transparente em `windows/design/personagens/`.
+  - **Aceite visual do proprietário (2026-11-13):** “vamos seguuir entao com as 8” referia-se à lineup; o proprietário esclareceu “falei errado to falando a lineup, gostei deles das imagens que fez das animacoes etc”. O aceite cobre a lineup e as pranchas estáticas dos estados, não o comportamento animado nem a integração ao app.
+- [x] **L1.4b — Protótipo Codex sprite × Canvas**, entregue fora da release e integrado à `main`. A comparação mantém lado a lado a referência aprovada e o desenho em Canvas nos oito estados e a 22/96 px. A página interativa e a prancha estão no repositório para conferência.
+  - **Limites registrados:** CPU e memória total de Tauri, tamanho final do instalador e comparação de runtime não foram medidos. O relatório só afirma contagens estáticas e estimativas de pixels; a comparação não representa aceite de movimentos ou validação real.
+- [x] **L1.4c — Escolha do renderer:** em 2026-11-13, com base na revisão técnica da L1.4b, o proprietário escolheu Canvas. Esta decisão autoriza o início da L1.4d; não declara aceite do código, da execução real nem do checkpoint L1.4.
+- [ ] **L1.4d — Engine Canvas por agente**, em subetapas com um commit cada; ao fim de cada uma, apresentar a página de conferência e parar para avaliação do proprietário.
+  - [x] **L1.4d-1 — Base da família e Codex:** implementação e testes sintéticos concluídos. Engine compatível, primitivas comuns, Codex em 11 estados e página de desenvolvimento com a matriz completa de 7 agentes × 11 estados em 22/96 px e DPR 1/1,5/2. Nesta subetapa, as seis artes restantes são referências PNG aprovadas; seus renderers Canvas ficam para d2.
+    - [ ] Revisão visual da página pelo proprietário antes de iniciar d2. Isso não equivale a aceite real do checkpoint L1.4.
+  - [ ] **L1.4d-2 — Outros seis personagens nos 11 estados.** Inclui `searching` (pose de pensar com varredura dos olhos), `ratelimit` (olhos cansados e gota; nunca dormindo) e `dizzy` (olhos em espiral; nunca pergunta).
+  - [ ] **L1.4d-3 — Animações P1** do catálogo definido no plano L1.4d.
+  - [ ] **L1.4d-4 — Animações P2** do catálogo definido no plano L1.4d.
+- [ ] Animações P3 ficam adiadas às fases correspondentes: nota ao salvar (L3), sino/adiar/check de tarefa (L4), carta ao resumir e sem sugerir envio (L5), estados distintos de salvo/sincronizado (L6), caixa guardada na nuvem durante backup (L7).
+- **Avaliação real da 0.6.13 (2026-11-13):** o proprietário relatou que "aparece tudo" (nome, ícone e identidade visíveis após instalar). Sem resultado ainda: tipo de instalação usado (MSI ou NSIS), settings preservados, hooks, permissões (permitir, negar, sem clique) e atualizador.
+- Checkpoint L1: identidade visual/sons originais e migração sintética passaram antes da publicação. Lumen 0.6.13 está publicada; cenários reais de migração continuam **em avaliação do proprietário**. A L1.4a tem aceite visual explícito; Canvas foi escolhido na L1.4c; a implementação sintética d1 está pronta para revisão visual, ainda sem aceite do proprietário. O checkpoint real L1.4, L1.3 ou L1 não está fechado.
 
 ### L2 — Login OAuth do ChatGPT no Lumen (M)
 - [x] L2.1 Implementação sintética aprovada em 2026-11-13: autenticação oficial Sign in with ChatGPT para cliente local de código aberto, PKCE, callback em `127.0.0.1`, validação OIDC, contas separadas e credenciais no cofre do sistema. A chave OpenAI existente continua independente. `npx tsc --noEmit`, 659 testes Node, `npm run build`, 660 testes Rust (8 ignorados) e `python scripts/test-whats-new.py windows` passaram. Preflight Windows `43477378762` e workflow de release `43482202733` passaram, incluindo upgrade sintético MSI/NSIS; Microsoft Defender não detectou ameaças nos artefatos do preflight nem nos instaladores finais. A versão `windows-v0.6.14` foi publicada e seus hashes conferem com os digests do GitHub. Login com conta real permanece **NOT_RUN**, aguardando o proprietário. Spec e plano: `docs/superpowers/specs/2026-11-13-l2-chatgpt-oauth.md` e `docs/superpowers/plans/2026-11-13-l2-chatgpt-oauth.md`.
@@ -64,6 +72,7 @@ Os relatos gerais do proprietário nas fases 0 e 2 ficam registrados como relato
 - [ ] L3.1 O Notetaker deixa de ser gravador de reunião e passa a ser **anotador**: ditado ou captura rápida vira nota.
 - [ ] L3.2 Comentários das personas com as mesmas regras do celular. Até o sync existir (L6), os comentários usam as personas importadas manualmente. (QwenPaw) Formato de referência para a persona importada: identidade e estilo, perfil do usuário e regras em partes separadas.
 - Checkpoint L3: uma nota ditada gera um comentário de persona, sem duplicar.
+- Animação P3 (adiada até a L3): quando uma ideia virar nota, o personagem escreve uma notinha com uma caneta.
 
 ### L4 — Tarefas no Lumen (M)
 Depende de: F11-01 da Segunda Mente (modelo de tarefa fixado).
@@ -72,11 +81,13 @@ Depende de: F11-01 da Segunda Mente (modelo de tarefa fixado).
 - [ ] L4.3 Captura por atalho ou ditado gera um cartão de confirmação.
 - [ ] L4.4 Aviso do Windows com Adiar, Concluir e Abrir. (QwenPaw) Referência em Rust: `console/src-tauri/src/notification_delivery/windows.rs` (toast com AUMID e ativação COM). Manter o AUMID atual do app (L1.2).
 - Checkpoint L4: a tarefa criada por voz avisa no horário certo no notebook.
+- Animação P3 (adiada até a L4): um sino aparece no lembrete; ao adiar, o personagem empurra o sino; ao concluir, traça um check.
 
 ### L5 — E-mail pessoal (M)
 - [ ] L5.1 MailCraft como e-mail principal, ligado pelo servidor MCP ou pelo canal de controle (`UCS-Care-Group/mailcraft`). Escopo: ler, resumir e preparar rascunho. Nunca enviar.
 - [ ] L5.2 O Outlook clássico (`mail/`) fica como secundário.
 - Checkpoint L5: o Lumen resume a caixa de entrada pessoal e prepara um rascunho sem enviar.
+- Animação P3 (adiada até a L5): uma carta cai na mão ao resumir a caixa; a pose nunca sugere que algo foi enviado.
 
 ### L6 — Sync com a Segunda Mente (G)
 Depende de: F12-01 da Segunda Mente (contrato de sync).
@@ -85,6 +96,7 @@ Depende de: F12-01 da Segunda Mente (contrato de sync).
 - [ ] L6.3 Outbox, aplicação idempotente e status "salvo neste PC" separado de "sincronizado".
 - [ ] L6.4 Escopo: tarefas, notas, conversas e comentários, personas, preferências e memória resumida. Concluir ou adiar num aparelho cancela o aviso no outro. (QwenPaw) A memória resumida atualiza cada conclusão por uma de quatro ações (criar, corroborar, refinar, corrigir), em vez de acumular notas repetidas; o formato é fixado com a Segunda Mente no contrato F12-01.
 - Checkpoint L6: com o celular desligado, a tarefa criada no PC chega ao celular uma vez quando ele reconecta, e o alarme dele toca.
+- Animação P3 (adiada até a L6): duas bolinhas percorrem o trajeto de sync; poses diferentes distinguem “salvo neste PC” de “sincronizado”.
 
 ### L7 — Google no Lumen (M)
 Depende de: F13-02 da Segunda Mente (login Google próprio).
@@ -92,6 +104,7 @@ Depende de: F13-02 da Segunda Mente (login Google próprio).
 - [ ] L7.2 Backup semanal dos dados do Lumen no Drive, numa subpasta própria.
 - [ ] L7.3 Google Calendar: ler eventos e criar evento a partir de tarefa confirmada.
 - Checkpoint L7: o backup é restaurado e o evento é criado só com confirmação.
+- Animação P3 (adiada até a L7): uma nuvenzinha guarda uma caixa durante o backup.
 
 ### Depois desta fase
 O plano M0–M10 continua como **"Lumen assistente"**, com as mesmas regras M. O modo "mais ativo" (resumos, cobranças e sugestões) é a F14 da Segunda Mente e roda nos dois aparelhos. (QwenPaw) Referência para a F14: o heartbeat, que roda perguntas fixas por intervalo e só dentro de uma janela de horário ativo.

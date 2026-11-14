@@ -15,6 +15,12 @@ interface MiniBot {
 
 const live = new Map<HTMLCanvasElement, MiniBot>();
 
+function setMiniAgent(engine: BotEngine, task: AgentTask) {
+  const lumenEngine = engine as BotEngine & { setAgent?: (agentId: string | null) => string };
+  const character = lumenEngine.setAgent?.(task.id);
+  engine.bodyColor = character === undefined || character === "codex" ? hexToRGB(task.color) : null;
+}
+
 /**
  * Creates a mini Mochi whose **body** is `bodySize` CSS pixels across.
  *
@@ -41,7 +47,7 @@ export function createMiniBot(task: AgentTask, bodySize: number, dancing?: () =>
 
   const engine = new BotEngine();
   engine.isMini = true;
-  engine.bodyColor = hexToRGB(task.color);
+  setMiniAgent(engine, task);
   engine.setState(task.state, true);
   if (task.emote) engine.setPermanentEmote(task.emote);
   if (task.miniEye) {
@@ -70,7 +76,7 @@ export function syncMiniBotStates(tasks: AgentTask[]) {
     const task = tasks.find((t) => t.id === mb.taskId);
     if (!task) continue;
     mb.engine.setState(task.state);
-    mb.engine.bodyColor = hexToRGB(task.color);
+    setMiniAgent(mb.engine, task);
   }
 }
 

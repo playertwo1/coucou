@@ -30,7 +30,7 @@ If you fork Coucou to ship your own app, that's welcome under the MIT License: j
 
 ## Lumen for Windows
 
-O fork para Windows usa o nome original Lumen e a arte da Bússola de papel, desenhada em `windows/src/lumen/compass.ts` e `windows/scripts/gen-icons.mjs`. A paleta sonora é sintetizada em `windows/src/core/sound.ts`; o pacote não inclui os arquivos WAV compartilhados do Coucou. Os elementos visuais e sonoros do Lumen foram criados para este fork e não derivam dos assets Coucou ou Mochi listados acima.
+O fork para Windows usa o nome original Lumen. A Bússola de papel, desenhada em `windows/src/lumen/compass.ts` e `windows/scripts/gen-icons.mjs`, permanece somente no ícone do aplicativo. Os personagens são originais do Lumen e não usam nem derivam do Mochi, Coucou ou Clawd, nem de logos, símbolos ou mascotes oficiais de empresas. A L1.4d-1 desenha o Codex em Canvas em `windows/src/lumen/compass-engine.ts`; as outras seis identidades ainda usam as pranchas PNG aprovadas até d2. A escolha do Canvas não representa aceite visual deste código. A paleta sonora é sintetizada em `windows/src/core/sound.ts`; o pacote não inclui os arquivos WAV compartilhados do Coucou.
 
 ## Questions or permission requests
 

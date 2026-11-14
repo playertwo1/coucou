@@ -18,26 +18,30 @@
 
 ### Personagens por agente — estudo assumido pela L1.4 (2026-11-13)
 
-**Decisão do proprietário (2026-11-13):** a decisão anterior de cancelar a L1.4 foi substituída. Como não há autorização escrita para usar o Mochi, os personagens do Lumen serão originais. A Bússola continua somente como ícone do aplicativo. O estudo foi assumido pela L1.4. O proprietário esclareceu que “vamos seguuir entao com as 8” referia-se à lineup: “falei errado to falando a lineup, gostei deles das imagens que fez das animacoes etc”. O aceite visual cobre a lineup e as pranchas estáticas dos estados visuais que servem de referência para animações dos sete agentes. Isso não escolhe sprite ou Canvas nem aprova implementação no app.
+**Decisões do proprietário (2026-11-13):** a decisão anterior de cancelar a L1.4 foi substituída. Sem autorização escrita para usar o Mochi, os personagens do Lumen serão originais; a Bússola continua somente como ícone do aplicativo. O proprietário aprovou visualmente a lineup e as pranchas estáticas dos estados dos sete agentes. Com base na revisão técnica da L1.4b, escolheu Canvas na L1.4c. Essa decisão autoriza a implementação por etapas, sem aprovar código, animações ou uso real.
 
-Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (ideias gerais de estados, proporção e pacotes; sem copiar arte ou código) e [pesquisa QwenPaw](../research/qwenpaw.md) (mapa de eventos para estados). Referências externas podem orientar ideias gerais, mas as imagens finais devem permanecer originais, sem copiar arte nem incluir logos, símbolos ou mascotes oficiais.
+Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (ideias gerais de estados, proporção e pacotes; sem copiar arte ou código) e [pesquisa QwenPaw](../research/qwenpaw.md) (mapa de eventos para estados). As imagens finais e o código dos personagens permanecem originais, sem copiar arte nem incluir logos, símbolos ou mascotes oficiais.
 
 **L1.4a — imagens de referência, sem código do app:**
 
 - [x] Gerar lineup dos sete personagens, uma prancha por personagem com quatro estados obrigatórios e quatro desejáveis, teste de 22 px, versões transparentes e `README.md` em pt-BR em `windows/design/personagens/`.
-- [x] O proprietário aprovou visualmente a lineup e as pranchas estáticas de estados visuais em 2026-11-13; evidência e esclarecimento registrados acima. O aceite não inclui o estudo separado do Claude com referências de marca.
+- [x] O proprietário aprovou visualmente a lineup e as pranchas estáticas em 2026-11-13; o estudo isolado de marca do Claude não foi aprovado para o app.
 
-**L1.4b — protótipo sprite × Canvas, em andamento fora da release:**
+**L1.4b — protótipo sprite × Canvas:**
 
-- [ ] Comparar o mesmo personagem em sprite e Canvas fora da release.
-- [ ] Medir legibilidade a 22 e 96 px, CPU com a ilha escondida (meta 0 %), memória e tamanho do instalador.
-- [ ] Aguardar a escolha explícita do proprietário entre sprite e código.
+- [x] Protótipo Codex isolado e documentação comparativa integrados à `main`.
+- [x] O proprietário escolheu Canvas com base na revisão técnica em 2026-11-13.
+- [ ] CPU e memória total de Tauri, delta do instalador e comparação em runtime seguem sem medição; consultar `windows/design/personagens/prototipo/comparacao.md`.
 
-O protótipo isolado começou após o aceite explícito da L1.4a em 2026-11-13. A medição do tamanho real do instalador Tauri depende de integração e não será apresentada como resultado deste protótipo.
+**L1.4d — implementação Canvas, fora deste bloco de itens parqueados:**
 
-**Histórico do escopo anterior enquanto o estudo estava parqueado:** a proposta era gerar imagens de um agente só nos quatro estados `idle`, `thinking`, `working` e `sleeping`, depois comparar sprite e desenho em código. A L1.4a ampliou a referência para sete agentes e oito estados visuais; após o aceite explícito de 2026-11-13, o protótipo L1.4b começou isolado do app.
+- [x] d1 (base da família e Codex em 11 estados) tem implementação e testes sintéticos concluídos.
+- [ ] Revisão visual da página de conferência pelo proprietário antes de iniciar a etapa seguinte; isto não registra aceite real.
+- [ ] d2 (outros seis personagens), d3 (animações P1) e d4 (animações P2) aguardam conclusão e conferência de cada subetapa anterior.
 
-Checkpoint atual: a L1.4a está aprovada; a L1.4b aguarda comparação e escolha explícita do proprietário entre sprite e Canvas. A L1.4c permanece bloqueada; nenhum personagem foi integrado ao aplicativo.
+**Histórico do escopo anterior enquanto o estudo estava parqueado:** a proposta inicial era gerar imagens de um agente nos quatro estados `idle`, `thinking`, `working` e `sleeping`; a L1.4a ampliou as referências para sete agentes e oito estados visuais.
+
+Checkpoint atual: a seleção do Canvas está registrada; d1 está pronta para revisão visual do proprietário. Nada aqui fecha o aceite real da L1.4.
 
 ### Conectores externos do pacote Mochi
 
