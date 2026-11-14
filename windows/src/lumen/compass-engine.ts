@@ -1,5 +1,18 @@
 import type { BotEmoteName, BotStateName } from "../core/layout";
-import type { MochiMood } from "../mochi/mood";
+import {
+  CALM,
+  dropAt,
+  dropGone,
+  heatWave,
+  hopAt,
+  isCalm,
+  nextHop,
+  restingHop,
+  throwDrop,
+  type MochiMood,
+  type MoodDrop,
+  type MoodHop,
+} from "../mochi/mood";
 import type { Outfit } from "../mochi/wardrobe";
 import { Sound } from "../core/sound";
 
@@ -27,7 +40,6 @@ const BLUSH: RGB = [0.91, 0.57, 0.63];
 const APPROVAL_AMBER: RGB = [0.984, 0.749, 0.141];
 const ERROR_RED: RGB = [0.937, 0.306, 0.349];
 const DONE_GREEN: RGB = [0.165, 0.788, 0.459];
-const NEUTRAL: MochiMood = { busy: 0, hot: 0, full: 0, tired: 0, asleep: false };
 
 const AGENT_CHARACTER_MAP: Record<string, LumenCharacter> = {
   integration_claude: "claude",
@@ -154,6 +166,10 @@ const BADGE_POP: ReadonlyArray<EnvelopeStep> = [[0.18, 1.14], [0.1, 1]];
 const ACTIVE_LOOP_STATES: ReadonlySet<BotStateName> = new Set([
   "working", "thinking", "searching", "approval", "ratelimit", "sleeping", "dizzy",
 ]);
+const MOOD_ACTIVE_STATES: ReadonlySet<BotStateName> = new Set([
+  "idle", "working", "thinking", "searching", "finished",
+]);
+const CALM_STATES: ReadonlySet<BotStateName> = new Set(["idle", "finished"]);
 
 function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   const radius = Math.max(0, Math.min(r, w / 2, h / 2));
@@ -225,9 +241,10 @@ function star(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, co
 export class CompassEngine {
   isMini = false;
   bodyColor: RGB | null = null;
-  moodTarget: MochiMood = { ...NEUTRAL };
+  moodTarget: MochiMood = { ...CALM };
   moodBusy = 0; moodHot = 0; moodFull = 0; moodTired = 0;
-  moodDrops: unknown[] = [];
+  moodDrops: MoodDrop[] = [];
+  physDx = 0; physDy = 0;
   state: BotStateName = "idle";
   cfg: StateConfig = BOT_STATES.idle;
   badge: Badge | null = null;
@@ -275,6 +292,20 @@ export class CompassEngine {
   private animTilt = 0;
   private animSx = 1;
   private animSy = 1;
+  private physVx = 0;
+  private physVy = 0;
+  private prevOx = 0;
+  private prevOy = 0;
+  private prevRoll = 0;
+  private outfitTarget: Outfit = "none";
+  private moodHop: MoodHop = restingHop();
+  private nextMoodDrop = 0;
+  private nextMoodYawn = 0;
+  private stressTremble = { x: 0, y: 0 };
+  private moodEye: EyeShape | null = null;
+  private miniLookNext = 0;
+  private miniLook = { x: 0, y: 0 };
+  private miniNextBehavior = 0;
 
   private markBusyFor(seconds: number) {
     this.busyUntil = Math.max(this.busyUntil, this.elapsed + seconds);
@@ -359,12 +390,32 @@ export class CompassEngine {
       this.badgePopStart = -1;
     }
   }
-  setOutfit(next: Outfit, _animate = true) { this.outfit = next; this.outfitPresence = next === "none" ? 0 : 1; }
+  setOutfit(next: Outfit, animate = true) {
+    this.outfitTarget = next;
+    if (!animate || reducedMotion()) {
+      this.outfit = next;
+      this.outfitPresence = next === "none" ? 0 : 1;
+      return;
+    }
+    if (next !== "none" && this.outfit === "none") {
+      this.outfit = next;
+      this.outfitPresence = 0;
+    }
+    this.markBusyFor(0.35);
+  }
   setPermanentEmote(emote: BotEmoteName | null) {
     this.permanentEmote = emote;
+    if (emote === "wink") {
+      this.permanentEye = null;
+      this.eyeOverride = null;
+      this.eyeOverrideUntil = 0;
+      this.miniNextBehavior = this.elapsed + 0.8;
+      return;
+    }
     this.permanentEye = emote ? EMOTE_EYE[emote] : null;
     this.eyeOverride = this.permanentEye;
     this.eyeOverrideUntil = emote ? Number.POSITIVE_INFINITY : 0;
+    this.miniNextBehavior = this.elapsed + 1.0;
   }
   triggerEmote(emote: BotEmoteName, duration = 1.8) {
     this.emote = emote;
@@ -404,8 +455,24 @@ export class CompassEngine {
   setDancing(dancing: boolean) { this.isDancing = dancing; }
   get busy() {
     if (reducedMotion()) return false;
+    const moodActive = !this.isMini && (
+      !isCalm(this.moodTarget) ||
+      this.moodDrops.length > 0 ||
+      this.moodBusy + this.moodHot + this.moodFull + this.moodTired > 0.01 ||
+      !this.moodHop.landed
+    );
+    const springMoving =
+      Math.abs(this.physDx) > 0.005 ||
+      Math.abs(this.physDy) > 0.005 ||
+      Math.abs(this.physVx) > 0.01 ||
+      Math.abs(this.physVy) > 0.01;
+    const outfitChanging = this.outfit !== this.outfitTarget;
     return (
       ACTIVE_LOOP_STATES.has(this.state) ||
+      this.isMini ||
+      moodActive ||
+      springMoving ||
+      outfitChanging ||
       this.isDancing ||
       this.dancingLevel > 0.001 ||
       this.rollDuration > 0 ||
@@ -510,6 +577,14 @@ export class CompassEngine {
       this.gulpStart = -1;
       this.pendingSparkAt = -1;
       this.particles = [];
+      this.moodBusy = this.moodHot = this.moodFull = this.moodTired = 0;
+      this.moodDrops = [];
+      this.moodHop = restingHop();
+      this.stressTremble = { x: 0, y: 0 };
+      this.moodEye = null;
+      this.physDx = this.physDy = this.physVx = this.physVy = 0;
+      this.outfit = this.outfitTarget;
+      this.outfitPresence = this.outfit === "none" ? 0 : 1;
       this.ox = 0;
       this.oy = 0;
       this.eyeOpen = 1;
@@ -522,6 +597,14 @@ export class CompassEngine {
     this.dancingLevel = stepDanceLevel(this.dancingLevel, this.isDancing, step);
     this.es += (this.tgEs - this.es) * (1 - Math.exp(-step * 9));
     this.slotH += (this.slotHTarget - this.slotH) * (1 - Math.exp(-step * 16));
+    if (this.outfit !== this.outfitTarget || Math.abs((this.outfitTarget === "none" ? 0 : 1) - this.outfitPresence) > 0.005) {
+      const targetPresence = this.outfitTarget === "none" ? 0 : 1;
+      this.outfitPresence += (targetPresence - this.outfitPresence) * (1 - Math.exp(-step * 14));
+      if (Math.abs(targetPresence - this.outfitPresence) <= 0.01) {
+        this.outfitPresence = targetPresence;
+        this.outfit = this.outfitTarget;
+      }
+    }
 
     if (this.pendingSparkAt >= 0 && this.elapsed >= this.pendingSparkAt) {
       this.pendingSparkAt = -1;
@@ -648,6 +731,10 @@ export class CompassEngine {
     this.animSx = gestureSx * stateSx;
     this.animSy = gestureSy * stateSy;
 
+    if (this.isMini) this.updateMiniBehavior(t);
+    else this.updateMood(step);
+    this.updateSecondaryPhysics(step);
+
     if (this.particles.length > 0) {
       const alive: Particle[] = [];
       for (const p of this.particles) {
@@ -662,6 +749,149 @@ export class CompassEngine {
       }
       this.particles = alive;
     }
+  }
+
+  private easeLevel(curr: number, target: number, k: number) {
+    const next = curr + (target - curr) * k;
+    return target === 0 && Math.abs(next) < 0.002 ? 0 : next;
+  }
+
+  private updateMiniBehavior(t: number) {
+    // Discreet idle breathe even when idle, autonomous wandering look, and periodic permanentEmote actions.
+    if (this.state === "idle") {
+      this.animSy *= 1 + Math.sin(t * 2.2) * 0.04;
+      this.animSx *= 1 - Math.sin(t * 2.2) * 0.022;
+    }
+    if (this.elapsed >= this.miniLookNext) {
+      this.miniLook = { x: -0.85 + Math.random() * 1.7, y: -0.5 + Math.random() * 0.9 };
+      this.miniLookNext = this.elapsed + 0.7 + Math.random() * 1.4;
+    }
+    if (this.permanentEmote && this.elapsed >= this.miniNextBehavior) {
+      switch (this.permanentEmote) {
+        case "happy":
+          this.startHop(-0.18);
+          this.squash();
+          break;
+        case "annoyed":
+          this.startShake();
+          break;
+        case "wink":
+          this.eyeOverride = "wink";
+          this.eyeOverrideUntil = this.elapsed + 0.55;
+          this.waveStart = this.elapsed;
+          this.waveDuration = 0.6;
+          break;
+        case "love":
+          this.emit("heart", 2);
+          this.waveStart = this.elapsed;
+          this.waveDuration = 0.75;
+          break;
+      }
+      this.miniNextBehavior = this.elapsed + 2.4 + Math.random() * 1.4;
+    }
+  }
+
+  private updateMood(step: number) {
+    const shows = MOOD_ACTIVE_STATES.has(this.state);
+    const calm = CALM_STATES.has(this.state);
+    const target = this.moodTarget;
+    const k = 1 - Math.pow(0.25, step);
+    this.moodBusy = this.easeLevel(this.moodBusy, shows ? target.busy : 0, k);
+    this.moodHot = this.easeLevel(this.moodHot, shows ? target.hot : 0, k);
+    this.moodFull = this.easeLevel(this.moodFull, shows ? target.full : 0, k);
+    this.moodTired = this.easeLevel(this.moodTired, calm ? target.tired : 0, k);
+    const sleeping = calm && target.asleep;
+
+    if (this.moodFull > 0.01) {
+      this.animSx *= 1 + 0.07 * this.moodFull;
+      this.animSy *= 1 - 0.035 * this.moodFull;
+    }
+
+    if (this.moodBusy > 0.02 || !this.moodHop.landed) {
+      let hop = this.moodHop;
+      const p = hop.duration > 0 ? Math.min(1, (this.elapsed - hop.start) / hop.duration) : 1;
+      if (p >= 1) {
+        if (!hop.landed) {
+          hop.landed = true;
+          this.squash();
+        }
+        if (this.moodBusy > 0.02 && this.elapsed >= hop.start + hop.duration + hop.rest) {
+          this.moodHop = hop = nextHop(hop, this.moodBusy, this.elapsed);
+        }
+      }
+      const q = Math.min(1, hop.duration > 0 ? (this.elapsed - hop.start) / hop.duration : 1);
+      const { x, lift, dir } = hopAt(hop, q);
+      const amount = Math.min(1, this.moodBusy * 1.4);
+      this.ox += x * amount;
+      this.oy -= lift * amount;
+      if (!hop.landed) this.animTilt += dir * 0.12 * Math.sin(Math.PI * q) * amount;
+      const tremble = Math.min(1, this.moodBusy * 1.3);
+      this.stressTremble = tremble > 0.01
+        ? { x: Math.sin(this.elapsed * 63) * 0.012 * tremble, y: Math.cos(this.elapsed * 51) * 0.01 * tremble }
+        : { x: 0, y: 0 };
+      this.ox += this.stressTremble.x;
+      this.oy += this.stressTremble.y;
+    } else {
+      this.stressTremble = { x: 0, y: 0 };
+    }
+
+    if (this.elapsed >= this.nextMoodDrop) {
+      if (this.moodBusy > 0.4) {
+        this.moodDrops.push(throwDrop(this.elapsed, this.ox, this.oy));
+        this.nextMoodDrop = this.elapsed + 0.22 + Math.random() * 0.2;
+      } else if (this.moodHot > 0.6) {
+        this.moodDrops.push(throwDrop(this.elapsed, this.ox, this.oy));
+        this.nextMoodDrop = this.elapsed + 0.6 + Math.random() * 0.45;
+      } else {
+        this.nextMoodDrop = this.elapsed + 0.3;
+      }
+      if (this.moodDrops.length > 24) this.moodDrops.shift();
+    }
+    if (this.moodDrops.length > 0) {
+      this.moodDrops = this.moodDrops.filter((d) => !dropGone(d, this.elapsed));
+    }
+
+    if (sleeping) {
+      this.moodEye = "closed";
+      if (this.elapsed >= this.nextMoodYawn) {
+        this.emit("z", 1);
+        this.nextMoodYawn = this.elapsed + 1.6;
+      }
+    } else if (this.moodTired > 0.5) {
+      this.moodEye = "tired";
+      if (this.elapsed >= this.nextMoodYawn) {
+        if (this.nextMoodYawn > 0) this.triggerEmote("yawn", 1.2);
+        this.nextMoodYawn = this.elapsed + 24;
+      }
+    } else {
+      this.moodEye = null;
+    }
+  }
+
+  private updateSecondaryPhysics(step: number) {
+    if (step <= 0) return;
+    const oxVel = (this.ox - this.prevOx) / step;
+    const oyVel = (this.oy - this.prevOy) / step;
+    const dRoll = this.roll - this.prevRoll;
+    const rollVel = Math.abs(dRoll) > Math.PI ? 0 : dRoll / step;
+    const clamp1 = (v: number) => Math.max(-1, Math.min(1, v));
+    const tDx = clamp1(-oxVel * 0.45 - this.lookX * 0.35 - this.animTilt * 2 + rollVel * 0.12);
+    const tDy = clamp1(oyVel * 0.5 + this.lookY * 0.25);
+    this.physVx += (60 * (tDx - this.physDx) - 9 * this.physVx) * step;
+    this.physVy += (60 * (tDy - this.physDy) - 9 * this.physVy) * step;
+    this.physDx = clamp1(this.physDx + this.physVx * step);
+    this.physDy = clamp1(this.physDy + this.physVy * step);
+    if (Math.abs(tDx) < 0.002 && Math.abs(this.physDx) < 0.004 && Math.abs(this.physVx) < 0.01) {
+      this.physDx = 0;
+      this.physVx = 0;
+    }
+    if (Math.abs(tDy) < 0.002 && Math.abs(this.physDy) < 0.004 && Math.abs(this.physVy) < 0.01) {
+      this.physDy = 0;
+      this.physVy = 0;
+    }
+    this.prevOx = this.ox;
+    this.prevOy = this.oy;
+    this.prevRoll = this.roll;
   }
 
   applyDance(ctx: CanvasRenderingContext2D, width: number, height: number) {
@@ -680,9 +910,11 @@ export class CompassEngine {
     const cfg = this.cfg ?? BOT_STATES.idle;
     const reduced = reducedMotion();
     const emote = !reduced && this.elapsed < this.emoteUntil ? this.emote : null;
+    const activeMoodEye = !reduced && cfg.eyes === "pill" ? this.moodEye : null;
     const eyes = this.elapsed < this.eyeOverrideUntil && this.eyeOverride ? this.eyeOverride :
-      emote ? EMOTE_EYE[emote] : cfg.eyes;
+      emote ? EMOTE_EYE[emote] : activeMoodEye ?? cfg.eyes;
     const eyeOpen = reduced ? 1 : this.eyeOpen;
+    const sleepingEyes = this.state === "sleeping" || activeMoodEye === "closed";
     const mouth: MouthShape = emote === "surprised" || emote === "yawn" ? "o" :
       emote === "happy" || emote === "proud" ? "wideSmile" :
       emote === "annoyed" ? "flat" : cfg.mouth;
@@ -694,6 +926,8 @@ export class CompassEngine {
     ctx.save();
     ctx.translate((width - 96 * scale) / 2, (height - 96 * scale) / 2);
     ctx.scale(scale, scale);
+
+    ctx.save();
     ctx.translate(48 + (reduced ? 0 : this.ox * 32), 49 + (reduced ? 0 : this.oy * 32));
     ctx.rotate(stateTilt + this.tilt + this.roll);
     ctx.scale(sx * this.es, sy * this.es);
@@ -702,34 +936,74 @@ export class CompassEngine {
     const fill = this.bodyColor ?? CHARACTER_COLOR[this.character];
     const face = CHARACTER_FACE[this.character];
     const motionTime = reduced ? 0 : Math.max(0, this.elapsed - this.stateStart);
+    const miniGaze = !reduced && this.isMini && this.lookX === 0 && this.lookY === 0 ? this.miniLook : null;
     const gaze: readonly [number, number] = !reduced && this.state === "searching"
       ? [Math.cos(motionTime * 2.6) * 2.8 + this.lookX * 0.8, -0.5 - this.lookY * 0.8]
       : !reduced && this.state === "thinking"
         ? [cfg.gaze[0] + Math.sin(motionTime * 2.1) * 0.9 + this.lookX * 1.4, cfg.gaze[1] + Math.cos(motionTime * 1.7) * 0.4 - this.lookY * 1.4]
-        : [cfg.gaze[0] + this.lookX * 2, cfg.gaze[1] - this.lookY * 2];
+        : [cfg.gaze[0] + (miniGaze ? miniGaze.x : this.lookX) * 2, cfg.gaze[1] - (miniGaze ? miniGaze.y : this.lookY) * 2];
     const spiralPhase = !reduced && this.state === "dizzy" ? motionTime * 4.5 : 0;
 
-    this.drawCharacter(ctx, fill);
-    this.drawEyes(ctx, eyes, gaze, this.state === "sleeping", face, spiralPhase, eyeOpen);
+    this.drawCharacter(ctx, fill, reduced);
+    if (!reduced && !this.isMini && this.moodHot > 0.01 && this.morph < 0.5) {
+      const grad = ctx.createRadialGradient(48, 55, 6, 48, 52, 30);
+      grad.addColorStop(0, `rgba(255,92,61,${0.32 * this.moodHot})`);
+      grad.addColorStop(1, "rgba(255,92,61,0)");
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(48, 52, 30, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    this.drawEyes(ctx, eyes, gaze, sleepingEyes, face, spiralPhase, eyeOpen);
     this.drawMouth(ctx, mouth, face);
     this.drawStateAccent(ctx, motionTime);
     if (!reduced && this.particles.length > 0) this.drawParticles(ctx);
     ctx.restore();
+
+    if (!reduced && !this.isMini && this.morph < 0.3) this.drawMoodExtras(ctx);
+    ctx.restore();
   }
 
-  private drawCharacter(ctx: CanvasRenderingContext2D, fill: RGB) {
+  private drawMoodExtras(ctx: CanvasRenderingContext2D) {
+    for (const drop of this.moodDrops) {
+      const age = this.elapsed - drop.born;
+      if (age < 0) continue;
+      const at = dropAt(drop, age);
+      const alpha = drop.alpha * Math.min(1, age / 0.06) * Math.min(1, Math.max(0, (1.05 - at.y) / 0.25));
+      this.drawSweatDrop(ctx, 48 + at.x * 28, 49 + at.y * 28, drop.size * 3.6, alpha);
+    }
+    if (this.moodHot > 0.5) {
+      const strength = (this.moodHot - 0.5) * 2;
+      ctx.save();
+      ctx.strokeStyle = "rgb(255,140,77)";
+      ctx.lineWidth = 2.1;
+      ctx.lineCap = "round";
+      for (let i = 0; i < 3; i++) {
+        const wave = heatWave(i, this.elapsed, 48, 49, 28, 30);
+        ctx.globalAlpha = strength * wave.opacity;
+        ctx.beginPath();
+        wave.points.forEach(([px, py], idx) => (idx ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  private drawCharacter(ctx: CanvasRenderingContext2D, fill: RGB, reduced: boolean) {
+    const lagX = reduced ? 0 : this.physDx;
+    const lagY = reduced ? 0 : this.physDy;
     switch (this.character) {
       case "claude":
-        this.drawClaude(ctx, fill);
+        this.drawClaude(ctx, fill, lagX, lagY);
         break;
       case "codex":
-        this.drawCodex(ctx, fill);
+        this.drawCodex(ctx, fill, lagX, lagY);
         break;
       case "chatgpt":
         this.drawChatGpt(ctx, fill);
         break;
       case "antigravity":
-        this.drawAntigravity(ctx, fill);
+        this.drawAntigravity(ctx, fill, lagX, lagY, reduced ? 0 : this.elapsed);
         break;
       case "gemini":
         this.drawGemini(ctx, fill);
@@ -743,7 +1017,7 @@ export class CompassEngine {
     }
   }
 
-  private drawClaude(ctx: CanvasRenderingContext2D, fill: RGB) {
+  private drawClaude(ctx: CanvasRenderingContext2D, fill: RGB, lagX = 0, lagY = 0) {
     ctx.beginPath();
     ctx.moveTo(32, 13);
     ctx.lineTo(60, 13);
@@ -774,9 +1048,9 @@ export class CompassEngine {
     ctx.moveTo(27, 8);
     ctx.lineTo(35, 8);
     ctx.arcTo(37, 8, 37, 10, 2);
-    ctx.lineTo(37, 25);
-    ctx.lineTo(31, 20);
-    ctx.lineTo(25, 25);
+    ctx.lineTo(37 + lagX * 1.4, 25 + lagY * 1.2);
+    ctx.lineTo(31 + lagX * 1.6, 20 + lagY * 1.2);
+    ctx.lineTo(25 + lagX * 1.4, 25 + lagY * 1.2);
     ctx.lineTo(25, 10);
     ctx.arcTo(25, 8, 27, 8, 2);
     ctx.closePath();
@@ -788,10 +1062,10 @@ export class CompassEngine {
     ctx.stroke();
   }
 
-  private drawCodex(ctx: CanvasRenderingContext2D, fill: RGB) {
+  private drawCodex(ctx: CanvasRenderingContext2D, fill: RGB, lagX = 0, lagY = 0) {
     roundedRect(ctx, 18, 16, 59, 69, 20);
     paintOutlinedShape(ctx, fill);
-    roundedRect(ctx, 74, 55, 14, 27, 7);
+    roundedRect(ctx, 74 + lagX * 1.2, 55 + lagY * 1.2, 14, 27, 7);
     ctx.fillStyle = rgbCss(SAND);
     ctx.fill();
     ctx.strokeStyle = rgbCss(INK);
@@ -808,7 +1082,7 @@ export class CompassEngine {
     paintOutlinedShape(ctx, fill);
   }
 
-  private drawAntigravity(ctx: CanvasRenderingContext2D, fill: RGB) {
+  private drawAntigravity(ctx: CanvasRenderingContext2D, fill: RGB, lagX = 0, lagY = 0, elapsed = 0) {
     ctx.beginPath();
     ctx.moveTo(48, 13);
     ctx.bezierCurveTo(60, 13, 75, 36, 75, 48);
@@ -818,11 +1092,13 @@ export class CompassEngine {
     ctx.closePath();
     paintOutlinedShape(ctx, fill);
 
-    for (const bx of [12.5, 83.5]) {
+    const floatAmp = elapsed > 0 ? 1.5 : 0;
+    [12.5, 83.5].forEach((bx, idx) => {
+      const floatDy = Math.sin(elapsed * 2.8 + idx * Math.PI) * floatAmp;
       ctx.beginPath();
-      ctx.arc(bx, 61, 5.5, 0, Math.PI * 2);
+      ctx.arc(bx + lagX * 2.2, 61 + lagY * 2.4 + floatDy, 5.5, 0, Math.PI * 2);
       paintOutlinedShape(ctx, fill);
-    }
+    });
   }
 
   private drawGemini(ctx: CanvasRenderingContext2D, fill: RGB) {

@@ -44,6 +44,7 @@ function canvasProbe() {
       if (typeof key === "string") {
         return (...args) => {
           ops.push({ op: key, args });
+          if (key === "createRadialGradient" || key === "createLinearGradient") return { addColorStop() {} };
         };
       }
       return undefined;
@@ -213,9 +214,9 @@ test("animações P1 de transição e loop contínuo respeitam tempo e voltam ao
   assert.ok(engine.ox > 0.02, "error deve aplicar tremor horizontal positivo no início");
   engine.update(0.07);
   assert.ok(engine.ox < -0.02, "error deve oscilar para o lado oposto");
-  for (let i = 0; i < 10; i++) engine.update(0.05);
+  for (let i = 0; i < 30; i++) engine.update(0.05);
   assert.equal(engine.ox, 0);
-  assert.equal(engine.busy, false, "após tremor de error, busy volta a false");
+  assert.equal(engine.busy, false, "após tremor e amortecimento da mola, busy volta a false");
 
   // Estados contínuos P1 animam e mantêm busy=true enquanto ativos.
   for (const state of ["working", "thinking", "approval", "ratelimit", "sleeping"]) {
@@ -292,14 +293,72 @@ test("prefers-reduced-motion suprime também os laços e gestos P1", () => {
     engine.gulp();
     engine.slap();
     engine.triggerEmote("love");
+    engine.moodTarget = { busy: 1, hot: 1, full: 1, tired: 1, asleep: true };
+    engine.isMini = true;
+    engine.setPermanentEmote("love");
     engine.update(0.2);
     assert.equal(engine.busy, false);
     assert.equal(engine.ox, 0);
     assert.equal(engine.oy, 0);
     assert.equal(engine.roll, 0);
+    assert.equal(engine.physDx, 0);
+    assert.equal(engine.physDy, 0);
+    assert.equal(engine.moodBusy, 0);
+    assert.equal(engine.moodHot, 0);
     assert.equal(engine.isChewing, false);
   } finally {
     if (previousWindow === undefined) delete globalThis.window;
     else globalThis.window = previousWindow;
   }
+});
+
+test("animações P2 de humor (mood.ts) geram saltos, gotas, ondas de calor e voltam a busy=false no CALM", () => {
+  const engine = new BotEngine();
+  engine.setAgent("agent_antigravity");
+  engine.setState("idle", true);
+
+  engine.moodTarget = { busy: 1, hot: 0.9, full: 0.8, tired: 0, asleep: false };
+  for (let i = 0; i < 20; i++) engine.update(0.1);
+  assert.equal(engine.busy, true, "humor ativo deve manter busy=true");
+  assert.ok(engine.moodBusy > 0.5 && engine.moodHot > 0.5 && engine.moodFull > 0.5);
+  assert.ok(engine.moodDrops.length > 0, "busy/hot deve gerar moodDrops via mood.ts");
+
+  const probe = canvasProbe();
+  engine.draw(probe.ctx, 96, 96);
+  assert.ok(probe.ops.some((o) => o.op === "createRadialGradient"), "PC quente deve desenhar tintura térmica");
+
+  engine.moodTarget = { busy: 0, hot: 0, full: 0, tired: 0.9, asleep: true };
+  for (let i = 0; i < 20; i++) engine.update(0.1);
+  const tiredProbe = canvasProbe();
+  engine.draw(tiredProbe.ctx, 96, 96);
+  assert.ok(tiredProbe.ops.some((o) => o.op === "quadraticCurveTo"), "asleep no humor deve fechar olhos em arco");
+
+  engine.moodTarget = { busy: 0, hot: 0, full: 0, tired: 0, asleep: false };
+  for (let i = 0; i < 65; i++) engine.update(0.1);
+  assert.equal(engine.moodBusy, 0);
+  assert.equal(engine.moodHot, 0);
+  assert.equal(engine.moodDrops.length, 0);
+  assert.equal(engine.busy, false, "retornar para CALM assenta busy em false");
+});
+
+test("animações P2 de mini bots (isMini) e física secundária (physDx/physDy) funcionam e assentam", () => {
+  const mini = new BotEngine();
+  mini.isMini = true;
+  mini.setAgent("integration_claude");
+  mini.setState("idle", true);
+  mini.setPermanentEmote("love");
+  for (let i = 0; i < 15; i++) mini.update(0.1);
+  assert.equal(mini.busy, true);
+
+  const main = new BotEngine();
+  main.setAgent("agent_antigravity");
+  main.setState("idle", true);
+  main.slap();
+  main.update(0.05);
+  main.update(0.05);
+  assert.ok(Math.abs(main.physDx) > 0.001 || Math.abs(main.physDy) > 0.001, "movimento deve excitar a mola secundária");
+  for (let i = 0; i < 50; i++) main.update(0.05);
+  assert.equal(main.physDx, 0, "mola secundária deve assentar em repouso");
+  assert.equal(main.physDy, 0);
+  assert.equal(main.busy, false);
 });
