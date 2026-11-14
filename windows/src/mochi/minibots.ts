@@ -18,7 +18,7 @@ const live = new Map<HTMLCanvasElement, MiniBot>();
 function setMiniAgent(engine: BotEngine, task: AgentTask) {
   const lumenEngine = engine as BotEngine & { setAgent?: (agentId: string | null) => string };
   const character = lumenEngine.setAgent?.(task.id);
-  engine.bodyColor = character === undefined || character === "codex" ? hexToRGB(task.color) : null;
+  engine.bodyColor = character === undefined || character !== "generic" ? hexToRGB(task.color) : null;
 }
 
 /**

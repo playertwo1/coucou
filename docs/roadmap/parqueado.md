@@ -36,12 +36,12 @@ Fontes: [pesquisa clawd-on-desk](../research/clawd-on-desk.md) (ideias gerais de
 **L1.4d — implementação Canvas, fora deste bloco de itens parqueados:**
 
 - [x] d1 (base da família e Codex em 11 estados) tem implementação e testes sintéticos concluídos; o proprietário aprovou a subetapa em 2026-11-13.
-- [ ] d2 (outros seis personagens) é a próxima subetapa, liberada após o aceite visual de d1.
+- [ ] d2 (outros seis personagens nos 11 estados) tem implementação e testes sintéticos concluídos; aguarda conferência visual do proprietário na página de desenvolvimento antes de d3.
 - [ ] d3 (animações P1) e d4 (animações P2) aguardam conclusão e conferência das subetapas anteriores.
 
 **Histórico do escopo anterior enquanto o estudo estava parqueado:** a proposta inicial era gerar imagens de um agente nos quatro estados `idle`, `thinking`, `working` e `sleeping`; a L1.4a ampliou as referências para sete agentes e oito estados visuais.
 
-Checkpoint atual: a seleção do Canvas e o aceite visual de d1 estão registrados; d2 é a próxima subetapa. Nada aqui fecha o aceite real da L1.4.
+Checkpoint atual: a seleção do Canvas e o aceite visual de d1 estão registrados; d2 está implementada e validada sinteticamente, aguardando revisão visual do proprietário antes de d3. Nada aqui fecha o aceite real da L1.4.
 
 ### Conectores externos do pacote Mochi
 
