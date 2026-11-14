@@ -32,6 +32,7 @@ const STRINGS = {
   noModel: N_("Choose a model"),
   loading: N_("Loading models…"),
   noKey: N_("No API key — add it in Settings."),
+  noChatGpt: "Conecte uma conta ChatGPT com acesso ao plano em Configurações.",
   openSettings: N_("Open Settings"),
 };
 
@@ -91,10 +92,21 @@ function buildPicker(onChange: () => void): Picker {
   const cache = new Map<string, ModelInfo[]>();
   let isOpen = false;
   let request = 0;
+  let chatGptConnected = false;
+
+  async function refreshChatGptConnected(): Promise<boolean> {
+    try {
+      const state = await Bridge.chatGptStatus();
+      chatGptConnected = Boolean(state?.accounts?.some((a) => a.connected && a.planEnabled));
+    } catch {
+      chatGptConnected = false;
+    }
+    return chatGptConnected;
+  }
 
   function drawChips() {
     clear(chips);
-    for (const p of visibleProviders(State.settings, subscribedProviders())) {
+    for (const p of visibleProviders(State.settings, subscribedProviders(), chatGptConnected)) {
       const on = p.id === State.settings.chatProvider;
       const chip = h(
         "button",
@@ -165,8 +177,13 @@ function buildPicker(onChange: () => void): Picker {
       drawModels(p, cached);
       return;
     }
-    // Nothing is asked of a provider that has no key yet (its subscription needs none).
-    if (!subscribed && p.key && !(await Bridge.keyReady(p.key))) {
+    // Nothing is asked of a provider that has no key or connected ChatGPT plan yet.
+    if (p.id === "chatgpt") {
+      if (!chatGptConnected && !(await refreshChatGptConnected())) {
+        if (ticket === request) status(STRINGS.noChatGpt, true);
+        return;
+      }
+    } else if (!subscribed && p.key && !(await Bridge.keyReady(p.key))) {
       if (ticket === request) status(t(STRINGS.noKey), true);
       return;
     }
@@ -184,7 +201,7 @@ function buildPicker(onChange: () => void): Picker {
       }
       drawModels(p, models);
     } catch (err) {
-      if (ticket === request) status(String(err).replace(/^Error:\s*/, ""), Boolean(p.key));
+      if (ticket === request) status(String(err).replace(/^Error:\s*/, ""), Boolean(p.key) || p.id === "chatgpt");
     }
   }
 
@@ -193,8 +210,8 @@ function buildPicker(onChange: () => void): Picker {
     el.classList.add("on");
     drawChips();
     onChange();
-    // Which subscriptions are on may have changed in Settings: ask, then list.
-    void loadSubscriptions().then(() => {
+    // Which subscriptions or ChatGPT accounts are active may have changed in Settings: ask, then list.
+    void Promise.all([loadSubscriptions(), refreshChatGptConnected()]).then(() => {
       if (!isOpen) return;
       drawChips();
       onChange();
@@ -272,7 +289,10 @@ export function buildPrompt(onHeightChange: () => void): ViewHost {
   function drawModelButton() {
     const p = providerDef(State.settings.chatProvider);
     modelDot.style.background = p.accent;
-    modelName.textContent = chipLabel(State.settings, activeModel(State.settings)) || t(STRINGS.noModel);
+    const picked = chipLabel(State.settings, activeModel(State.settings));
+    modelName.textContent = p.id === "chatgpt"
+      ? (picked ? `${picked} · Plano ChatGPT` : "Plano ChatGPT")
+      : (picked || t(STRINGS.noModel));
     modelBtn.classList.toggle("open", picker.isOpen);
     modelBtn.disabled = sending;
   }

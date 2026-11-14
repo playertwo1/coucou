@@ -201,3 +201,40 @@ test("a failed question keeps the window for the next try", async () => {
   await ask("what is this?");
   assert.deepEqual(State.windowContext, docs);
 });
+
+test("ChatGPT conectado pelo plano lista modelos no chat sem precisar de openai-api-key", async () => {
+  answers.secret_present = false;
+  answers.claude_ready = false;
+  answers.chatgpt_status = {
+    accounts: [{ profileId: "p1", label: "Conta 1", connected: true, planEnabled: true, active: true }],
+    activeProfileId: "p1",
+  };
+  answers.chat_models = (args) =>
+    args.provider === "chatgpt" ? [{ id: "gpt-5.4", label: "GPT-5.4" }] : [];
+
+  $(".model-btn").fire("click");
+  await flush();
+  await flush();
+  assert.deepEqual(chips(), ["Anthropic", "Google", "OpenAI", "ChatGPT", "OpenRouter"]);
+
+  const chatGptChip = view.el.find(".picker-chip").find((c) => c.textContent === "ChatGPT");
+  chatGptChip.fire("click");
+  await flush();
+  await flush();
+
+  assert.equal(State.settings.chatProvider, "chatgpt");
+  assert.equal(State.settings.chatModels.chatgpt, "gpt-5.4");
+  assert.deepEqual(models(), ["GPT-5.4"]);
+  assert.equal($(".model-name").textContent, "gpt-5.4 · Plano ChatGPT");
+});
+
+test("chatProvider chatgpt sem conta conectada orienta abrir Configurações sem pedir modelos", async () => {
+  State.settings = { ...State.settings, chatProvider: "chatgpt" };
+  view.sync();
+  answers.chatgpt_status = { accounts: [], activeProfileId: null };
+  $(".model-btn").fire("click");
+  await flush();
+  await flush();
+  assert.deepEqual(sent("chat_models"), []);
+  assert.match($(".picker-status").textContent, /Conecte uma conta ChatGPT/);
+});

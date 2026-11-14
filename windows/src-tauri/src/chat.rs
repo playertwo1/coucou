@@ -213,6 +213,9 @@ pub async fn send(
     if cli_relay::uses_subscription(settings, provider) {
         return cli_relay::send(chat, provider, &model, query, context).await;
     }
+    if provider == "chatgpt" {
+        return crate::chatgpt::send(app, chat, &model, query, context).await;
+    }
     if provider == ANTHROPIC || provider.is_empty() {
         return claude::send(chat, &model, query, context).await;
     }
@@ -239,6 +242,9 @@ pub async fn send_for_phone(
     if cli_relay::uses_subscription(settings, provider) {
         return cli_relay::send(chat, provider, model, query, None).await;
     }
+    if provider == "chatgpt" {
+        return crate::chatgpt::send_with(chat, model, query, None, on_delta).await;
+    }
     if provider == ANTHROPIC {
         return claude::send(chat, model, query, None).await;
     }
@@ -258,6 +264,9 @@ pub async fn models(settings: &Settings, provider: &str) -> Result<Vec<ModelInfo
     let no_key = || crate::i18n::t("No API key — add it in Settings.");
     if cli_relay::uses_subscription(settings, provider) {
         return Ok(cli_relay::models(provider));
+    }
+    if provider == "chatgpt" {
+        return crate::chatgpt::models().await;
     }
     if provider == ANTHROPIC {
         return claude::available_models().await;

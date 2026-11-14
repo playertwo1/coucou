@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::sync::Mutex;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, Instant as WallInstant, SystemTime, UNIX_EPOCH};
 
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use base64::Engine;
@@ -9,12 +9,17 @@ use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
 use ring::digest;
 use ring::rand::{SecureRandom, SystemRandom};
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 use subtle::ConstantTimeEq;
+use tauri::{AppHandle, Emitter};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::Mutex as AsyncMutex;
 use tokio::time::{timeout_at, Instant};
 
+use crate::chat::{self, Chat, ChatContext, ChatReply, ModelInfo};
+use crate::island::WINDOW_LABEL;
+use crate::openai_compat::{self, Attachment};
 use crate::{net, platform, secrets};
 
 const ISSUER: &str = "https://auth.openai.com";
@@ -23,6 +28,8 @@ const AUTHORIZE_URL: &str = "https://auth.openai.com/api/accounts/authorize";
 const TOKEN_URL: &str = "https://auth.openai.com/api/accounts/oauth/token";
 const JWKS_URL: &str = "https://auth.openai.com/.well-known/jwks.json";
 const REVOKE_URL: &str = "https://auth.openai.com/api/accounts/oauth/revoke";
+const MODELS_URL: &str = "https://api.openai.com/v1/models";
+const RESPONSES_URL: &str = "https://api.openai.com/v1/responses";
 const DYNAMIC_CLIENT: &str = "dynamic_agent_client";
 const RESOURCE: &str = "https://api.openai.com/v1";
 const SCOPES: &str =
@@ -31,11 +38,17 @@ const CALLBACK_PATH: &str = "/auth/callback";
 const MAX_HTTP_REQUEST: usize = 16 * 1024;
 const MAX_OAUTH_RESPONSE: usize = 64 * 1024;
 const MAX_INDEX_BYTES: usize = 2048;
+const MAX_SSE_LINE: usize = 1024 * 1024;
+const MAX_ANSWER_BYTES: usize = 4 * 1024 * 1024;
 const AUTH_TIMEOUT: Duration = Duration::from_secs(300);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(15);
+const STREAM_TIMEOUT: Duration = Duration::from_secs(300);
+const DELTA_INTERVAL: Duration = Duration::from_millis(1000 / 15);
+const REFRESH_MARGIN_SECS: u64 = 60;
 
 static STORAGE_LOCK: Mutex<()> = Mutex::new(());
 static AUTH_LOCK: AsyncMutex<()> = AsyncMutex::const_new(());
+static REFRESH_LOCK: AsyncMutex<()> = AsyncMutex::const_new(());
 
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -137,6 +150,15 @@ struct TokenResponse {
 }
 
 #[derive(Deserialize)]
+struct RefreshResponse {
+    access_token: String,
+    refresh_token: Option<String>,
+    token_type: String,
+    expires_in: u64,
+    scope: Option<String>,
+}
+
+#[derive(Deserialize)]
 struct IdClaims {
     sub: String,
     nonce: String,
@@ -172,6 +194,53 @@ pub fn activate(profile_id: &str) -> Result<AccountStatus, String> {
     index.active = Some(profile_id.to_string());
     write_index(&store, &index)?;
     status_with(&store)
+}
+
+pub async fn models() -> Result<Vec<ModelInfo>, String> {
+    let endpoint = reqwest::Url::parse(MODELS_URL).map_err(|_| "Endereço de modelos inválido.")?;
+    let client = net::client(&endpoint, REQUEST_TIMEOUT)
+        .map_err(|_| "Não foi possível preparar a conexão segura.".to_string())?;
+    models_with(&SystemCredentialStore, &client, TOKEN_URL, MODELS_URL).await
+}
+
+pub async fn send(
+    app: &AppHandle,
+    chat: &Chat,
+    model: &str,
+    query: String,
+    context: Option<ChatContext>,
+) -> Result<ChatReply, String> {
+    send_with(chat, model, query, context, |visible| {
+        let _ = app.emit_to(WINDOW_LABEL, "chat-delta", visible);
+    })
+    .await
+}
+
+pub async fn send_with(
+    chat: &Chat,
+    model: &str,
+    query: String,
+    context: Option<ChatContext>,
+    on_delta: impl FnMut(String),
+) -> Result<ChatReply, String> {
+    let endpoint = reqwest::Url::parse(RESPONSES_URL).map_err(|_| "Endereço do ChatGPT inválido.")?;
+    let stream_client = net::client(&endpoint, STREAM_TIMEOUT)
+        .map_err(|_| "Não foi possível preparar a conexão segura.".to_string())?;
+    let meta_client = http_client()?;
+    send_with_endpoints(
+        &SystemCredentialStore,
+        &meta_client,
+        &stream_client,
+        TOKEN_URL,
+        MODELS_URL,
+        RESPONSES_URL,
+        chat,
+        model,
+        query,
+        context,
+        on_delta,
+    )
+    .await
 }
 
 pub async fn sign_in(profile_id: Option<String>) -> Result<AccountStatus, String> {
@@ -1122,6 +1191,547 @@ async fn respond(stream: &mut TcpStream, status: u16) {
     let _ = stream.shutdown().await;
 }
 
+struct ActiveSession {
+    profile_id: String,
+    generation: String,
+    client_id: String,
+    subject: String,
+    plan_enabled: bool,
+    expires_at: u64,
+    access: String,
+    refresh: String,
+    id: String,
+}
+
+fn read_active_session(store: &impl CredentialStore) -> Result<ActiveSession, String> {
+    let index = read_index(store)?;
+    let profile_id = index
+        .active
+        .ok_or_else(|| "Conecte uma conta ChatGPT com acesso ao plano em Configurações.".to_string())?;
+    let profile = read_profile(store, &profile_id)?
+        .ok_or_else(|| "Conecte uma conta ChatGPT com acesso ao plano em Configurações.".to_string())?;
+    let generation = profile
+        .generation
+        .clone()
+        .filter(|_| profile.plan_enabled)
+        .ok_or_else(|| "Conecte uma conta ChatGPT com acesso ao plano em Configurações.".to_string())?;
+    let access = read_token(store, &profile_id, &generation, "access")?
+        .ok_or_else(|| "Sessão ChatGPT desconectada. Reconecte a conta em Configurações.".to_string())?;
+    let refresh = read_token(store, &profile_id, &generation, "refresh")?
+        .ok_or_else(|| "Sessão ChatGPT desconectada. Reconecte a conta em Configurações.".to_string())?;
+    let id = read_token(store, &profile_id, &generation, "id")?
+        .ok_or_else(|| "Sessão ChatGPT desconectada. Reconecte a conta em Configurações.".to_string())?;
+    Ok(ActiveSession {
+        profile_id,
+        generation,
+        client_id: profile.client_id,
+        subject: profile.subject,
+        plan_enabled: profile.plan_enabled,
+        expires_at: profile.expires_at,
+        access,
+        refresh,
+        id,
+    })
+}
+
+fn save_refreshed(
+    store: &impl CredentialStore,
+    profile_id: &str,
+    expected_subject: &str,
+    plan_enabled: bool,
+    expires_at: u64,
+    tokens: TokenBundle,
+) -> Result<String, String> {
+    let mut record = read_profile(store, profile_id)?.ok_or("Essa conta foi desconectada.")?;
+    let Some(old_generation) = record.generation.clone() else {
+        return Err("Essa conta foi desconectada.".into());
+    };
+    if record.subject != expected_subject {
+        return Err("A identidade da conta foi alterada durante a atualização.".into());
+    }
+    let old_record = record.clone();
+    if !record.cleanup_generations.contains(&old_generation) {
+        record.cleanup_generations.push(old_generation);
+    }
+    let generation = random_hex(8)?;
+    let staged = [
+        ("access", tokens.access.as_str()),
+        ("refresh", tokens.refresh.as_str()),
+        ("id", tokens.id.as_str()),
+    ];
+    for (kind, value) in staged {
+        if let Err(error) = store.set(&token_key(profile_id, &generation, kind), value) {
+            if !clear_generation(store, profile_id, &generation) {
+                retain_cleanup_generation(store, profile_id, &generation, Some(old_record));
+            }
+            return Err(error);
+        }
+    }
+    record.plan_enabled = plan_enabled;
+    record.expires_at = expires_at;
+    record.generation = Some(generation.clone());
+    let record_raw =
+        serde_json::to_string(&record).map_err(|_| "Não foi possível atualizar a conta ChatGPT.")?;
+    if let Err(error) = store.set(&metadata_key(profile_id), &record_raw) {
+        if !clear_generation(store, profile_id, &generation) {
+            retain_cleanup_generation(store, profile_id, &generation, Some(old_record));
+        }
+        return Err(error);
+    }
+    if !plan_enabled {
+        let mut index = read_index(store)?;
+        if index.active.as_deref() == Some(profile_id) {
+            index.active = None;
+            for candidate in &index.profiles {
+                if candidate != profile_id {
+                    if let Some(other) = read_profile(store, candidate)? {
+                        if profile_usable(store, candidate, &other)? {
+                            index.active = Some(candidate.clone());
+                            break;
+                        }
+                    }
+                }
+            }
+            let _ = write_index(store, &index);
+        }
+    }
+    retry_old_credentials(store, profile_id, &mut record);
+    Ok(generation)
+}
+
+async fn ensure_access_token_with(
+    store: &impl CredentialStore,
+    client: &reqwest::Client,
+    token_url: &str,
+    stale_generation: Option<&str>,
+) -> Result<(String, String), String> {
+    let now = unix_now()?;
+    let needs_refresh = {
+        let _guard = STORAGE_LOCK.lock().unwrap();
+        let session = read_active_session(store)?;
+        if stale_generation.is_none_or(|gen| gen != session.generation)
+            && now.saturating_add(REFRESH_MARGIN_SECS) < session.expires_at
+        {
+            return Ok((session.access, session.generation));
+        }
+        session
+    };
+
+    let _refresh_guard = REFRESH_LOCK.lock().await;
+    let current = {
+        let _guard = STORAGE_LOCK.lock().unwrap();
+        let session = read_active_session(store)?;
+        let now = unix_now()?;
+        let rotated_by_peer = stale_generation
+            .map(|gen| session.generation != gen)
+            .unwrap_or_else(|| session.generation != needs_refresh.generation);
+        if rotated_by_peer && now.saturating_add(REFRESH_MARGIN_SECS) < session.expires_at {
+            return Ok((session.access, session.generation));
+        }
+        if stale_generation.is_none() && now.saturating_add(REFRESH_MARGIN_SECS) < session.expires_at
+        {
+            return Ok((session.access, session.generation));
+        }
+        session
+    };
+
+    let response = client
+        .post(token_url)
+        .form(&[
+            ("grant_type", "refresh_token"),
+            ("client_id", current.client_id.as_str()),
+            ("refresh_token", current.refresh.as_str()),
+            ("resource", RESOURCE),
+        ])
+        .send()
+        .await
+        .map_err(|_| "Não foi possível renovar a sessão ChatGPT.".to_string())?;
+    let status = response.status();
+    if status.as_u16() == 400 || status.as_u16() == 401 {
+        return Err("Sua sessão ChatGPT expirou ou foi revogada. Reconecte a conta em Configurações.".into());
+    }
+    if !status.is_success() {
+        return Err("Não foi possível renovar a sessão ChatGPT.".into());
+    }
+    let body = net::read_capped(response, MAX_OAUTH_RESPONSE)
+        .await
+        .map_err(|_| "A resposta de renovação da sessão ChatGPT é inválida.".to_string())?;
+    let refreshed: RefreshResponse = serde_json::from_slice(&body)
+        .map_err(|_| "A resposta de renovação da sessão ChatGPT é inválida.")?;
+    if refreshed.access_token.is_empty()
+        || !refreshed.token_type.eq_ignore_ascii_case("bearer")
+        || refreshed.expires_in == 0
+    {
+        return Err("O serviço devolveu credenciais incompletas ao renovar a sessão.".into());
+    }
+    let next_refresh = refreshed
+        .refresh_token
+        .filter(|value| !value.is_empty())
+        .unwrap_or(current.refresh);
+    let next_plan = refreshed
+        .scope
+        .as_deref()
+        .map(has_plan_scope)
+        .unwrap_or(current.plan_enabled);
+    let next_expires_at = unix_now()?
+        .checked_add(refreshed.expires_in)
+        .ok_or("Validade do token inválida.")?;
+    let next_access = refreshed.access_token;
+
+    let next_generation = {
+        let _guard = STORAGE_LOCK.lock().unwrap();
+        save_refreshed(
+            store,
+            &current.profile_id,
+            &current.subject,
+            next_plan,
+            next_expires_at,
+            TokenBundle {
+                access: next_access.clone(),
+                refresh: next_refresh,
+                id: current.id,
+            },
+        )?
+    };
+    if !next_plan {
+        return Err("Sua conta ChatGPT não tem mais permissão de uso do plano.".into());
+    }
+    Ok((next_access, next_generation))
+}
+
+fn parse_models_response(json: &Value) -> Vec<ModelInfo> {
+    if let Some(items) = json.get("models").and_then(Value::as_array) {
+        return items
+            .iter()
+            .filter(|m| m.get("visibility").and_then(Value::as_str) == Some("list"))
+            .filter_map(|m| {
+                let slug = m.get("slug").and_then(Value::as_str)?.trim();
+                if slug.is_empty() {
+                    return None;
+                }
+                let label = m
+                    .get("display_name")
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .unwrap_or(slug);
+                Some(ModelInfo {
+                    id: slug.to_string(),
+                    label: label.to_string(),
+                })
+            })
+            .collect();
+    }
+    json.get("data")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|m| {
+                    let id = m.get("id").and_then(Value::as_str)?.trim();
+                    if id.is_empty() {
+                        return None;
+                    }
+                    let label = m
+                        .get("display_name")
+                        .or_else(|| m.get("name"))
+                        .and_then(Value::as_str)
+                        .map(str::trim)
+                        .filter(|s| !s.is_empty())
+                        .unwrap_or(id);
+                    Some(ModelInfo {
+                        id: id.to_string(),
+                        label: label.to_string(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default()
+}
+
+fn status_error(status: u16, detail: &str) -> String {
+    match status {
+        401 | 403 => "Sua sessão ChatGPT expirou ou perdeu acesso ao plano. Reconecte a conta em Configurações.".into(),
+        404 => format!("Modelo do ChatGPT não encontrado (404). Escolha outro modelo acima do chat. {detail}"),
+        429 => format!("Limite temporário do plano ChatGPT atingido (429). {detail}"),
+        _ => {
+            if detail.is_empty() {
+                format!("ChatGPT ({status})")
+            } else {
+                format!("ChatGPT ({status}): {detail}")
+            }
+        }
+    }
+}
+
+async fn models_with(
+    store: &impl CredentialStore,
+    client: &reqwest::Client,
+    token_url: &str,
+    models_url: &str,
+) -> Result<Vec<ModelInfo>, String> {
+    let (mut access, mut generation) =
+        ensure_access_token_with(store, client, token_url, None).await?;
+    for attempt in 0..2 {
+        let response = client
+            .get(models_url)
+            .bearer_auth(&access)
+            .send()
+            .await
+            .map_err(|e| format!("Erro de rede ao consultar modelos ChatGPT: {e}"))?;
+        let status = response.status();
+        if status.as_u16() == 401 && attempt == 0 {
+            (access, generation) =
+                ensure_access_token_with(store, client, token_url, Some(&generation)).await?;
+            continue;
+        }
+        if !status.is_success() {
+            let body = net::read_capped(response, net::MAX_ERROR_BODY)
+                .await
+                .unwrap_or_default();
+            return Err(status_error(status.as_u16(), &net::error_detail(&body)));
+        }
+        let bytes = net::read_capped(response, net::MAX_BODY).await?;
+        let json: Value = serde_json::from_slice(&bytes)
+            .map_err(|_| "A resposta da lista de modelos ChatGPT é inválida.".to_string())?;
+        return Ok(parse_models_response(&json));
+    }
+    Err("Sua sessão ChatGPT expirou. Reconecte a conta em Configurações.".into())
+}
+
+fn user_message(first: bool, context: Option<&ChatContext>, query: &str) -> Value {
+    let mut prefix = String::new();
+    let mut image_url = None;
+    match chat::for_turn(first, context) {
+        Some(ChatContext::File { name, path }) => match openai_compat::read_attachment(path) {
+            Some(Attachment::ImageDataUrl(url)) => {
+                image_url = Some(url);
+                prefix = format!("File: {name}\n\n");
+            }
+            Some(Attachment::Text(body)) => prefix = format!("File: {name}\nFile contents:\n{body}\n\n"),
+            None => prefix = format!("File: {name}\n\n"),
+        },
+        Some(ChatContext::Window { app_name, title, url }) => {
+            prefix = format!("{}\n\n", chat::window_line(app_name, title, url.as_deref()));
+        }
+        None => {}
+    }
+    let text = format!("{prefix}{query}");
+    let mut parts = vec![json!({ "type": "input_text", "text": text })];
+    if let Some(url) = image_url {
+        parts.push(json!({ "type": "input_image", "image_url": url }));
+    }
+    json!({ "role": "user", "content": parts })
+}
+
+fn history_item_to_responses(item: &Value) -> Value {
+    let role = item.get("role").and_then(Value::as_str).unwrap_or("user");
+    let content = &item["content"];
+    if content.is_array() {
+        return json!({ "role": role, "content": content });
+    }
+    let text = content.as_str().unwrap_or_default();
+    let block_type = if role == "assistant" { "output_text" } else { "input_text" };
+    json!({
+        "role": role,
+        "content": [{ "type": block_type, "text": text }],
+    })
+}
+
+fn build_responses_body(model: &str, system: &str, history: &[Value], user: &Value) -> Value {
+    let mut input: Vec<Value> = history.iter().map(history_item_to_responses).collect();
+    input.push(user.clone());
+    json!({
+        "model": model,
+        "store": false,
+        "stream": true,
+        "instructions": system,
+        "input": input,
+    })
+}
+
+enum SseEvent {
+    Delta(String),
+    Completed(String),
+}
+
+fn completed_output_text(json: &Value) -> String {
+    let mut text = String::new();
+    let Some(outputs) = json.pointer("/response/output").and_then(Value::as_array) else {
+        return text;
+    };
+    for item in outputs {
+        if let Some(parts) = item.get("content").and_then(Value::as_array) {
+            for part in parts {
+                if part.get("type").and_then(Value::as_str) == Some("output_text") {
+                    if let Some(chunk) = part.get("text").and_then(Value::as_str) {
+                        text.push_str(chunk);
+                    }
+                }
+            }
+        }
+    }
+    text
+}
+
+fn parse_sse_line(line: &str) -> Option<Result<SseEvent, String>> {
+    let payload = line.strip_prefix("data:")?.trim_start();
+    if payload.is_empty() || payload == "[DONE]" {
+        return None;
+    }
+    let json: Value = serde_json::from_str(payload).ok()?;
+    let event_type = json.get("type").and_then(Value::as_str).unwrap_or("");
+    if event_type == "error" || event_type == "response.failed" {
+        let msg = json
+            .pointer("/error/message")
+            .or_else(|| json.pointer("/response/error/message"))
+            .or_else(|| json.get("message"))
+            .and_then(Value::as_str)
+            .unwrap_or("O ChatGPT não conseguiu concluir esta resposta.");
+        return Some(Err(msg.to_string()));
+    }
+    if event_type == "response.output_text.delta" {
+        if let Some(delta) = json.get("delta").and_then(Value::as_str) {
+            if !delta.is_empty() {
+                return Some(Ok(SseEvent::Delta(delta.to_string())));
+            }
+        }
+        return None;
+    }
+    if event_type == "response.completed" {
+        let completed = completed_output_text(&json);
+        if !completed.is_empty() {
+            return Some(Ok(SseEvent::Completed(completed)));
+        }
+    }
+    None
+}
+
+async fn send_with_endpoints(
+    store: &impl CredentialStore,
+    meta_client: &reqwest::Client,
+    stream_client: &reqwest::Client,
+    token_url: &str,
+    models_url: &str,
+    responses_url: &str,
+    chat: &Chat,
+    model: &str,
+    query: String,
+    context: Option<ChatContext>,
+    mut on_delta: impl FnMut(String),
+) -> Result<ChatReply, String> {
+    let resolved_model = if model.trim().is_empty() {
+        models_with(store, meta_client, token_url, models_url)
+            .await?
+            .into_iter()
+            .next()
+            .map(|m| m.id)
+            .ok_or_else(|| "Nenhum modelo habilitado foi encontrado na sua conta ChatGPT.".to_string())?
+    } else {
+        model.trim().to_string()
+    };
+
+    let (mut access, mut generation) =
+        ensure_access_token_with(store, meta_client, token_url, None).await?;
+    let turn = chat.begin("chatgpt");
+    let user = user_message(turn.first, context.as_ref(), &query);
+    let body = build_responses_body(
+        &resolved_model,
+        &chat::system_prompt(false),
+        &turn.history,
+        &user,
+    );
+
+    let mut reply = None;
+    for attempt in 0..2 {
+        let response = stream_client
+            .post(responses_url)
+            .bearer_auth(&access)
+            .json(&body)
+            .send()
+            .await
+            .map_err(|e| format!("Erro de rede ao falar com o ChatGPT: {e}"))?;
+        let status = response.status();
+        if status.as_u16() == 401 && attempt == 0 {
+            (access, generation) =
+                ensure_access_token_with(store, meta_client, token_url, Some(&generation)).await?;
+            continue;
+        }
+        if !status.is_success() {
+            let err_body = net::read_capped(response, net::MAX_ERROR_BODY)
+                .await
+                .unwrap_or_default();
+            return Err(status_error(status.as_u16(), &net::error_detail(&err_body)));
+        }
+        reply = Some(response);
+        break;
+    }
+    let mut reply = reply
+        .ok_or_else(|| "Sua sessão ChatGPT expirou. Reconecte a conta em Configurações.".to_string())?;
+
+    let mut accumulated = String::new();
+    let mut completed_fallback = String::new();
+    let mut pending = Vec::<u8>::new();
+    let mut last = WallInstant::now()
+        .checked_sub(DELTA_INTERVAL)
+        .unwrap_or_else(WallInstant::now);
+
+    while let Some(chunk) = reply
+        .chunk()
+        .await
+        .map_err(|e| format!("Conexão interrompida durante a resposta do ChatGPT: {e}"))?
+    {
+        pending.extend_from_slice(&chunk);
+        while let Some(end) = pending.iter().position(|b| *b == b'\n') {
+            let line: Vec<u8> = pending.drain(..=end).collect();
+            let line = String::from_utf8_lossy(&line);
+            match parse_sse_line(line.trim_end()) {
+                Some(Ok(SseEvent::Delta(delta))) => accumulated.push_str(&delta),
+                Some(Ok(SseEvent::Completed(full))) => {
+                    if completed_fallback.is_empty() {
+                        completed_fallback = full;
+                    }
+                }
+                Some(Err(message)) => return Err(message),
+                None => {}
+            }
+        }
+        if pending.len() > MAX_SSE_LINE || accumulated.len() > MAX_ANSWER_BYTES {
+            return Err("A resposta do ChatGPT excedeu o limite suportado.".into());
+        }
+        if !accumulated.is_empty() && last.elapsed() >= DELTA_INTERVAL {
+            last = WallInstant::now();
+            on_delta(accumulated.clone());
+        }
+    }
+    if let Some(Ok(event)) = parse_sse_line(String::from_utf8_lossy(&pending).trim_end()) {
+        match event {
+            SseEvent::Delta(delta) => accumulated.push_str(&delta),
+            SseEvent::Completed(full) if completed_fallback.is_empty() => completed_fallback = full,
+            _ => {}
+        }
+    }
+    let answer = if accumulated.trim().is_empty() {
+        completed_fallback.trim().to_string()
+    } else {
+        accumulated.trim().to_string()
+    };
+    if answer.is_empty() {
+        return Err("O ChatGPT não retornou texto na resposta.".into());
+    }
+    on_delta(answer.clone());
+
+    let plain = chat::plain_question(turn.first, context.as_ref(), &query);
+    chat.commit(
+        &turn,
+        user,
+        json!({ "role": "assistant", "content": [{ "type": "output_text", "text": answer }] }),
+        &plain,
+        &answer,
+    );
+    Ok(ChatReply { text: answer })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1506,5 +2116,208 @@ mod tests {
         assert_ne!(profile_id_for("oaiapp_1"), profile_id_for("oaiapp_2"));
         assert!(is_profile_id(&profile_id_for("oaiapp_1")));
         assert!(!is_issued_client_id(DYNAMIC_CLIENT));
+    }
+
+    #[test]
+    fn siwc_models_catalog_keeps_list_visibility_order_and_slug() {
+        let raw = json!({
+            "models": [
+                { "slug": "hidden-model", "display_name": "Hidden", "visibility": "hide" },
+                { "slug": "gpt-5.4", "display_name": "GPT-5.4", "visibility": "list" },
+                { "slug": "gpt-5-mini", "visibility": "list" }
+            ]
+        });
+        let parsed = parse_models_response(&raw);
+        assert_eq!(
+            parsed,
+            vec![
+                ModelInfo { id: "gpt-5.4".into(), label: "GPT-5.4".into() },
+                ModelInfo { id: "gpt-5-mini".into(), label: "gpt-5-mini".into() },
+            ]
+        );
+    }
+
+    #[test]
+    fn responses_body_enforces_store_false_stream_true_and_converts_history() {
+        let history = vec![
+            json!({ "role": "user", "content": "oi" }),
+            json!({ "role": "assistant", "content": "olá" }),
+        ];
+        let user = user_message(true, None, "tudo bem?");
+        let body = build_responses_body("gpt-5.4", "instruções", &history, &user);
+        assert_eq!(body["model"], "gpt-5.4");
+        assert_eq!(body["store"], false);
+        assert_eq!(body["stream"], true);
+        assert_eq!(body["instructions"], "instruções");
+        let input = body["input"].as_array().unwrap();
+        assert_eq!(input.len(), 3);
+        assert_eq!(input[0]["content"][0], json!({ "type": "input_text", "text": "oi" }));
+        assert_eq!(input[1]["content"][0], json!({ "type": "output_text", "text": "olá" }));
+        assert_eq!(input[2]["content"][0], json!({ "type": "input_text", "text": "tudo bem?" }));
+    }
+
+    #[test]
+    fn sse_parser_reads_deltas_completed_fallback_and_errors() {
+        assert!(matches!(
+            parse_sse_line("data: {\"type\":\"response.output_text.delta\",\"delta\":\"Olá\"}"),
+            Some(Ok(SseEvent::Delta(d))) if d == "Olá"
+        ));
+        assert!(matches!(
+            parse_sse_line("data: {\"type\":\"response.completed\",\"response\":{\"output\":[{\"content\":[{\"type\":\"output_text\",\"text\":\"Final\"}]}]}}"),
+            Some(Ok(SseEvent::Completed(t))) if t == "Final"
+        ));
+        assert!(parse_sse_line("data: [DONE]").is_none());
+        assert!(matches!(
+            parse_sse_line("data: {\"type\":\"response.failed\",\"response\":{\"error\":{\"message\":\"quota\"}}}"),
+            Some(Err(e)) if e == "quota"
+        ));
+    }
+
+    #[tokio::test]
+    async fn refresh_is_serialized_and_401_retries_models_and_streaming_chat() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        use std::sync::Arc;
+
+        let store = MemoryStore::default();
+        let profile = save(&store, None, "oaiapp_chat", "subject-1", "expired", true).unwrap();
+        save_refreshed(
+            &store,
+            &profile,
+            "subject-1",
+            true,
+            1, // já expirado
+            TokenBundle {
+                access: "access-expired".into(),
+                refresh: "refresh-1".into(),
+                id: "id-1".into(),
+            },
+        )
+        .unwrap();
+
+        let refresh_calls = Arc::new(AtomicUsize::new(0));
+        let model_calls = Arc::new(AtomicUsize::new(0));
+        let response_calls = Arc::new(AtomicUsize::new(0));
+        let captured_body = Arc::new(Mutex::new(String::new()));
+        let listener = TcpListener::bind(("127.0.0.1", 0)).await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+
+        let rc = refresh_calls.clone();
+        let mc = model_calls.clone();
+        let respc = response_calls.clone();
+        let cap = captured_body.clone();
+        let server = tokio::spawn(async move {
+            for _ in 0..8 {
+                let Ok((mut stream, _)) = listener.accept().await else { break };
+                let rc = rc.clone();
+                let mc = mc.clone();
+                let respc = respc.clone();
+                let cap = cap.clone();
+                tokio::spawn(async move {
+                    let mut buf = Vec::new();
+                    let mut tmp = [0u8; 2048];
+                    loop {
+                        let n = stream.read(&mut tmp).await.unwrap_or(0);
+                        if n == 0 { break; }
+                        buf.extend_from_slice(&tmp[..n]);
+                        if let Some(hdr_end) = buf.windows(4).position(|w| w == b"\r\n\r\n") {
+                            let headers = String::from_utf8_lossy(&buf[..hdr_end]).to_ascii_lowercase();
+                            let content_len = headers
+                                .lines()
+                                .find_map(|l| l.strip_prefix("content-length:"))
+                                .and_then(|v| v.trim().parse::<usize>().ok())
+                                .unwrap_or(0);
+                            if buf.len() >= hdr_end + 4 + content_len {
+                                break;
+                            }
+                        }
+                    }
+                    let req = String::from_utf8_lossy(&buf).to_string();
+                    let path = req.split_ascii_whitespace().nth(1).unwrap_or("");
+                    let body_part = req.split("\r\n\r\n").nth(1).unwrap_or("");
+                    let (status, ctype, body) = if path == "/oauth/token" {
+                        let idx = rc.fetch_add(1, Ordering::SeqCst);
+                        (
+                            "200 OK",
+                            "application/json",
+                            format!("{{\"access_token\":\"access-fresh-{idx}\",\"refresh_token\":\"refresh-2\",\"token_type\":\"Bearer\",\"expires_in\":3600}}"),
+                        )
+                    } else if path == "/v1/models" {
+                        let idx = mc.fetch_add(1, Ordering::SeqCst);
+                        if idx == 0 {
+                            ("401 Unauthorized", "application/json", "{\"error\":{\"message\":\"expired\"}}".into())
+                        } else {
+                            (
+                                "200 OK",
+                                "application/json",
+                                "{\"models\":[{\"slug\":\"gpt-5.4\",\"display_name\":\"GPT-5.4\",\"visibility\":\"list\"},{\"slug\":\"internal\",\"visibility\":\"hide\"}]}".into(),
+                            )
+                        }
+                    } else if path == "/v1/responses" {
+                        respc.fetch_add(1, Ordering::SeqCst);
+                        *cap.lock().unwrap() = body_part.to_string();
+                        (
+                            "200 OK",
+                            "text/event-stream",
+                            "data: {\"type\":\"response.output_text.delta\",\"delta\":\"Olá \"}\n\ndata: {\"type\":\"response.output_text.delta\",\"delta\":\"Lumen!\"}\n\ndata: {\"type\":\"response.completed\"}\n\ndata: [DONE]\n\n".into(),
+                        )
+                    } else {
+                        ("404 Not Found", "text/plain", "nope".into())
+                    };
+                    let reply = format!(
+                        "HTTP/1.1 {status}\r\nContent-Type: {ctype}\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+                        body.len()
+                    );
+                    let _ = stream.write_all(reply.as_bytes()).await;
+                    let _ = stream.shutdown().await;
+                });
+            }
+        });
+
+        let client = reqwest::Client::builder().timeout(Duration::from_secs(5)).build().unwrap();
+        let token_url = format!("http://127.0.0.1:{port}/oauth/token");
+        let models_url = format!("http://127.0.0.1:{port}/v1/models");
+        let responses_url = format!("http://127.0.0.1:{port}/v1/responses");
+
+        // Chamadas concorrentes de refresh devem resultar em apenas 1 troca na rede
+        let (a, b) = tokio::join!(
+            ensure_access_token_with(&store, &client, &token_url, None),
+            ensure_access_token_with(&store, &client, &token_url, None),
+        );
+        assert_eq!(a.unwrap().0, b.unwrap().0);
+        assert_eq!(refresh_calls.load(Ordering::SeqCst), 1);
+
+        // Modelos: primeiro 401 dispara refresh + retry automático
+        let listed = models_with(&store, &client, &token_url, &models_url).await.unwrap();
+        assert_eq!(listed, vec![ModelInfo { id: "gpt-5.4".into(), label: "GPT-5.4".into() }]);
+        assert_eq!(refresh_calls.load(Ordering::SeqCst), 2);
+        assert_eq!(model_calls.load(Ordering::SeqCst), 2);
+
+        // Chat streaming com model vazio escolhe primeiro do catálogo e exige store:false, stream:true
+        let chat = Chat::default();
+        let mut streamed = Vec::new();
+        let reply = send_with_endpoints(
+            &store,
+            &client,
+            &client,
+            &token_url,
+            &models_url,
+            &responses_url,
+            &chat,
+            "",
+            "Oi!".into(),
+            None,
+            |s| streamed.push(s),
+        )
+        .await
+        .unwrap();
+        assert_eq!(reply.text, "Olá Lumen!");
+        assert_eq!(streamed.last().map(String::as_str), Some("Olá Lumen!"));
+        let sent_json: Value = serde_json::from_str(&captured_body.lock().unwrap()).unwrap();
+        assert_eq!(sent_json["model"], "gpt-5.4");
+        assert_eq!(sent_json["store"], false);
+        assert_eq!(sent_json["stream"], true);
+        assert!(!chat.begin("chatgpt").first);
+
+        server.abort();
     }
 }

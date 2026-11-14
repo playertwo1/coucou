@@ -660,7 +660,7 @@ function chatGptAccountSection(initial: ChatGptAccountStatus | null, initialErro
     h("h2", {}, h("span", { text: "Usar seu plano ChatGPT" })),
     h("div", {
       class: "hint",
-      text: "Conecte sua conta ChatGPT. As credenciais ficam no cofre do sistema; o uso da conta no chat será habilitado na próxima etapa.",
+      text: "Conecte sua conta ChatGPT para conversar no chat usando o seu plano. As credenciais ficam no cofre do sistema.",
     }),
     body,
   );
@@ -681,10 +681,24 @@ function chatGptAccountSection(initial: ChatGptAccountStatus | null, initialErro
       const state = !account.connected
         ? "Sessão desconectada"
         : account.planEnabled
-          ? account.active ? "Conta selecionada para a próxima etapa" : "Autorização do plano confirmada"
+          ? account.active ? "Conta ativa no chat" : "Autorização do plano confirmada"
           : "Conectada, sem autorização para usar o plano";
       const row = h("div", { style: "display:flex;align-items:center;gap:8px;flex-wrap:wrap" });
       row.append(h("strong", { text: account.label }), h("span", { class: "hint", text: state }));
+      if (account.connected && account.planEnabled && account.active) {
+        const inUse = settings.chatProvider === "chatgpt";
+        const useInChat = h("button", {
+          class: inUse ? "" : "primary",
+          text: inUse ? "Em uso" : "Usar no chat",
+        });
+        useInChat.disabled = busy || inUse;
+        useInChat.addEventListener("click", () => void run(async () => {
+          settings.chatProvider = "chatgpt";
+          await save();
+          localRedraw?.();
+        }));
+        row.append(useInChat);
+      }
       if (account.connected && account.planEnabled && !account.active) {
         const use = h("button", { text: "Usar esta conta" });
         use.disabled = busy;
@@ -746,6 +760,11 @@ function chatGptAccountSection(initial: ChatGptAccountStatus | null, initialErro
     try {
       const result = await Bridge.chatGptSignOut(profileId);
       status = await Bridge.chatGptStatus();
+      const anyActive = Boolean(status?.accounts?.some((a) => a.connected && a.planEnabled));
+      if (!anyActive && settings.chatProvider === "chatgpt") {
+        settings.chatProvider = "anthropic";
+        await save();
+      }
       notice = result.localCleared
         ? result.remoteRevoked
           ? "Sessão encerrada e revogada."
@@ -759,6 +778,7 @@ function chatGptAccountSection(initial: ChatGptAccountStatus | null, initialErro
     }
   }
 
+  declaredViews.push(draw);
   draw();
   return section;
 }
