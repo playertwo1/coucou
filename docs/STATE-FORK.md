@@ -1,6 +1,6 @@
 # STATE do fork — ponto de retomada
 
-**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.14`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.14) (Lumen; login real em avaliação) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; personagens atuais mantidos por decisão do dono; L1.4 cancelada; L1.3 real em avaliação; L2.1 sintética aprovada e 0.6.14 publicada; falta validar o login ChatGPT real
+**Atualizado:** 2026-11-13 · **Última release:** [`windows-v0.6.14`](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.14) (Lumen; login real em avaliação) · **Fase da vez:** [Fase L — Lumen + Segunda Mente](roadmap/fase-l-lumen.md), L0 concluída; estudo de personagens originais reaberto e Etapa 1 aguardando aprovação visual; registro histórico da L1.4 cancelada preservado; L1.3 real em avaliação; L2.1 sintética aprovada e 0.6.14 publicada; falta validar o login ChatGPT real
 
 Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e evidências ficam nos arquivos de `docs/roadmap/`, e a ordem fica no [ROADMAP-FORK](ROADMAP-FORK.md).
 
@@ -9,7 +9,7 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 | Fase | Estado |
 |---|---|
 | 0, 1, 2 | Pausadas (D-053); ver inventário L0 na Fase L |
-| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; avaliação real da migração pendente; L1.4 cancelada pelo dono; L2.1 sintética aprovada e release 0.6.14 publicada; login real pendente |
+| L | Em andamento. L0 concluída; L1.1 B escolhida; L1.2 implementada; L1.3 aprovada sinteticamente; avaliação real da migração pendente; estudo de personagens originais reaberto em 2026-11-13, Etapa 1 aguardando aprovação; L1.4 cancelada historicamente; L2.1 sintética aprovada e release 0.6.14 publicada; login real pendente |
 | 2B, 2C | Pausadas (decisão do dono, 2026-11-13) |
 | M0–M10 | Viram "Lumen assistente"; começam depois do Checkpoint L7 |
 | 3 (identidade) | Incorporada à L1 |
@@ -26,7 +26,7 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 ## Próxima ação
 
 1. O proprietário relatou que a identidade da 0.6.13 aparece ("aparece tudo"). Ainda faltam os resultados por cenário da migração real: tipo de instalação (MSI ou NSIS), settings, hooks, permissões e atualizador.
-2. **L1.4 foi cancelada pelo proprietário:** manter os personagens atuais do Coucou sem mudanças; a Bússola Lumen fica somente como ícone do aplicativo. Não gerar sprites nem alterar os personagens.
+2. **Decisão do proprietário (2026-11-13):** sem autorização escrita para Mochi; reabriu o estudo de personagens originais do Lumen para ilha e pílulas. A Bússola fica somente como ícone do app. O cancelamento da L1.4 permanece no histórico; a Etapa 1 consiste em imagens de referência e aguarda aprovação do proprietário. Nenhuma arte foi aceita e o aplicativo não foi alterado nesta etapa.
 3. **L2.1 sintética passou e a 0.6.14 foi publicada em 2026-11-13.** TypeScript, 659 testes Node, build Vite e 660 testes Rust passaram; 8 testes Rust foram ignorados. Os CIs Windows `43477378762` (preflight) e `43482202733` (release) passaram; upgrade sintético MSI/NSIS passou em ambos. Defender não detectou ameaças nos quatro artefatos do preflight nem nos instaladores finais; os hashes finais conferem com GitHub. Depois de atualizar, o proprietário testa o login real. Renovação automática e uso no chat continuam na L2.2.
 4. Achados do QwenPaw registrados em [research/qwenpaw.md](research/qwenpaw.md) e marcados "(QwenPaw)" em L2, L3, L4, L6, M0, M1, M5, M8 e M9.
 
@@ -34,4 +34,5 @@ Este arquivo guarda só o estado atual e a próxima ação. Fases, checkpoints e
 
 - Informar os resultados reais pendentes da instalação da 0.6.13 (MSI/NSIS, settings, hooks, permissões e atualizador).
 - Testar o login ChatGPT real depois da publicação da 0.6.14; nenhum teste real do Sign in with ChatGPT foi executado.
+- Revisar as referências visuais da Etapa 1 em [parqueado.md](roadmap/parqueado.md) e aprovar ou pedir ajustes antes de qualquer protótipo da Etapa 2.
 - Validações reais abertas nas fases 0, 1 e 2 (ver inventário da L0 na Fase L).
