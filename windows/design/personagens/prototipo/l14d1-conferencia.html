@@ -84,11 +84,14 @@
     const referenceStates = ["idle", "thinking", "working", "sleeping", "approval", "question", "error", "finished"];
     const agents = [
       { id: "integration_claude", name: "Claude Code", color: "#F5F6F8", sheet: "claude-code-estados-transparente.png", stage: "d2" },
+      { id: "agent_claude-desktop", name: "Claude Desktop", color: "#D97757", sheet: null, stage: "derivado" },
       { id: "agent_codex", name: "Codex", color: "#2DD4BF", sheet: "codex-estados-transparente.png", stage: "d1" },
       { id: "ai_openai", name: "ChatGPT", color: "#10A37F", sheet: "chatgpt-estados-transparente.png", stage: "d2" },
       { id: "agent_antigravity", name: "Antigravity", color: "#E879F9", sheet: "antigravity-estados-transparente.png", stage: "d2" },
       { id: "agent_gemini", name: "Gemini CLI", color: "#8AB4F8", sheet: "gemini-cli-estados-transparente.png", stage: "d2" },
       { id: "agent_opencode", name: "OpenCode", color: "#4ADE80", sheet: "opencode-estados-transparente.png", stage: "d2" },
+      { id: "integration_youtubemusic", name: "YouTube Music", color: "#FF0033", sheet: null, stage: "novo" },
+      { id: "integration_mail", name: "Email", color: "#2F8CFF", sheet: null, stage: "novo" },
       { id: "generic", name: "Genérico", color: "#F4E8C9", sheet: "generico-estados-transparente.png", stage: "d2" },
     ];
     const labels = new Map(states);
@@ -103,7 +106,7 @@
     let lastTime = 0;
 
     async function loadSheets() {
-      await Promise.all(agents.map(({ sheet }) => new Promise((resolve, reject) => {
+      await Promise.all(agents.filter((a) => a.sheet).map(({ sheet }) => new Promise((resolve, reject) => {
         const image = new Image();
         image.onload = () => { images.set(sheet, image); resolve(); };
         image.onerror = () => reject(new Error(`Não foi possível carregar ${sheet}`));
@@ -142,6 +145,12 @@
     }
 
     function reference(agent, state, dpr) {
+      if (!agent.sheet) {
+        const note = document.createElement("span");
+        note.className = "missing";
+        note.textContent = "Personagem Canvas sem prancha PNG dedicada.";
+        return note;
+      }
       const index = referenceStates.indexOf(state);
       if (index < 0) {
         const note = document.createElement("span");
@@ -196,7 +205,10 @@
         swatch.className = "swatch";
         swatch.style.background = agent.color;
         badge.className = "badge";
-        badge.textContent = agent.stage === "d1" ? "Canvas d1 · P1/P2 d3–d4" : "Canvas d2 · P1/P2 d3–d4";
+        badge.textContent = agent.stage === "d1" ? "Canvas d1 · P1/P2 d3–d4"
+          : agent.stage === "derivado" ? "Canvas · variação de cor"
+          : agent.stage === "novo" ? "Canvas · integração"
+          : "Canvas d2 · P1/P2 d3–d4";
         heading.append(swatch, document.createTextNode(agent.name), badge);
         const table = document.createElement("table");
         table.innerHTML = `<thead><tr><th scope="col">Estado</th><th scope="col">Canvas (d1–d4)</th><th scope="col">Prancha aprovada</th></tr></thead>`;
@@ -223,7 +235,7 @@
         section.append(heading, table);
         matrix.append(section);
       }
-      status.textContent = `Matriz completa · 7 agentes × 11 estados em Canvas · 22/96 px · DPR ${dpr}. Prévia P1 ${playing ? "ativa" : "pausada em t=0"}.`;
+      status.textContent = `Matriz completa · ${agents.length} agentes × 11 estados em Canvas · 22/96 px · DPR ${dpr}. Prévia P1 ${playing ? "ativa" : "pausada em t=0"}.`;
     }
 
     function triggerGesture(kind) {

@@ -21,6 +21,8 @@ const emotes = ["love", "surprised", "proud", "wink", "yawn", "happy", "annoyed"
 const agents = [
   ["integration_claude", "claude"],
   ["claude", "claude"],
+  ["agent_claude-desktop", "claude-desktop"],
+  ["claude-desktop", "claude-desktop"],
   ["agent_codex", "codex"],
   ["codex", "codex"],
   ["ai_openai", "chatgpt"],
@@ -31,6 +33,11 @@ const agents = [
   ["gemini", "gemini"],
   ["agent_opencode", "opencode"],
   ["opencode", "opencode"],
+  ["integration_youtubemusic", "youtube-music"],
+  ["youtubemusic", "youtube-music"],
+  ["youtube-music", "youtube-music"],
+  ["integration_mail", "mail"],
+  ["mail", "mail"],
   ["agent_cursor", "generic"],
   ["unknown-agent", "generic"],
 ];
@@ -54,14 +61,18 @@ function canvasProbe() {
   return { ctx, ops, calls: () => ops.length };
 }
 
-test("mapeia os sete personagens pelos IDs reais e usa genérico como fallback", () => {
+test("mapeia todos os personagens pelos IDs reais e usa genérico como fallback", () => {
   for (const [id, expected] of agents) assert.equal(characterForAgent(id), expected, id);
   assert.equal(characterForAgent(null), "generic");
   assert.equal(characterForAgent(undefined), "generic");
 });
 
-test("desenha todos os estados para os sete personagens a 22/96 px e DPR 1/1,5/2", () => {
-  const canonicalIds = ["integration_claude", "agent_codex", "ai_openai", "agent_antigravity", "agent_gemini", "agent_opencode", "unknown-agent"];
+test("desenha todos os estados para todos os personagens a 22/96 px e DPR 1/1,5/2", () => {
+  const canonicalIds = [
+    "integration_claude", "agent_claude-desktop", "agent_codex", "ai_openai",
+    "agent_antigravity", "agent_gemini", "agent_opencode", "integration_youtubemusic",
+    "integration_mail", "unknown-agent",
+  ];
   for (const id of canonicalIds) {
     const engine = new BotEngine();
     assert.equal(engine.setAgent(id), characterForAgent(id));
@@ -78,7 +89,11 @@ test("desenha todos os estados para os sete personagens a 22/96 px e DPR 1/1,5/2
 });
 
 test("desenha cada emote nos dois tamanhos sem erro para todos os personagens", () => {
-  for (const id of ["integration_claude", "agent_codex", "ai_openai", "agent_antigravity", "agent_gemini", "agent_opencode", "unknown-agent"]) {
+  for (const id of [
+    "integration_claude", "agent_claude-desktop", "agent_codex", "ai_openai",
+    "agent_antigravity", "agent_gemini", "agent_opencode", "integration_youtubemusic",
+    "integration_mail", "unknown-agent",
+  ]) {
     const engine = new BotEngine();
     engine.setAgent(id);
     engine.blink();
