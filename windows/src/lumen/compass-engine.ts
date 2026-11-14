@@ -21,7 +21,17 @@ export type EyeShape = "pill" | "wide" | "dot" | "line" | "flat" | "happy" | "cl
 export type BadgeKind = "dots" | "bang" | "question" | "dot" | "arrow";
 export interface Badge { kind: BadgeKind; color: RGB }
 export type TweenKey = readonly [target: number, durationMs: number, ease: (t: number) => number];
-export type LumenCharacter = "claude" | "codex" | "chatgpt" | "antigravity" | "gemini" | "opencode" | "generic";
+export type LumenCharacter =
+  | "claude"
+  | "claude-desktop"
+  | "codex"
+  | "chatgpt"
+  | "antigravity"
+  | "gemini"
+  | "opencode"
+  | "youtube-music"
+  | "mail"
+  | "generic";
 
 type MouthShape = "smile" | "wideSmile" | "frown" | "o" | "flat" | "pant" | "sleep";
 interface StateConfig { color: RGB; badge: Badge | null; eyes: EyeShape; mouth: MouthShape; tilt: number; gaze: readonly [number, number] }
@@ -30,12 +40,15 @@ interface FaceLayout { eyeLeftX: number; eyeRightX: number; eyeY: number; mouthX
 const INK: RGB = [0.149, 0.133, 0.294];
 const SAND: RGB = [0.957, 0.91, 0.788];
 const CLAUDE_WHITE: RGB = [0.961, 0.965, 0.973];
+const CLAUDE_DESKTOP_TERRACOTTA: RGB = [0.851, 0.467, 0.341];
 const TEAL: RGB = [0.176, 0.831, 0.749];
 const CHATGPT_GREEN: RGB = [0.063, 0.639, 0.498];
 const ANTIGRAVITY_MAGENTA: RGB = [0.91, 0.475, 0.976];
 const LIGHT_BLUE: RGB = [0.541, 0.706, 0.973];
 const GLASS_TINT: RGB = [0.859, 0.925, 0.996];
 const OPENCODE_GREEN: RGB = [0.29, 0.871, 0.502];
+const YTM_CRIMSON: RGB = [1, 0, 0.2];
+const MAIL_BLUE: RGB = [0.184, 0.549, 1];
 const BLUSH: RGB = [0.91, 0.57, 0.63];
 const APPROVAL_AMBER: RGB = [0.984, 0.749, 0.141];
 const ERROR_RED: RGB = [0.937, 0.306, 0.349];
@@ -45,6 +58,8 @@ const MEMORY_VIOLET: RGB = [0.655, 0.545, 0.98];
 const AGENT_CHARACTER_MAP: Record<string, LumenCharacter> = {
   integration_claude: "claude",
   claude: "claude",
+  "agent_claude-desktop": "claude-desktop",
+  "claude-desktop": "claude-desktop",
   agent_codex: "codex",
   codex: "codex",
   ai_openai: "chatgpt",
@@ -55,25 +70,36 @@ const AGENT_CHARACTER_MAP: Record<string, LumenCharacter> = {
   gemini: "gemini",
   agent_opencode: "opencode",
   opencode: "opencode",
+  integration_youtubemusic: "youtube-music",
+  youtubemusic: "youtube-music",
+  "youtube-music": "youtube-music",
+  integration_mail: "mail",
+  mail: "mail",
 };
 
 const CHARACTER_COLOR: Record<LumenCharacter, RGB> = {
   claude: CLAUDE_WHITE,
+  "claude-desktop": CLAUDE_DESKTOP_TERRACOTTA,
   codex: TEAL,
   chatgpt: CHATGPT_GREEN,
   antigravity: ANTIGRAVITY_MAGENTA,
   gemini: LIGHT_BLUE,
   opencode: OPENCODE_GREEN,
+  "youtube-music": YTM_CRIMSON,
+  mail: MAIL_BLUE,
   generic: SAND,
 };
 
 const CHARACTER_FACE: Record<LumenCharacter, FaceLayout> = {
   claude: { eyeLeftX: 37, eyeRightX: 59, eyeY: 45, mouthX: 48, mouthY: 58 },
+  "claude-desktop": { eyeLeftX: 37, eyeRightX: 59, eyeY: 45, mouthX: 48, mouthY: 58 },
   codex: { eyeLeftX: 34, eyeRightX: 56, eyeY: 43, mouthX: 48, mouthY: 62 },
   chatgpt: { eyeLeftX: 36, eyeRightX: 58, eyeY: 44, mouthX: 47, mouthY: 57 },
   antigravity: { eyeLeftX: 37, eyeRightX: 59, eyeY: 43, mouthX: 48, mouthY: 55 },
   gemini: { eyeLeftX: 37, eyeRightX: 59, eyeY: 34, mouthX: 48, mouthY: 46 },
   opencode: { eyeLeftX: 37, eyeRightX: 59, eyeY: 41, mouthX: 48, mouthY: 52 },
+  "youtube-music": { eyeLeftX: 38, eyeRightX: 58, eyeY: 46, mouthX: 48, mouthY: 59 },
+  mail: { eyeLeftX: 37, eyeRightX: 59, eyeY: 54, mouthX: 48, mouthY: 66 },
   generic: { eyeLeftX: 37, eyeRightX: 59, eyeY: 39, mouthX: 48, mouthY: 52 },
 };
 
@@ -1045,6 +1071,7 @@ export class CompassEngine {
     const lagY = reduced ? 0 : this.physDy;
     switch (this.character) {
       case "claude":
+      case "claude-desktop":
         this.drawClaude(ctx, fill, lagX, lagY);
         break;
       case "codex":
@@ -1061,6 +1088,12 @@ export class CompassEngine {
         break;
       case "opencode":
         this.drawOpenCode(ctx, fill);
+        break;
+      case "youtube-music":
+        this.drawYouTubeMusic(ctx, fill, lagX, lagY);
+        break;
+      case "mail":
+        this.drawMail(ctx, fill);
         break;
       case "generic":
         this.drawGeneric(ctx, fill);
@@ -1185,6 +1218,37 @@ export class CompassEngine {
     ctx.strokeStyle = rgbCss(INK);
     ctx.lineWidth = 3;
     ctx.stroke();
+  }
+
+  private drawYouTubeMusic(ctx: CanvasRenderingContext2D, fill: RGB, lagX = 0, lagY = 0) {
+    ctx.beginPath();
+    ctx.arc(48, 43, 30, Math.PI, 0, false);
+    ctx.arc(48, 43, 24.5, 0, Math.PI, true);
+    ctx.closePath();
+    paintOutlinedShape(ctx, SAND);
+
+    roundedRect(ctx, 21, 20, 54, 63, 21);
+    paintOutlinedShape(ctx, fill);
+
+    for (const bx of [11, 74] as const) {
+      roundedRect(ctx, bx + lagX * 0.9, 37 + lagY * 0.9, 11, 22, 5.5);
+      paintOutlinedShape(ctx, SAND);
+    }
+  }
+
+  private drawMail(ctx: CanvasRenderingContext2D, fill: RGB) {
+    roundedRect(ctx, 14, 18, 68, 61, 13);
+    paintOutlinedShape(ctx, fill);
+
+    ctx.beginPath();
+    ctx.moveTo(14, 31);
+    ctx.arcTo(14, 18, 27, 18, 13);
+    ctx.lineTo(69, 18);
+    ctx.arcTo(82, 18, 82, 31, 13);
+    ctx.lineTo(50, 41);
+    ctx.quadraticCurveTo(48, 42.4, 46, 41);
+    ctx.closePath();
+    paintOutlinedShape(ctx, SAND);
   }
 
   private drawGeneric(ctx: CanvasRenderingContext2D, fill: RGB) {
