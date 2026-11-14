@@ -12,6 +12,19 @@
 - [x] Comparar os SHA-256 dos instaladores publicados com o preflight. Os hashes diferiram; os assets finais foram baixados, conferidos com os digests do GitHub e examinados diretamente pelo Defender sem detecções (evento 1001, exame `{9AD2DD74-E9E4-4DCE-8E77-D2954870AA9F}`).
 - Nunca executar esta lista de publicação sem o proprietário pedir release.
 
+## Windows 0.6.15 — L1.4d-3/d-4 e L2.2 Chat com login ChatGPT (publicação local)
+
+- [x] Pedido explícito do proprietário em 2026-11-14 para publicar `windows-v0.6.15` 100% localmente (`no-github-actions`), sem executar GitHub Actions nem rodar `test-lumen-upgrade.ps1` destrutivo no perfil local.
+- [x] Validações locais: `python scripts/test-whats-new.py windows` (`0.6.15: 2 items in 1 languages`), `npm run icons`, `npx tsc --noEmit`, `npm test` (673/673), `cargo test --manifest-path src-tauri/Cargo.toml --lib` (664 passaram, 8 ignorados) e `npm run pack` (`Lumen-Windows-0.6.15.msi` 12,45 MB e `Lumen-Windows-0.6.15-setup.exe` 8,95 MB).
+- [x] Microsoft Defender, assinaturas `1.463.288.0` (13/11/2026 15:38:53), examinou individualmente os quatro binários/instaladores locais com `MpCmdRun.exe -Scan -ScanType 3 -File <arquivo> -DisableRemediation`; os quatro retornaram código 0 e `found no threats`.
+- [x] SHA-256 dos artefatos locais publicados:
+  - MSI `Lumen-Windows-0.6.15.msi`: `BBCEC30907F2E01C1052D240BD8EC71E8D84866666AAF5C3E91194065A7EF7FE`.
+  - Setup `Lumen-Windows-0.6.15-setup.exe`: `4BAD63F08E16291F3DFB0229430DA8C3E5CB69A021D7510BFBC7C09FBCBE2E47`.
+  - App `lumen.exe`: `D352F490358D3B7CB3A860B2F49D3EE858EACC02789E3310689FD871EF2F7B5E`.
+  - Hook `lumen-hook.exe`: `4A172A24F8C782313814907AB437638B9F1FF02D36A90F175A4709D824418F64`.
+- [x] Publicação local via `gh release create windows-v0.6.15` e atualização dos assets de `windows-latest` (`Lumen-Windows.msi` e `Lumen-Windows-setup.exe`) apontando para os binários desta build. Release: https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.15.
+- [ ] Proprietário validar no uso real: personagens e animações P1/P2 (`L1.4`), cenários da migração (`L1.3`) e login + chat ChatGPT (`L2.1` + `L2.2`). Testes reais seguem **NOT_RUN** até essa verificação.
+
 ## Windows 0.6.14 — L2.1 Sign in with ChatGPT
 
 - [x] Autorização recorrente do proprietário para publicar cada etapa depois dos testes sintéticos, registrada em `docs/ROADMAP-FORK.md`.

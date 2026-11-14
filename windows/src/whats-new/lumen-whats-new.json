@@ -1,6 +1,21 @@
 {
   "releases": [
     {
+      "version": "0.6.15",
+      "items": [
+        {
+          "icon": "chat",
+          "title": { "pt-BR": "Chat com sua conta ChatGPT" },
+          "detail": { "pt-BR": "Escolha Plano ChatGPT no chat para listar modelos e conversar usando seu login, sem chave paga." }
+        },
+        {
+          "icon": "sparkles",
+          "title": { "pt-BR": "Novas animações dos personagens" },
+          "detail": { "pt-BR": "Estados animados, expressões, modo PC Memória e tela de trabalho no companheiro da ilha." }
+        }
+      ]
+    },
+    {
       "version": "0.6.14",
       "items": [
         {
