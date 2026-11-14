@@ -1,5 +1,10 @@
 # Changelog
 
+## Windows 0.6.15 — 14 de novembro de 2026 *(Lumen; validação real em avaliação)*
+
+- **Chat com o login do ChatGPT (`L2.2`)** — seletor `Plano ChatGPT` no chat lista modelos do plano, transmite respostas em streaming (`store: false`) e renova tokens OAuth de forma serializada, sem chave de API paga e mantendo `openai` independente. Testes sintéticos com mocks passaram; validação em conta real do proprietário pendente.
+- **Animações P1 e P2 dos personagens Canvas (`L1.4d-3` e `L1.4d-4`)** — estados animados, expressões e partículas, humor do PC (`PC Memória` com pente horizontal de RAM), modo `working` com monitor e teclado, coreografia mini e respeito a `prefers-reduced-motion`. Aprovadas visualmente na página de conferência; validação no app instalado pendente.
+
 ## Windows 0.6.14 — 13 de novembro de 2026 *(Lumen; login real em avaliação)*
 
 - **Entrar com ChatGPT** — conecte e gerencie contas pelo navegador; os tokens ficam no cofre do sistema. O chat usará essa conexão na próxima etapa (L2.2). Testes sintéticos passaram; login real ainda aguarda avaliação do proprietário.

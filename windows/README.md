@@ -23,15 +23,15 @@ Baixe **[Lumen-Windows.msi](https://github.com/playertwo1/coucou/releases/downlo
 ou **[Lumen-Windows-setup.exe](https://github.com/playertwo1/coucou/releases/download/windows-latest/Lumen-Windows-setup.exe)**,
 sempre a versão mais recente, e execute. O `.exe` instala somente para o usuário atual, sem pedir acesso de administrador; o `.msi` pode pedir esse acesso.
 
-Os instaladores não têm assinatura Authenticode, então o SmartScreen pode informar que o editor é desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.14 foram examinados pelo Microsoft Defender em 13/11/2026, sem ameaças detectadas. Esse resultado vale para os arquivos desta versão. Também é possível [compilar pelo código-fonte](#build-it-yourself).
+Os instaladores não têm assinatura Authenticode, então o SmartScreen pode informar que o editor é desconhecido. Se isso acontecer, clique em **Mais informações → Executar mesmo assim**. Os instaladores da versão 0.6.15 foram examinados pelo Microsoft Defender em 14/11/2026, sem ameaças detectadas. Esse resultado vale para os arquivos desta versão. Também é possível [compilar pelo código-fonte](#build-it-yourself).
 
 ## Usar o Lumen
 
 ### Entrar com ChatGPT
 
-Em **Ajustes → Chat → Usar seu plano ChatGPT**, escolha **Continuar com ChatGPT** e conclua a autorização no navegador. O Lumen não recebe sua senha; os tokens ficam no cofre do Windows. Nesta etapa, é possível conectar, alternar e desconectar contas; o chat passará a usar essa conexão na L2.2.
+Em **Ajustes → Chat → Usar seu plano ChatGPT**, escolha **Continuar com ChatGPT** e conclua a autorização no navegador. O Lumen não recebe sua senha; os tokens ficam no cofre do Windows. Depois de conectar uma conta com plano ativo, escolha **Usar no chat** (ou selecione **ChatGPT** / **Plano ChatGPT** no chat) para listar modelos e conversar sem chave de API paga, mantendo o provedor `openai` independente.
 
-> A tabela de interações herdada abaixo ainda pode mostrar nomes e detalhes visuais da versão original; eles não foram validados no Lumen instalado. A identidade, os links de instalação e o atualizador acima correspondem à versão 0.6.14.
+> A tabela de interações herdada abaixo ainda pode mostrar nomes e detalhes visuais da versão original; eles não foram validados no Lumen instalado. A identidade, os links de instalação e o atualizador acima correspondem à versão 0.6.15.
 
 | What you do | What happens |
 |---|---|
