@@ -40,6 +40,7 @@ const BLUSH: RGB = [0.91, 0.57, 0.63];
 const APPROVAL_AMBER: RGB = [0.984, 0.749, 0.141];
 const ERROR_RED: RGB = [0.937, 0.306, 0.349];
 const DONE_GREEN: RGB = [0.165, 0.788, 0.459];
+const MEMORY_VIOLET: RGB = [0.655, 0.545, 0.98];
 
 const AGENT_CHARACTER_MAP: Record<string, LumenCharacter> = {
   integration_claude: "claude",
@@ -803,8 +804,9 @@ export class CompassEngine {
     const sleeping = calm && target.asleep;
 
     if (this.moodFull > 0.01) {
-      this.animSx *= 1 + 0.07 * this.moodFull;
-      this.animSy *= 1 - 0.035 * this.moodFull;
+      const throb = Math.sin(this.elapsed * 3.8) * 0.025 * this.moodFull;
+      this.animSx *= 1 + 0.1 * this.moodFull + throb;
+      this.animSy *= 1 - 0.055 * this.moodFull - throb * 0.7;
     }
 
     if (this.moodBusy > 0.02 || !this.moodHop.landed) {
@@ -972,6 +974,9 @@ export class CompassEngine {
       const alpha = drop.alpha * Math.min(1, age / 0.06) * Math.min(1, Math.max(0, (1.05 - at.y) / 0.25));
       this.drawSweatDrop(ctx, 48 + at.x * 28, 49 + at.y * 28, drop.size * 3.6, alpha);
     }
+    if (this.moodFull > 0.15) {
+      this.drawMemoryGauge(ctx, this.moodFull);
+    }
     if (this.moodHot > 0.5) {
       const strength = (this.moodHot - 0.5) * 2;
       ctx.save();
@@ -987,6 +992,52 @@ export class CompassEngine {
       }
       ctx.restore();
     }
+  }
+
+  private drawMemoryGauge(ctx: CanvasRenderingContext2D, level: number) {
+    const alpha = Math.min(1, (level - 0.15) / 0.25);
+    const critical = level > 0.72;
+    const pulse = critical ? 0.55 + 0.45 * Math.abs(Math.sin(this.elapsed * 5.2)) : 1;
+    ctx.save();
+    ctx.globalAlpha *= alpha;
+
+    // Pinos superiores claros e dentes dourados de pente de memória RAM na base (legíveis sobre fundo escuro)
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    for (const px of [7.5, 13.5, 19.5]) {
+      ctx.strokeStyle = rgbCss(SAND);
+      ctx.beginPath(); ctx.moveTo(px, 6.5); ctx.lineTo(px, 9.5); ctx.stroke();
+      ctx.strokeStyle = rgbCss(APPROVAL_AMBER);
+      ctx.beginPath(); ctx.moveTo(px, 22.5); ctx.lineTo(px, 26); ctx.stroke();
+    }
+
+    roundedRect(ctx, 3.5, 9.5, 20, 13, 2.8);
+    ctx.fillStyle = rgbCss(INK);
+    ctx.fill();
+    ctx.strokeStyle = rgbCss(critical ? ERROR_RED : SAND);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Quatro blocos horizontais de uso de RAM (roxo -> vermelho no pico)
+    const activeBars = Math.max(1, Math.min(4, Math.ceil(level * 4)));
+    for (let i = 0; i < activeBars; i++) {
+      const bx = 6 + i * 4.1;
+      const isLast = i === 3;
+      ctx.fillStyle = isLast && critical ? rgbCss(ERROR_RED, pulse) : rgbCss(MEMORY_VIOLET);
+      roundedRect(ctx, bx, 12, 2.9, 8, 0.8);
+      ctx.fill();
+    }
+
+    if (critical) {
+      ctx.beginPath();
+      ctx.arc(23.5, 9, 2.3, 0, Math.PI * 2);
+      ctx.fillStyle = rgbCss(ERROR_RED, pulse);
+      ctx.fill();
+      ctx.strokeStyle = rgbCss(INK);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
   private drawCharacter(ctx: CanvasRenderingContext2D, fill: RGB, reduced: boolean) {
@@ -1326,6 +1377,72 @@ export class CompassEngine {
     ctx.restore();
   }
 
+  private drawWorkingDesk(ctx: CanvasRenderingContext2D, motionTime: number, popScale: number) {
+    // Mini monitor/terminal no canto superior direito com linhas de código animadas
+    this.drawScaledAccent(ctx, 77, 15, popScale, () => {
+      roundedRect(ctx, 61, 4, 32, 20, 4.5);
+      ctx.fillStyle = rgbCss(SAND);
+      ctx.fill();
+      ctx.strokeStyle = rgbCss(INK);
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      roundedRect(ctx, 64, 7, 26, 14, 2);
+      ctx.fillStyle = rgbCss(INK);
+      ctx.fill();
+
+      const line1W = motionTime > 0 ? 10 + Math.abs(Math.sin(motionTime * 4.5)) * 9 : 14;
+      const line2W = motionTime > 0 ? 7 + Math.abs(Math.cos(motionTime * 3.8)) * 8 : 11;
+      const cursorOn = motionTime <= 0 || Math.sin(motionTime * 8) > -0.2;
+      ctx.lineCap = "round";
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = rgbCss(TEAL);
+      ctx.beginPath(); ctx.moveTo(66.5, 10.5); ctx.lineTo(66.5 + line1W, 10.5); ctx.stroke();
+      ctx.strokeStyle = rgbCss(SAND);
+      ctx.beginPath(); ctx.moveTo(66.5, 14.2); ctx.lineTo(66.5 + line2W, 14.2); ctx.stroke();
+      if (cursorOn) {
+        roundedRect(ctx, 66.5, 16.8, 5, 2.2, 0.8);
+        ctx.fillStyle = rgbCss(APPROVAL_AMBER);
+        ctx.fill();
+      }
+
+      ctx.strokeStyle = rgbCss(INK);
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(77, 24); ctx.lineTo(77, 27.5);
+      ctx.moveTo(71.5, 27.5); ctx.lineTo(82.5, 27.5);
+      ctx.stroke();
+    });
+
+    // Mini teclado à frente sem cobrir boca ou olhos
+    const leftTap = motionTime > 0 ? Math.sin(motionTime * 12) * 1.2 : 0;
+    const rightTap = motionTime > 0 ? -Math.sin(motionTime * 12) * 1.2 : 0;
+    roundedRect(ctx, 27, 75, 42, 13.5, 4.5);
+    ctx.fillStyle = rgbCss(SAND);
+    ctx.fill();
+    ctx.strokeStyle = rgbCss(INK);
+    ctx.lineWidth = 2.4;
+    ctx.stroke();
+
+    ctx.fillStyle = rgbCss(INK);
+    for (let i = 0; i < 6; i++) {
+      roundedRect(ctx, 30.5 + i * 6, 78, 4.2, 2.8, 0.9);
+      ctx.fill();
+    }
+    roundedRect(ctx, 34, 82.8, 28, 3, 1.2);
+    ctx.fill();
+
+    for (const [hx, dy] of [[25, leftTap], [71, rightTap]] as const) {
+      ctx.beginPath();
+      ctx.arc(hx, 81 + dy, 3.2, 0, Math.PI * 2);
+      ctx.fillStyle = rgbCss(SAND);
+      ctx.fill();
+      ctx.strokeStyle = rgbCss(INK);
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+  }
+
   private drawStateAccent(ctx: CanvasRenderingContext2D, motionTime = 0) {
     if (this.showsUpdateHint) {
       this.drawScaledAccent(ctx, 83.5, 11.5, this.badgeS || 1, () => {
@@ -1341,6 +1458,10 @@ export class CompassEngine {
     }
     const popScale = this.badgeS > 0 ? this.badgeS : 1;
     switch (this.state) {
+      case "working": {
+        this.drawWorkingDesk(ctx, motionTime, popScale);
+        break;
+      }
       case "thinking": {
         this.drawScaledAccent(ctx, 79, 13, popScale, () => {
           roundedRect(ctx, 66, 5, 27, 16, 8);

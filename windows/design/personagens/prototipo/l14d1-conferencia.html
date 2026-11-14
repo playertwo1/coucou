@@ -196,10 +196,10 @@
         swatch.className = "swatch";
         swatch.style.background = agent.color;
         badge.className = "badge";
-        badge.textContent = agent.stage === "d1" ? "Canvas d1 + P1 d3" : "Canvas d2 + P1 d3";
+        badge.textContent = agent.stage === "d1" ? "Canvas d1 · P1/P2 d3–d4" : "Canvas d2 · P1/P2 d3–d4";
         heading.append(swatch, document.createTextNode(agent.name), badge);
         const table = document.createElement("table");
-        table.innerHTML = `<thead><tr><th scope="col">Estado</th><th scope="col">Canvas (d1–d3)</th><th scope="col">Prancha aprovada</th></tr></thead>`;
+        table.innerHTML = `<thead><tr><th scope="col">Estado</th><th scope="col">Canvas (d1–d4)</th><th scope="col">Prancha aprovada</th></tr></thead>`;
         const body = document.createElement("tbody");
 
         for (const [state, label] of states) {

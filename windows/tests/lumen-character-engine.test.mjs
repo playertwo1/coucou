@@ -326,6 +326,10 @@ test("animações P2 de humor (mood.ts) geram saltos, gotas, ondas de calor e vo
   const probe = canvasProbe();
   engine.draw(probe.ctx, 96, 96);
   assert.ok(probe.ops.some((o) => o.op === "createRadialGradient"), "PC quente deve desenhar tintura térmica");
+  assert.ok(
+    probe.ops.some((o) => o.op === "moveTo" && o.args[0] === 7.5 && o.args[1] === 6.5),
+    "pouca memória deve desenhar o pente de memória RAM",
+  );
 
   engine.moodTarget = { busy: 0, hot: 0, full: 0, tired: 0.9, asleep: true };
   for (let i = 0; i < 20; i++) engine.update(0.1);
@@ -361,4 +365,24 @@ test("animações P2 de mini bots (isMini) e física secundária (physDx/physDy)
   assert.equal(main.physDx, 0, "mola secundária deve assentar em repouso");
   assert.equal(main.physDy, 0);
   assert.equal(main.busy, false);
+});
+
+test("estado working desenha monitor com linhas de código e mini teclado à frente", () => {
+  const engine = new BotEngine();
+  engine.setAgent("integration_claude");
+  engine.setState("working", true);
+  const p0 = canvasProbe();
+  engine.draw(p0.ctx, 96, 96);
+  const lineAt0 = p0.ops.find((o) => o.op === "moveTo" && o.args[0] === 66.5 && o.args[1] === 10.5);
+  assert.ok(lineAt0, "working deve desenhar linhas de código no mini monitor");
+  assert.ok(
+    p0.ops.some((o) => o.op === "moveTo" && o.args[0] >= 30 && o.args[1] === 78),
+    "working deve desenhar teclas do mini teclado à frente",
+  );
+  engine.update(0.25);
+  const p1 = canvasProbe();
+  engine.draw(p1.ctx, 96, 96);
+  const endAt0 = p0.ops[p0.ops.indexOf(lineAt0) + 1];
+  const idx1 = p1.ops.findIndex((o) => o.op === "moveTo" && o.args[0] === 66.5 && o.args[1] === 10.5);
+  assert.notEqual(p1.ops[idx1 + 1].args[0], endAt0.args[0], "linhas de código no monitor devem animar durante working");
 });
