@@ -88,12 +88,12 @@ fn user_message(first: bool, context: Option<&ChatContext>, query: &str) -> Valu
     let mut prefix = String::new();
     let mut image = None;
     match chat::for_turn(first, context) {
-        Some(ChatContext::File { name, path }) => match file_part(path) {
-            Some(FilePart::Image(part)) => {
-                image = Some(part);
+        Some(ChatContext::File { name, path }) => match read_attachment(path) {
+            Some(Attachment::ImageDataUrl(url)) => {
+                image = Some(json!({ "type": "image_url", "image_url": { "url": url } }));
                 prefix = format!("File: {name}\n\n");
             }
-            Some(FilePart::Text(body)) => prefix = format!("File: {name}\nFile contents:\n{body}\n\n"),
+            Some(Attachment::Text(body)) => prefix = format!("File: {name}\nFile contents:\n{body}\n\n"),
             None => prefix = format!("File: {name}\n\n"),
         },
         Some(ChatContext::Window { app_name, title, url }) => {
@@ -255,8 +255,8 @@ fn is_free(m: &Value, id: &str) -> bool {
     id.ends_with(":free") || (zero("/pricing/prompt") && zero("/pricing/completion"))
 }
 
-enum FilePart {
-    Image(Value),
+pub(crate) enum Attachment {
+    ImageDataUrl(String),
     Text(String),
 }
 
@@ -294,9 +294,9 @@ fn extract_pdf_text(path: &str) -> Option<String> {
     }
 }
 
-/// Images → image_url data URL, text/code/PDF → inline text. Larger files and
+/// Images → data URL, text/code/PDF → inline text. Larger files and
 /// binary files without extractable text go by name only.
-fn file_part(path: &str) -> Option<FilePart> {
+pub(crate) fn read_attachment(path: &str) -> Option<Attachment> {
     let ext = std::path::Path::new(path)
         .extension()
         .and_then(|e| e.to_str())
@@ -316,18 +316,18 @@ fn file_part(path: &str) -> Option<FilePart> {
         }
         let bytes = std::fs::read(path).ok()?;
         let url = format!("data:{media};base64,{}", crate::claude::base64_for(&bytes));
-        return Some(FilePart::Image(json!({ "type": "image_url", "image_url": { "url": url } })));
+        return Some(Attachment::ImageDataUrl(url));
     }
     if ext == "pdf" {
         if len > MAX_IMAGE {
             return None;
         }
-        return extract_pdf_text(path).map(FilePart::Text);
+        return extract_pdf_text(path).map(Attachment::Text);
     }
     if len > MAX_INLINE_TEXT {
         return None;
     }
-    std::fs::read_to_string(path).ok().map(FilePart::Text)
+    std::fs::read_to_string(path).ok().map(Attachment::Text)
 }
 
 #[cfg(test)]

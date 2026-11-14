@@ -58,7 +58,7 @@ Pesquisas de projetos externos ficam em `docs/research/`; as ideias aproveitadas
 | 1 | 0 — Validar o que já existe | [fase-0-validacao.md](roadmap/fase-0-validacao.md) | Pausada (D-053; L0 concluída; 0.4 fechado) |
 | 2 | 1 — Recursos do Mac ainda não escolhidos | [fase-1-recursos-mac.md](roadmap/fase-1-recursos-mac.md) | Pausada (D-053; 1.2 concluída; 1.3 e 1.4 descartadas) |
 | 3 | 2 — Melhorias próprias do Windows | [fase-2-melhorias-windows.md](roadmap/fase-2-melhorias-windows.md) | Pausada (D-053; 2.8a sintética; 0.6.12 sem release) |
-| 4 | L — Lumen + Segunda Mente | [fase-l-lumen.md](roadmap/fase-l-lumen.md) | Em andamento (0.6.14 publicada; avaliação real da migração, L1.4 e login ChatGPT pendentes; L1.4a e L1.4d-1/d-2/d-3/d-4 com aceite visual; L1.4b entregue; Canvas escolhido na L1.4c em 2026-11-13; L2.1 aprovada sinteticamente; próxima: L2.2) |
+| 4 | L — Lumen + Segunda Mente | [fase-l-lumen.md](roadmap/fase-l-lumen.md) | Em andamento (0.6.14 publicada; avaliação real da migração, L1.4 e L2 pendentes; L1.4a e L1.4d-1/d-2/d-3/d-4 com aceite visual; L1.4b entregue; Canvas escolhido na L1.4c em 2026-11-13; L2.1 e L2.2 aprovadas sinteticamente; próxima: release `0.6.15` para teste real ou L3) |
 | — | 2B — Paridade entre agentes e ambientes | [fase-2b-paridade-agentes.md](roadmap/fase-2b-paridade-agentes.md) | Pausada (D-053) |
 | — | 2C — Pílulas configuráveis e posição livre | [fase-2c-pilulas-posicao.md](roadmap/fase-2c-pilulas-posicao.md) | Pausada (D-053) |
 | 6 | M0 — Mochi: descoberta e licenças | [m0-descoberta.md](roadmap/m0-descoberta.md) | Pendente |

@@ -12,9 +12,11 @@ const settings = (over = {}) => ({ ...DEFAULT_SETTINGS, ...over });
 
 test("the ids and key names match the Rust side and the Mac", () => {
   assert.deepEqual(PROVIDERS.map((p) => p.id), [
-    "anthropic", "google", "openai", "openrouter", "ollama", "lmstudio", "custom", "cursor", "copilot",
+    "anthropic", "google", "openai", "chatgpt", "openrouter", "ollama", "lmstudio", "custom", "cursor", "copilot",
   ]);
-  // Cursor and Copilot answer only through the subscription: no key, no address.
+  // Cursor, Copilot and ChatGPT (OAuth plan) need no API key or server address.
+  assert.equal(providerDef("chatgpt").key, null);
+  assert.equal(providerDef("chatgpt").urlField, null);
   assert.equal(providerDef("cursor").key, null);
   assert.equal(providerDef("copilot").urlField, null);
   assert.equal(providerDef("google").key, "google-api-key");
@@ -46,9 +48,11 @@ test("model servers show in the picker once connected, or while in use", () => {
   assert.deepEqual(ids(settings({ chatProvider: "custom" })), ["anthropic", "google", "openai", "openrouter", "custom"]);
 });
 
-test("Cursor and Copilot show once their subscription is on, or while in use", () => {
-  const ids = (s, on) => visibleProviders(s, on).map((p) => p.id);
+test("Cursor, Copilot and ChatGPT show once their plan/subscription is active, or while in use", () => {
+  const ids = (s, on, chatGpt = false) => visibleProviders(s, on, chatGpt).map((p) => p.id);
   assert.deepEqual(ids(settings(), new Set(["cursor"])), ["anthropic", "google", "openai", "openrouter", "cursor"]);
+  assert.deepEqual(ids(settings(), new Set(), true), ["anthropic", "google", "openai", "chatgpt", "openrouter"]);
+  assert.deepEqual(ids(settings({ chatProvider: "chatgpt" })), ["anthropic", "google", "openai", "chatgpt", "openrouter"]);
   assert.deepEqual(ids(settings({ chatSubscriptions: { copilot: true } })), ["anthropic", "google", "openai", "openrouter", "copilot"]);
   assert.deepEqual(ids(settings({ chatProvider: "copilot" })), ["anthropic", "google", "openai", "openrouter", "copilot"]);
 });
