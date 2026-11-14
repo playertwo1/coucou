@@ -12,6 +12,19 @@
 - [x] Comparar os SHA-256 dos instaladores publicados com o preflight. Os hashes diferiram; os assets finais foram baixados, conferidos com os digests do GitHub e examinados diretamente pelo Defender sem detecções (evento 1001, exame `{9AD2DD74-E9E4-4DCE-8E77-D2954870AA9F}`).
 - Nunca executar esta lista de publicação sem o proprietário pedir release.
 
+## Windows 0.6.16 — correção do login ChatGPT (publicação local)
+
+- [x] Pedido explícito do proprietário em 2026-11-14. O GitHub Actions está desabilitado no repositório (`HTTP 422: Actions has been disabled`), então a build e a publicação foram locais, como na 0.6.15.
+- [x] Causa corrigida: o Credential Manager do Windows recusa valores acima de 2560 bytes e os tokens OAuth passavam disso. `secrets.rs` divide valores longos em partes de 800 caracteres.
+- [x] Validações locais: `python scripts/test-whats-new.py windows`, `npx tsc --noEmit`, `npm test` (673/673), `npm run build`, `cargo test --lib` (665 passaram, 8 ignorados) e `npm run pack`.
+- [x] Microsoft Defender, assinaturas `1.463.288.0`, examinou individualmente os quatro binários com `MpCmdRun.exe -Scan -ScanType 3 -File <arquivo> -DisableRemediation`: código 0 e `found no threats`.
+- [x] SHA-256 dos artefatos publicados:
+  - MSI `Lumen-Windows-0.6.16.msi`: `5EB4DF72741D61B74D68612037AE93666ADF32BBCAE89D415848E208222E298C`.
+  - Setup `Lumen-Windows-0.6.16-setup.exe`: `FE95D36E1523E2E2F6664650D7A68BEFEA36B32AF020DC6326741CB04F752AA8`.
+  - App `lumen.exe`: `E32BF18F43F672710CD5706ACB73815C7C5DB45ACC4000398D239FEC7871834C`.
+  - Hook `lumen-hook.exe`: `90E489E359E46C1DC97FD71158843B7BCEE37B73368EC4AA20996DE5802A5B54`.
+- [ ] Proprietário validar o login real com ChatGPT (L2.1). Continua **NOT_RUN** até esse teste.
+
 ## Windows 0.6.15 — L1.4d-3/d-4 e L2.2 Chat com login ChatGPT (publicação local)
 
 - [x] Pedido explícito do proprietário em 2026-11-14 para publicar `windows-v0.6.15` 100% localmente (`no-github-actions`), sem executar GitHub Actions nem rodar `test-lumen-upgrade.ps1` destrutivo no perfil local.
