@@ -182,6 +182,7 @@ No Windows, o fork passa a se chamar Lumen; no Linux e no macOS, o app continua 
 
 | Lumen (Windows) e Coucou (Linux) | Data | Destaques |
 |---------|------|------------|
+| 0.6.17 · validação real pendente | 14 nov. 2026 | O chat do Plano ChatGPT busca na web e sabe a data e a cidade que você salvar em Configurações → Chat |
 | 0.6.16 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.16) · validação real pendente | 14 nov. 2026 | Corrige o login com ChatGPT, que falhava ao gravar as credenciais no cofre do Windows |
 | 0.6.15 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.15) · validação real pendente | 14 nov. 2026 | Chat com login ChatGPT (`Plano ChatGPT`) sem chave paga e animações P1/P2 dos personagens Canvas |
 | 0.6.14 · [Windows](https://github.com/playertwo1/coucou/releases/tag/windows-v0.6.14) · login real em avaliação | 13 nov. 2026 | Login ChatGPT pelo navegador; credenciais no cofre do sistema; integração com o chat vem na L2.2 |

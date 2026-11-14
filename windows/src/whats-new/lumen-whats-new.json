@@ -1,6 +1,16 @@
 {
   "releases": [
     {
+      "version": "0.6.17",
+      "items": [
+        {
+          "icon": "chat",
+          "title": { "pt-BR": "O chat sabe a data e a sua cidade" },
+          "detail": { "pt-BR": "Pergunte o clima de amanhã: com o plano ChatGPT o chat busca na web. Salve sua cidade em Configurações → Chat." }
+        }
+      ]
+    },
+    {
       "version": "0.6.16",
       "items": [
         {

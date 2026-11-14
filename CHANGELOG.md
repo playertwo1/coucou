@@ -1,5 +1,9 @@
 # Changelog
 
+## Windows 0.6.17 — 14 de novembro de 2026 *(Lumen; validação real pendente)*
+
+- **Chat com internet e localização** — o Plano ChatGPT passa a pedir a busca web do provedor, para perguntas atuais como o clima de amanhã; se o plano recusar a ferramenta, o chat repete a pergunta sem web. O prompt também leva a data de hoje e, se você quiser, a cidade salva em Configurações → Chat → Sua localização (opcional, apagável ali mesmo). Testes sintéticos passaram; teste com conta real pendente.
+
 ## Windows 0.6.16 — 14 de novembro de 2026 *(Lumen; validação real em avaliação)*
 
 - **Login com ChatGPT corrigido** — o Credential Manager do Windows recusa valores acima de 2560 bytes e os tokens OAuth passavam disso, então a conexão falhava com “Não foi possível gravar no cofre do sistema”. Valores longos agora são divididos em partes e remontados na leitura; valores curtos e credenciais já salvas não mudam.
