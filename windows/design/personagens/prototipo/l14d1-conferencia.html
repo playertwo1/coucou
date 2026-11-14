@@ -29,6 +29,19 @@
     figcaption { color: #c7c4d8; font-size: .72rem; }
     canvas { display: block; background: #000; image-rendering: auto; }
     .missing { color: #aaa5c0; font-size: .82rem; }
+    .strip-card { margin: 18px 0; padding: 14px; border: 1px solid #302c48; border-radius: 14px; background: #08070d; }
+    .strip-grid { display: grid; gap: 10px; }
+    .strip-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .island-sim {
+      position: relative; overflow: hidden; border-radius: 999px;
+      background: #0a090d; border: 1px solid #302c48; flex: none;
+    }
+    .island-sim canvas { position: absolute; left: 0; background: transparent; }
+    .mini-slot {
+      display: inline-grid; place-items: center; width: 22px; height: 22px;
+      border-radius: 6px; background: #14121b; border: 1px solid #2b2740;
+    }
+    .mini-slot canvas { background: transparent; }
     #status { margin-top: 16px; color: #aaa5c0; }
     @media (max-width: 620px) {
       body { padding: 14px; }
@@ -192,10 +205,113 @@
       rafId = requestAnimationFrame(step);
     }
 
+    function renderCompactStrip(dpr) {
+      const card = document.createElement("section");
+      card.className = "strip-card";
+      card.id = "compact-strip";
+      const heading = document.createElement("h2");
+      heading.textContent = "Prévia da barra reduzida real (Fechada 24 px · Compacta 32 px · Mini grid 13 px)";
+      const grid = document.createElement("div");
+      grid.className = "strip-grid";
+
+      const makeBarPreview = (title, barH, diameter, barW, rows) => {
+        const wrap = document.createElement("div");
+        const label = document.createElement("figcaption");
+        label.textContent = title;
+        const strip = document.createElement("div");
+        strip.className = "strip-row";
+        const w = Math.round(diameter / 0.6);
+        const overhang = 40;
+        const hCss = w + overhang;
+        const cy = barH / 2;
+        for (const [agentId, state] of rows) {
+          const box = document.createElement("div");
+          box.className = "island-sim";
+          box.style.width = `${barW}px`;
+          box.style.height = `${barH}px`;
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.round(w * dpr);
+          canvas.height = Math.round(hCss * dpr);
+          canvas.style.width = `${w}px`;
+          canvas.style.height = `${hCss}px`;
+          canvas.style.left = `${Math.round(barW / 2 - w / 2)}px`;
+          canvas.style.top = `${cy - overhang / 2 - hCss / 2}px`;
+          const ctx = canvas.getContext("2d");
+          const eng = new BotEngine();
+          eng.particleOverhang = overhang;
+          eng.setAgent(agentId);
+          eng.setState(state, true);
+          const paint = () => {
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            ctx.clearRect(0, 0, w, hCss);
+            eng.draw(ctx, w, hCss);
+          };
+          paint();
+          liveSlots.push({ state, engine: eng, paints: [paint] });
+          box.append(canvas);
+          strip.append(box);
+        }
+        wrap.append(label, strip);
+        return wrap;
+      };
+
+      const previewStates = [
+        ["agent_codex", "working"],
+        ["integration_claude", "thinking"],
+        ["agent_claude-desktop", "approval"],
+        ["ai_openai", "searching"],
+        ["agent_antigravity", "question"],
+        ["agent_gemini", "error"],
+        ["agent_opencode", "finished"],
+        ["integration_youtubemusic", "ratelimit"],
+        ["integration_mail", "sleeping"],
+        ["generic", "dizzy"],
+        ["agent_codex", "idle"],
+      ];
+      grid.append(
+        makeBarPreview("Fechada 24 px (diameter 18 · BOT_OVERHANG=40 · Codex working primeiro):", 24, 18, 56, previewStates),
+        makeBarPreview("Compacta 32 px (diameter 20 · BOT_OVERHANG=40):", 32, 20, 64, previewStates),
+      );
+
+      const miniWrap = document.createElement("div");
+      const miniLabel = document.createElement("figcaption");
+      miniLabel.textContent = "Mini grid expandido (13 px · isMini=true):";
+      const miniRow = document.createElement("div");
+      miniRow.className = "strip-row";
+      for (const [agentId, state] of previewStates) {
+        const slot = document.createElement("div");
+        slot.className = "mini-slot";
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(22 * dpr);
+        canvas.height = Math.round(22 * dpr);
+        canvas.style.width = "22px";
+        canvas.style.height = "22px";
+        const ctx = canvas.getContext("2d");
+        const eng = new BotEngine();
+        eng.isMini = true;
+        eng.setAgent(agentId);
+        eng.setState(state, true);
+        const paint = () => {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          ctx.clearRect(0, 0, 22, 22);
+          eng.draw(ctx, 22, 22);
+        };
+        paint();
+        liveSlots.push({ state, engine: eng, paints: [paint] });
+        slot.append(canvas);
+        miniRow.append(slot);
+      }
+      miniWrap.append(miniLabel, miniRow);
+      grid.append(miniWrap);
+      card.append(heading, grid);
+      return card;
+    }
+
     function render() {
       const dpr = Number(dprSelect.value);
       liveSlots = [];
       matrix.replaceChildren();
+      matrix.append(renderCompactStrip(dpr));
       for (const agent of agents) {
         const section = document.createElement("section");
         section.className = "agent";
