@@ -8,17 +8,57 @@ export type EyeShape = "pill" | "wide" | "dot" | "line" | "flat" | "happy" | "cl
 export type BadgeKind = "dots" | "bang" | "question" | "dot" | "arrow";
 export interface Badge { kind: BadgeKind; color: RGB }
 export type TweenKey = readonly [target: number, durationMs: number, ease: (t: number) => number];
-export type LumenCharacter = "codex" | "generic";
+export type LumenCharacter = "claude" | "codex" | "chatgpt" | "antigravity" | "gemini" | "opencode" | "generic";
 
 type MouthShape = "smile" | "wideSmile" | "frown" | "o" | "flat";
 interface StateConfig { color: RGB; badge: Badge | null; eyes: EyeShape; mouth: MouthShape; tilt: number; gaze: readonly [number, number] }
+interface FaceLayout { eyeLeftX: number; eyeRightX: number; eyeY: number; mouthX: number; mouthY: number }
 
 const INK: RGB = [0.149, 0.133, 0.294];
 const SAND: RGB = [0.957, 0.91, 0.788];
+const CLAUDE_WHITE: RGB = [0.961, 0.965, 0.973];
 const TEAL: RGB = [0.176, 0.831, 0.749];
+const CHATGPT_GREEN: RGB = [0.063, 0.639, 0.498];
+const ANTIGRAVITY_MAGENTA: RGB = [0.91, 0.475, 0.976];
 const LIGHT_BLUE: RGB = [0.541, 0.706, 0.973];
+const OPENCODE_GREEN: RGB = [0.29, 0.871, 0.502];
 const BLUSH: RGB = [0.91, 0.57, 0.63];
 const NEUTRAL: MochiMood = { busy: 0, hot: 0, full: 0, tired: 0, asleep: false };
+
+const AGENT_CHARACTER_MAP: Record<string, LumenCharacter> = {
+  integration_claude: "claude",
+  claude: "claude",
+  agent_codex: "codex",
+  codex: "codex",
+  ai_openai: "chatgpt",
+  openai: "chatgpt",
+  agent_antigravity: "antigravity",
+  antigravity: "antigravity",
+  agent_gemini: "gemini",
+  gemini: "gemini",
+  agent_opencode: "opencode",
+  opencode: "opencode",
+};
+
+const CHARACTER_COLOR: Record<LumenCharacter, RGB> = {
+  claude: CLAUDE_WHITE,
+  codex: TEAL,
+  chatgpt: CHATGPT_GREEN,
+  antigravity: ANTIGRAVITY_MAGENTA,
+  gemini: LIGHT_BLUE,
+  opencode: OPENCODE_GREEN,
+  generic: SAND,
+};
+
+const CHARACTER_FACE: Record<LumenCharacter, FaceLayout> = {
+  claude: { eyeLeftX: 37, eyeRightX: 59, eyeY: 45, mouthX: 48, mouthY: 58 },
+  codex: { eyeLeftX: 34, eyeRightX: 56, eyeY: 43, mouthX: 48, mouthY: 62 },
+  chatgpt: { eyeLeftX: 36, eyeRightX: 58, eyeY: 44, mouthX: 47, mouthY: 57 },
+  antigravity: { eyeLeftX: 37, eyeRightX: 59, eyeY: 43, mouthX: 48, mouthY: 55 },
+  gemini: { eyeLeftX: 37, eyeRightX: 59, eyeY: 34, mouthX: 48, mouthY: 46 },
+  opencode: { eyeLeftX: 37, eyeRightX: 59, eyeY: 41, mouthX: 48, mouthY: 52 },
+  generic: { eyeLeftX: 37, eyeRightX: 59, eyeY: 39, mouthX: 48, mouthY: 52 },
+};
 
 const rgbCss = (color: RGB, alpha = 1) => `rgba(${Math.round(color[0] * 255)},${Math.round(color[1] * 255)},${Math.round(color[2] * 255)},${alpha})`;
 const EMOTE_EYE: Record<BotEmoteName, EyeShape> = {
@@ -29,14 +69,14 @@ export const BOT_STATES: Record<BotStateName, StateConfig> = {
   idle: { color: SAND, badge: null, eyes: "pill", mouth: "smile", tilt: 0, gaze: [0, 0] },
   working: { color: TEAL, badge: null, eyes: "pill", mouth: "smile", tilt: 0.055, gaze: [0, 1.5] },
   thinking: { color: TEAL, badge: { kind: "dots", color: SAND }, eyes: "pill", mouth: "smile", tilt: 0, gaze: [1.5, -1.5] },
-  searching: { color: TEAL, badge: { kind: "dots", color: SAND }, eyes: "pill", mouth: "smile", tilt: 0, gaze: [3, 0] },
+  searching: { color: TEAL, badge: { kind: "dots", color: SAND }, eyes: "pill", mouth: "smile", tilt: 0, gaze: [2.8, -0.5] },
   approval: { color: TEAL, badge: { kind: "bang", color: SAND }, eyes: "wide", mouth: "smile", tilt: 0, gaze: [0, 0] },
   question: { color: TEAL, badge: { kind: "question", color: SAND }, eyes: "pill", mouth: "o", tilt: -0.04, gaze: [0, 0] },
   error: { color: TEAL, badge: { kind: "dot", color: BLUSH }, eyes: "flat", mouth: "frown", tilt: 0, gaze: [0, 2] },
   finished: { color: TEAL, badge: { kind: "dot", color: SAND }, eyes: "happy", mouth: "wideSmile", tilt: 0, gaze: [0, 0] },
   ratelimit: { color: TEAL, badge: { kind: "dot", color: LIGHT_BLUE }, eyes: "tired", mouth: "flat", tilt: 0, gaze: [0, 1] },
   sleeping: { color: TEAL, badge: null, eyes: "closed", mouth: "smile", tilt: 0, gaze: [0, 0] },
-  dizzy: { color: TEAL, badge: null, eyes: "spiral", mouth: "frown", tilt: 0, gaze: [0, 0] },
+  dizzy: { color: TEAL, badge: null, eyes: "spiral", mouth: "frown", tilt: 0.05, gaze: [0, 0] },
 };
 
 export const STATE_SOUND: Partial<Record<BotStateName, string>> = {
@@ -53,7 +93,7 @@ export function hexToRGB(hex: string): RGB {
 }
 
 export function characterForAgent(agentId: string | null | undefined): LumenCharacter {
-  return agentId === "agent_codex" || agentId === "codex" ? "codex" : "generic";
+  return (agentId && AGENT_CHARACTER_MAP[agentId]) || "generic";
 }
 
 export function stepDanceLevel(level: number, dancing: boolean, dt: number) {
@@ -79,6 +119,27 @@ function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: num
   ctx.arcTo(x, y + h, x, y, radius);
   ctx.arcTo(x, y, x + w, y, radius);
   ctx.closePath();
+}
+
+function paintOutlinedShape(
+  ctx: CanvasRenderingContext2D,
+  fill: RGB,
+  lineWidth = 3,
+  fillRule: CanvasFillRule = "nonzero",
+) {
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.28)";
+  ctx.shadowColor = "rgba(0,0,0,0.32)";
+  ctx.shadowBlur = 2;
+  ctx.shadowOffsetY = 2;
+  ctx.fill(fillRule);
+  ctx.restore();
+  ctx.fillStyle = rgbCss(fill);
+  ctx.fill(fillRule);
+  ctx.strokeStyle = rgbCss(INK);
+  ctx.lineWidth = lineWidth;
+  ctx.lineJoin = "round";
+  ctx.stroke();
 }
 
 function curve(ctx: CanvasRenderingContext2D, x1: number, y1: number, cx: number, cy: number, x2: number, y2: number, width = 3) {
@@ -192,7 +253,8 @@ export class CompassEngine {
   setDancing(dancing: boolean) { this.isDancing = dancing; }
   get busy() {
     if (reducedMotion()) return false;
-    return this.isDancing || this.dancingLevel > 0.001 || this.elapsed < this.pulseUntil ||
+    return this.state === "searching" || this.state === "dizzy" ||
+      this.isDancing || this.dancingLevel > 0.001 || this.elapsed < this.pulseUntil ||
       this.elapsed < this.particleUntil || this.rollDuration > 0 || Math.abs(this.tgEs - this.es) > 0.002;
   }
 
@@ -292,38 +354,97 @@ export class CompassEngine {
       ? Math.sin(Math.PI * (1 - (this.squashUntil - this.elapsed) / 0.32)) : 0;
     const sx = 1 + pulse * 0.08;
     const sy = 1 - pulse * 0.09;
+    const stateTilt = !reduced && this.state === "dizzy"
+      ? Math.sin(this.elapsed * 4.2 + 0.85) * 0.065
+      : cfg.tilt;
 
     ctx.save();
     ctx.translate((width - 96 * scale) / 2, (height - 96 * scale) / 2);
     ctx.scale(scale, scale);
     ctx.translate(48 + this.ox * 5, 49 + this.oy * 5);
-    ctx.rotate(cfg.tilt + this.tilt + this.roll);
+    ctx.rotate(stateTilt + this.tilt + this.roll);
     ctx.scale(sx * this.es, sy * this.es);
     ctx.translate(-48, -49);
 
-    const fill = this.bodyColor ?? (this.character === "codex" ? TEAL : SAND);
-    const gaze: readonly [number, number] = [cfg.gaze[0] + this.lookX * 2, cfg.gaze[1] - this.lookY * 2];
-    if (this.character === "codex") this.drawCodexBody(ctx, fill);
-    else this.drawGenericBody(ctx, fill);
-    if (this.character === "codex") this.drawToolTab(ctx);
-    if (this.character === "generic") this.drawGenericOval(ctx);
-    this.drawEyes(ctx, eyes, gaze, this.state === "sleeping");
-    this.drawMouth(ctx, mouth, this.character === "generic");
+    const fill = this.bodyColor ?? CHARACTER_COLOR[this.character];
+    const face = CHARACTER_FACE[this.character];
+    const gaze: readonly [number, number] = !reduced && this.state === "searching"
+      ? [Math.cos(this.elapsed * 2.6) * 2.8 + this.lookX * 0.8, -0.5 - this.lookY * 0.8]
+      : [cfg.gaze[0] + this.lookX * 2, cfg.gaze[1] - this.lookY * 2];
+    const spiralPhase = !reduced && this.state === "dizzy" ? this.elapsed * 4 : 0;
+
+    this.drawCharacter(ctx, fill);
+    this.drawEyes(ctx, eyes, gaze, this.state === "sleeping", face, spiralPhase);
+    this.drawMouth(ctx, mouth, face);
     this.drawStateAccent(ctx);
     if (!reduced && this.elapsed < this.particleUntil) this.drawParticle(ctx);
     ctx.restore();
   }
 
-  private drawCodexBody(ctx: CanvasRenderingContext2D, fill: RGB) {
-    roundedRect(ctx, 18, 16, 59, 69, 20);
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
-    ctx.shadowColor = "rgba(0,0,0,0.32)";
-    ctx.shadowBlur = 2;
-    ctx.shadowOffsetY = 2;
-    ctx.fill();
-    ctx.restore();
+  private drawCharacter(ctx: CanvasRenderingContext2D, fill: RGB) {
+    switch (this.character) {
+      case "claude":
+        this.drawClaude(ctx, fill);
+        break;
+      case "codex":
+        this.drawCodex(ctx, fill);
+        break;
+      case "chatgpt":
+        this.drawChatGpt(ctx, fill);
+        break;
+      case "antigravity":
+        this.drawAntigravity(ctx, fill);
+        break;
+      case "gemini":
+        this.drawGemini(ctx, fill);
+        break;
+      case "opencode":
+        this.drawOpenCode(ctx, fill);
+        break;
+      case "generic":
+        this.drawGeneric(ctx, fill);
+        break;
+    }
+  }
+
+  private drawClaude(ctx: CanvasRenderingContext2D, fill: RGB) {
+    ctx.beginPath();
+    ctx.moveTo(32, 13);
+    ctx.lineTo(60, 13);
+    ctx.lineTo(77, 30);
+    ctx.lineTo(77, 72);
+    ctx.arcTo(77, 85, 64, 85, 13);
+    ctx.lineTo(32, 85);
+    ctx.arcTo(19, 85, 19, 72, 13);
+    ctx.lineTo(19, 26);
+    ctx.arcTo(19, 13, 32, 13, 13);
+    ctx.closePath();
+    paintOutlinedShape(ctx, fill);
+
+    ctx.beginPath();
+    ctx.moveTo(60, 13);
+    ctx.lineTo(60, 26);
+    ctx.arcTo(60, 30, 64, 30, 4);
+    ctx.lineTo(77, 30);
+    ctx.closePath();
     ctx.fillStyle = rgbCss(fill);
+    ctx.fill();
+    ctx.strokeStyle = rgbCss(INK);
+    ctx.lineWidth = 3;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(27, 8);
+    ctx.lineTo(35, 8);
+    ctx.arcTo(37, 8, 37, 10, 2);
+    ctx.lineTo(37, 25);
+    ctx.lineTo(31, 20);
+    ctx.lineTo(25, 25);
+    ctx.lineTo(25, 10);
+    ctx.arcTo(25, 8, 27, 8, 2);
+    ctx.closePath();
+    ctx.fillStyle = rgbCss(SAND);
     ctx.fill();
     ctx.strokeStyle = rgbCss(INK);
     ctx.lineWidth = 3;
@@ -331,7 +452,9 @@ export class CompassEngine {
     ctx.stroke();
   }
 
-  private drawToolTab(ctx: CanvasRenderingContext2D) {
+  private drawCodex(ctx: CanvasRenderingContext2D, fill: RGB) {
+    roundedRect(ctx, 18, 16, 59, 69, 20);
+    paintOutlinedShape(ctx, fill);
     roundedRect(ctx, 74, 55, 14, 27, 7);
     ctx.fillStyle = rgbCss(SAND);
     ctx.fill();
@@ -340,35 +463,87 @@ export class CompassEngine {
     ctx.stroke();
   }
 
-  private drawGenericBody(ctx: CanvasRenderingContext2D, fill: RGB) {
-    roundedRect(ctx, 16, 12, 64, 72, 21);
-    ctx.save();
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
-    ctx.shadowColor = "rgba(0,0,0,0.32)";
-    ctx.shadowBlur = 2;
-    ctx.shadowOffsetY = 2;
-    ctx.fill();
-    ctx.restore();
-    ctx.fillStyle = rgbCss(fill);
+  private drawChatGpt(ctx: CanvasRenderingContext2D, fill: RGB) {
+    ctx.beginPath();
+    ctx.arc(47, 48, 32, 1.18, 0.72, false);
+    ctx.bezierCurveTo(74.5, 76, 73, 82, 68.5, 82);
+    ctx.bezierCurveTo(64.5, 82, 61.5, 79.5, 59.19, 77.59);
+    ctx.closePath();
+    paintOutlinedShape(ctx, fill);
+  }
+
+  private drawAntigravity(ctx: CanvasRenderingContext2D, fill: RGB) {
+    ctx.beginPath();
+    ctx.moveTo(48, 13);
+    ctx.bezierCurveTo(60, 13, 75, 36, 75, 48);
+    ctx.bezierCurveTo(75, 61, 59, 83, 48, 83);
+    ctx.bezierCurveTo(37, 83, 21, 61, 21, 48);
+    ctx.bezierCurveTo(21, 36, 36, 13, 48, 13);
+    ctx.closePath();
+    paintOutlinedShape(ctx, fill);
+
+    for (const bx of [12.5, 83.5]) {
+      ctx.beginPath();
+      ctx.arc(bx, 61, 5.5, 0, Math.PI * 2);
+      paintOutlinedShape(ctx, fill);
+    }
+  }
+
+  private drawGemini(ctx: CanvasRenderingContext2D, fill: RGB) {
+    const r = 19.5;
+    const topAngle = Math.acos(10 / r);
+    const waistAngle = Math.asin(15 / r);
+    ctx.beginPath();
+    ctx.arc(58, 33, r, -Math.PI + topAngle, waistAngle, false);
+    ctx.arc(58, 63, r, -waistAngle, Math.PI - topAngle, false);
+    ctx.arc(38, 63, r, topAngle, Math.PI + waistAngle, false);
+    ctx.arc(38, 33, r, Math.PI - waistAngle, -topAngle, false);
+    ctx.closePath();
+    paintOutlinedShape(ctx, fill);
+  }
+
+  private drawOpenCode(ctx: CanvasRenderingContext2D, fill: RGB) {
+    ctx.beginPath();
+    ctx.moveTo(20, 39);
+    ctx.arc(48, 39, 28, Math.PI, 0, false);
+    ctx.lineTo(76, 71);
+    ctx.arcTo(76, 85, 62, 85, 14);
+    ctx.lineTo(34, 85);
+    ctx.arcTo(20, 85, 20, 71, 14);
+    ctx.closePath();
+    ctx.moveTo(61.5, 31);
+    ctx.arc(48, 31, 13.5, 0, Math.PI, true);
+    ctx.closePath();
+    paintOutlinedShape(ctx, fill, 3, "evenodd");
+
+    roundedRect(ctx, 29, 61, 38, 16, 8);
+    ctx.fillStyle = rgbCss(SAND);
     ctx.fill();
     ctx.strokeStyle = rgbCss(INK);
     ctx.lineWidth = 3;
-    ctx.lineJoin = "round";
     ctx.stroke();
   }
 
-  private drawGenericOval(ctx: CanvasRenderingContext2D) {
-    ctx.beginPath();
-    ctx.ellipse(48, 69, 25, 8, 0, 0, Math.PI * 2);
+  private drawGeneric(ctx: CanvasRenderingContext2D, fill: RGB) {
+    roundedRect(ctx, 16, 12, 64, 72, 21);
+    paintOutlinedShape(ctx, fill);
+    roundedRect(ctx, 25, 60, 46, 17, 8.5);
     ctx.fillStyle = rgbCss(INK);
     ctx.fill();
   }
 
-  private drawEyes(ctx: CanvasRenderingContext2D, shape: EyeShape, gaze: readonly [number, number], sleeping: boolean) {
+  private drawEyes(
+    ctx: CanvasRenderingContext2D,
+    shape: EyeShape,
+    gaze: readonly [number, number],
+    sleeping: boolean,
+    face: FaceLayout,
+    spiralPhase: number,
+  ) {
     const [gx, gy] = gaze;
     for (const side of [-1, 1]) {
-      const x = side < 0 ? 34 : 56;
-      const y = 43 + gy;
+      const x = side < 0 ? face.eyeLeftX : face.eyeRightX;
+      const y = face.eyeY + gy;
       const eye = shape === "wink" && side > 0 ? "happy" : shape;
       if (eye === "heart") { heart(ctx, x, y, 5.4, BLUSH); continue; }
       if (eye === "star") { star(ctx, x, y, 5.3, SAND); continue; }
@@ -379,7 +554,7 @@ export class CompassEngine {
       if (eye === "spiral") {
         ctx.beginPath();
         for (let i = 0; i <= 18; i++) {
-          const angle = (i / 18) * Math.PI * 2.4;
+          const angle = spiralPhase + (i / 18) * Math.PI * 2.4;
           const radius = 0.5 + (i / 18) * 4.6;
           const px = x + Math.cos(angle) * radius;
           const py = y + Math.sin(angle) * radius;
@@ -413,34 +588,37 @@ export class CompassEngine {
     }
   }
 
-  private drawMouth(ctx: CanvasRenderingContext2D, shape: MouthShape, generic: boolean) {
-    const y = generic ? 57 : 62;
+  private drawMouth(ctx: CanvasRenderingContext2D, shape: MouthShape, face: FaceLayout) {
+    const mx = face.mouthX;
+    const y = face.mouthY;
     if (this.morph > 0.1 || this.slotH > 0.08) {
       ctx.beginPath();
-      ctx.ellipse(48, 64, 7 + 4 * this.morph, 2.5 + this.slotH * 10, 0, 0, Math.PI * 2);
+      ctx.ellipse(mx, y + 2, 7 + 4 * this.morph, 2.5 + this.slotH * 10, 0, 0, Math.PI * 2);
       ctx.fillStyle = rgbCss(INK);
       ctx.fill();
       return;
     }
     if (shape === "o") {
       ctx.beginPath();
-      ctx.ellipse(48, y, 3.5, 4.5, 0, 0, Math.PI * 2);
+      ctx.ellipse(mx, y, 3.5, 4.5, 0, 0, Math.PI * 2);
       ctx.fillStyle = rgbCss(INK);
       ctx.fill();
     } else if (shape === "frown") {
-      curve(ctx, 41, y + 3, 48, y - 4, 55, y + 3, 3.2);
+      curve(ctx, mx - 7, y + 3, mx, y - 4, mx + 7, y + 3, 3.2);
     } else if (shape === "flat") {
-      curve(ctx, 43, y, 48, y + 0.5, 53, y, 3);
+      curve(ctx, mx - 5, y, mx, y + 0.5, mx + 5, y, 3);
     } else {
-      curve(ctx, shape === "wideSmile" ? 38 : 41, y - 1, 48, y + (shape === "wideSmile" ? 10 : 7), shape === "wideSmile" ? 58 : 55, y - 1, shape === "wideSmile" ? 3.6 : 3.2);
+      const half = shape === "wideSmile" ? 10 : 7;
+      const depth = shape === "wideSmile" ? 10 : 7;
+      curve(ctx, mx - half, y - 1, mx, y + depth, mx + half, y - 1, shape === "wideSmile" ? 3.6 : 3.2);
     }
   }
 
   private drawSweat(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
-    ctx.moveTo(79, 18);
-    ctx.quadraticCurveTo(73, 27, 79, 30);
-    ctx.quadraticCurveTo(85, 27, 79, 18);
+    ctx.moveTo(81, 17);
+    ctx.quadraticCurveTo(75, 26, 81, 29);
+    ctx.quadraticCurveTo(87, 26, 81, 17);
     ctx.fillStyle = rgbCss(LIGHT_BLUE);
     ctx.fill();
   }
