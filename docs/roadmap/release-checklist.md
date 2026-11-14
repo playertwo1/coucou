@@ -12,9 +12,9 @@
 - [x] Comparar os SHA-256 dos instaladores publicados com o preflight. Os hashes diferiram; os assets finais foram baixados, conferidos com os digests do GitHub e examinados diretamente pelo Defender sem detecções (evento 1001, exame `{9AD2DD74-E9E4-4DCE-8E77-D2954870AA9F}`).
 - Nunca executar esta lista de publicação sem o proprietário pedir release.
 
-## Windows 0.6.17 — chat com internet e localização (empacotada localmente, NÃO publicada)
+## Windows 0.6.17 — chat com internet e localização (publicação local)
 
-- [x] Pedido do proprietário em 2026-11-14 só para empacotar; sem tag, sem `gh release` e sem merge na `main`. Branch `feat/chat-web-localizacao`.
+- [x] Pedido do proprietário em 2026-11-14 para empacotar e, em seguida, autorização para publicar. Build local (GitHub Actions desabilitado). Os SHA-256 dos instaladores foram conferidos de novo e o Defender reexaminou o MSI e o setup sem ameaças antes da publicação. A tag aponta para o commit empacotado; a `main` recebeu depois um merge com as correções dos personagens (L1.4), ainda fora desta build.
 - [x] Validações locais: `python3 scripts/test-whats-new.py windows`, `npx tsc --noEmit`, `npm test` (673/673), `npm run build`, `cargo test --lib` (670 passaram, 8 ignorados) e `npm run pack`.
 - [x] Microsoft Defender examinou os quatro arquivos com `MpCmdRun.exe -Scan -ScanType 3 -File <arquivo> -DisableRemediation`: código 0 e `found no threats`.
 - [x] SHA-256:
@@ -22,7 +22,7 @@
   - Setup `Lumen-Windows-0.6.17-setup.exe`: `460611D9E2CF3DC4D123A524C98828C7D57D8377F9387C4C63BE20968684CB94`.
   - App `lumen.exe`: `5DACC5782177D6E0FAFF9AE17623E0A0EDC19560FF628F86F995D83AAFB2E2DF`.
   - Hook `lumen-hook.exe`: `180DDDB1139A02D9D21ED8A36CF7FD6C0A2F5AB34337EF106B4C4FF22DB7ED0E`.
-- [ ] Proprietário instalar os arquivos de `windows/release/` e testar o clima com a conta ChatGPT real e a cidade salva. Continua **NOT_RUN**.
+- [ ] Proprietário instalar a 0.6.17 e testar o clima com a conta ChatGPT real e a cidade salva. Continua **NOT_RUN**.
 
 ## Windows 0.6.16 — correção do login ChatGPT (publicação local)
 
