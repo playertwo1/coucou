@@ -109,9 +109,30 @@ test("searching varre os olhos horizontalmente na pose de pensar; ratelimit e di
   rateEngine.setState("ratelimit", true);
   const rateProbe = canvasProbe();
   rateEngine.draw(rateProbe.ctx, 96, 96);
-  // Olhos cansados desenham elipses (diferente de sleeping que fecha em curvas).
+  // Olhos cansados desenham elipses (diferente de sleeping que fecha em curvas) e várias gotas na cabeça.
   assert.ok(rateProbe.ops.some((o) => o.op === "ellipse"), "ratelimit deve desenhar olhos cansados, não dormindo");
-  assert.ok(rateProbe.ops.some((o) => o.op === "quadraticCurveTo" && o.args[2] === 81 && o.args[3] === 29), "ratelimit deve desenhar gota de suor");
+  const sweatTips = new Set(
+    rateProbe.ops
+      .filter((o) => o.op === "quadraticCurveTo" && [24, 34, 65, 81].includes(o.args[2]))
+      .map((o) => o.args[2]),
+  );
+  assert.equal(sweatTips.size, 4, "ratelimit deve desenhar várias gotas de suor na cabeça");
+
+  const checkOp = (state, fn) => {
+    const e = new BotEngine();
+    e.setAgent("integration_claude");
+    e.setState(state, true);
+    const probe = canvasProbe();
+    e.draw(probe.ctx, 96, 96);
+    assert.ok(fn(probe.ops), `estado ${state} deve manter seu destaque próprio`);
+  };
+  checkOp("thinking", (ops) => ops.some((o) => o.op === "arc" && o.args[0] === 85.5 && o.args[1] === 13));
+  checkOp("searching", (ops) => ops.some((o) => o.op === "arc" && o.args[0] === 77 && o.args[2] === 9));
+  checkOp("question", (ops) => ops.some((o) => o.op === "arc" && o.args[0] === 79 && o.args[1] === 11.8 && o.args[2] === 3.2));
+  checkOp("error", (ops) => ops.some((o) => o.op === "lineTo" && o.args[0] === 91.5 && o.args[1] === 25.5));
+  checkOp("approval", (ops) => ops.some((o) => o.op === "arc" && o.args[0] === 78 && o.args[1] === 16 && o.args[2] === 11.5));
+  checkOp("finished", (ops) => ops.some((o) => o.op === "lineTo" && o.args[0] === 84.8 && o.args[1] === 11.4));
+  checkOp("sleeping", (ops) => ops.some((o) => o.op === "moveTo" && o.args[0] === 82 && o.args[1] === 2));
 
   const dizzyEngine = new BotEngine();
   dizzyEngine.setAgent("agent_gemini");
