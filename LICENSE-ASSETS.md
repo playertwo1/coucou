@@ -30,7 +30,7 @@ If you fork Coucou to ship your own app, that's welcome under the MIT License: j
 
 ## Lumen for Windows
 
-O fork para Windows usa o nome original Lumen. A Bússola de papel, desenhada em `windows/src/lumen/compass.ts` e `windows/scripts/gen-icons.mjs`, permanece somente no ícone do aplicativo. Os personagens são originais do Lumen e não usam nem derivam do Mochi, Coucou ou Clawd, nem de logos, símbolos ou mascotes oficiais de empresas. A L1.4d-1 desenhou o Codex em Canvas em `windows/src/lumen/compass-engine.ts`, e a L1.4d-2 completou em Canvas os outros seis personagens (Claude Code, ChatGPT, Antigravity, Gemini CLI, OpenCode e Genérico) nos 11 estados. A escolha e a implementação em Canvas ainda não encerram o aceite real do checkpoint L1.4. A paleta sonora é sintetizada em `windows/src/core/sound.ts`; o pacote não inclui os arquivos WAV compartilhados do Coucou.
+O fork para Windows usa o nome original Lumen. A Bússola de papel, desenhada em `windows/src/lumen/compass.ts` e `windows/scripts/gen-icons.mjs`, permanece somente no ícone do aplicativo. Os personagens são originais do Lumen e não usam nem derivam do Mochi, Coucou ou Clawd, nem de logos, símbolos ou mascotes oficiais de empresas. A L1.4d-1 desenhou o Codex em Canvas em `windows/src/lumen/compass-engine.ts`, e a L1.4d-2 completou em Canvas os outros seis personagens (Claude Code, ChatGPT, Antigravity, Gemini CLI, OpenCode e Genérico) nos 11 estados (ambas com aceite visual na página de conferência em 2026-11-13). A escolha e os aceites de d1/d2 não encerram o aceite real do checkpoint L1.4. A paleta sonora é sintetizada em `windows/src/core/sound.ts`; o pacote não inclui os arquivos WAV compartilhados do Coucou.
 
 ## Questions or permission requests
 
